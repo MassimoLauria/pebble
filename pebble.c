@@ -213,7 +213,6 @@ void dispose_list(VertexList *l) {
 /* Destroy a DAG structure, freeing memory */
 /* {{{ */ void dispose_graph(DAG *p) {
   int i;
-  VertexList *t,*h;
   
   /* Ignore null graphs */
   if (!p) return;
@@ -378,14 +377,10 @@ void dispose_list(VertexList *l) {
    Thus the output of this function can be interpreted in both directions.
 */   
 /* {{{ */ void pebbling_strategy(DAG *g) {
-  int worst_cost=0;
-  int black_count=0;
-  int white_count=0;
   Vertex i;
 
   /* Pebbling sequence */
-  VertexList *pebbling;
-
+  
   /* Cursors */
   VertexList **in,**out;
   
