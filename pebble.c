@@ -1,5 +1,5 @@
 /*
-  Massimo lauria, 2010
+  Massimo Lauria, 2010
   
   This incomplete program is supposed to test
   the black white pebbling number of a graph.
@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define EMPTY_STATUS  0x0
 #define BLACK_PEBBLE  0x1
 #define WHITE_PEBBLE  0x2
 #define SINK_VERTEX   0x4
@@ -21,7 +22,8 @@
 /* {{{ Basic datastructures:
    a Vertex is encoded as an int, 
    a VertexList is a classic List for adjiacency lists */
-typedef int Vertex;
+typedef unsigned int Vertex;
+typedef unsigned int VertexInfo;
 typedef struct _VertexList { Vertex idx;  struct _VertexList *next; } VertexList;
 
 /* Vertices are given in some topological order, so the unique sink is the last
@@ -29,20 +31,26 @@ typedef struct _VertexList { Vertex idx;  struct _VertexList *next; } VertexList
 
    The representation of the graph is a standard adjiacency list representation. Each
    vertex has both a list of incoming and outgoing edges.  
-*/
+   
+   An array may or may not be present (i.e. it is null). If not null
+   it contains the status of the vertices. */
 typedef struct { 
 
-  int size;     /* Number of vertices in the DAG */
+  size_t size;     /* Number of vertices in the DAG */
 
   VertexList **in;  /* Vector of adiacency lists */
   VertexList **out;
+  
+  VertexInfo *info;  /* Additional information about each vertex, its use is application dependent. */
 
 } DAG;
 
 
 
 
-
+/* This is intended to receive an adjacency list, and to insert the
+   vertex in el in the appropriated position, maintaining the
+   decreasing ordering of the adjacency list.  */
 VertexList *sorted_insertion(VertexList *l,Vertex el) {
   VertexList *v,*t; 
   
@@ -58,6 +66,7 @@ VertexList *sorted_insertion(VertexList *l,Vertex el) {
   
   /* Inner insertion invariant: the new element is always >= then the element 
      pointed by t */
+  t=l;
   while ( (t->next!=NULL) && (el >= t->next->idx) ) t=t->next;
   v->next=t->next;
   t->next=v;
@@ -154,8 +163,11 @@ void dispose_list(VertexList *l) {
   d->in  = (VertexList**)calloc( d->size, sizeof(VertexList*) );
   d->out = (VertexList**)calloc( d->size, sizeof(VertexList*) );
 
+  d->info= (VertexInfo*)calloc( d->size, sizeof(VertexInfo) );
+
   ASSERT_NOTNULL(d->in );
   ASSERT_NOTNULL(d->out);
+  ASSERT_NOTNULL(d->info);
   
   v=0;
   for (i=0; i < h; ++i)
@@ -176,7 +188,11 @@ void dispose_list(VertexList *l) {
 /* }}} */
 
 
-/* This builds a copy of a DAG */
+/* This builds a copy of a DAG.  
+
+   N.B. The clone of an inconsistent graph is always consistent, but
+   may fail to represent the original inconsistent graph. */
+
 /* {{{ */ DAG* clone_graph(DAG *orig) {
   
   int i;
@@ -194,23 +210,35 @@ void dispose_list(VertexList *l) {
   d->in  = (VertexList**)calloc( d->size, sizeof(VertexList*) );
   d->out = (VertexList**)calloc( d->size, sizeof(VertexList*) );
 
+  d->info = (VertexInfo*)calloc( d->size, sizeof(VertexInfo) );
+
+
   ASSERT_NOTNULL(d->in );
   ASSERT_NOTNULL(d->out);
+  ASSERT_NOTNULL(d->info);
 
-  if (!orig->out) return d;
-  
-  for (i=0; i < d->size; ++i)
-  {
-    t=orig->out[i];
-    while(t) { add_arc(d,i,t->idx); t=t->next; }
+  /* If there are outgoing edges, we add the respective arcs, notice
+  that this insertion do not check consistency of the original graph.
+  If the original graph is not well formed (e.g. it has outgoing edges
+  but not the respective incoming edges) it adds nevertheless.
+  */
+  if (orig->out) { 
+    for(i=0; i < d->size; ++i) { 
+      t=orig->out[i];
+      while(t) { add_arc(d,i,t->idx); t=t->next; } 
+    } 
   }
   
+  /* We also clone the infos on the vertices. */
+  if (orig->info) {
+    memcpy(d->info,orig->info,d->size);
+  }
   return d;
 }
 /* }}} */
              
              
-/* Destroy a DAG structure, freeing memory */
+/* Destroys a DAG structure, freeing memory */
 /* {{{ */ void dispose_graph(DAG *p) {
   int i;
   
@@ -227,33 +255,73 @@ void dispose_list(VertexList *l) {
     for (i = 0; i < p->size; ++i) dispose_list(p->out[i]);
     free(p->out);
   }
+  /* Info */
+  if (p->info) free(p->info);
+
+  /* Dispose the main data structure */
   free(p);
 } 
 /* }}} */
 
+/* This is the default way a label is assigned to a vertex idx Given a
+   buffer and a size limit, it writes on the buffer the label for the
+   vertex v.  The default impletemtation is to map numbers in their
+   string representation.
+ */
+extern int snprintf(char* buf,size_t size, const char *format, ... );
+void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
+  snprintf(buf,l,"%d",v);
+}
+
 
 /* Prints a string representation of the DAG */
-/* {{{ */ void print_graph(DAG *p) {
+/* {{{ */ void print_graph(DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
   int i;
   VertexList *h;
+  char label_buffer[20];
   
   /* Ignore null graphs */
   if (!p) return;
 
+  /* If no fucntion for computing labels is specified, then we use the
+     default one, which turn a number in its string respresentation */
+  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
+
   for (i = 0; i < p->size; ++i) {
-    printf("%d ",i); 
+    
+    if (p->info) {
+      printf("[");
+      if (p->info[i] & BLACK_PEBBLE) {
+        printf("B");
+      } else if (p->info[i] & WHITE_PEBBLE) {
+        printf("W");
+      } else {
+        printf(" ");
+      }
+      printf("] ");
+    }
+    vertex_label_hash(label_buffer,20,i);
+    printf("%s ",label_buffer); 
     /* Incoming edges */
     if (p->in) {
       printf("I:"); 
       h=p->in[i];
-      while(h) { printf(" %d",h->idx); h=h->next;}
+      while(h) { 
+        vertex_label_hash(label_buffer,20,h->idx);
+        printf(" %s",label_buffer); 
+        h=h->next;
+      }
     }
   
     /* Outgoing edges */
     if (p->out) { 
       printf(" O:"); 
       h=p->out[i];
-      while(h) { printf(" %d",h->idx); h=h->next;}
+      while(h) { 
+        vertex_label_hash(label_buffer,20,h->idx);
+        printf(" %s",label_buffer); 
+        h=h->next;
+      }
     }
     printf("\n");
   }
@@ -261,25 +329,64 @@ void dispose_list(VertexList *l) {
 /* }}} */ 
 
 
-/* Prints a representation of the DAG, which can be used by DOT (graphviz) */
-/* {{{ */ void print_dot_graph(DAG *p,char *name,char* options) {
+
+/* Prints a representation of the DAG, which can be used by DOT and
+ * graphviz.
+ */
+void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(char*,size_t,Vertex) ) {
   int i;
   VertexList *h;
+  char label_buffer[20];
   
   /* Ignore null graphs */
   if (!p) return;
-
+  
+  /* If no function for computing labels is specified, then we use the
+   * default one, which turn a number in its string
+   * representation. (setq c-block-comment-prefix "*")
+   */
+  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
+ 
   printf("digraph %s {\n",name);
+  printf("\t rankdir=BT;\n");
   if (options) printf("%s\n",options);
+  
 
+
+  /* Print the eventual info */
+  for (i = 0; i < p->size; ++i) {
+
+    /* Vertex identifier */
+    printf("\t %d [",i);
+    
+    /* Start with vertex info */
+    vertex_label_hash(label_buffer,20,i);
+    printf("label=%s,penwidth=2,shape=circle,style=filled,fixedsize=true",label_buffer); 
+
+    /* if there are no pebbling information, move to the next
+       vertex */
+    if (!p->info) { printf("]\n"); continue; }
+
+    if (p->info[i] & BLACK_PEBBLE) {
+      printf(",color=gray,fontcolor=white,fillcolor=black");
+    } else if (p->info[i] & WHITE_PEBBLE) {
+      printf(",color=gray,fontcolor=black,fillcolor=white");
+    } else {
+      printf(",color=gray,fontcolor=black,fillcolor=lightgray");
+    }
+    printf("]\n");
+  }
+ 
+  
   for (i = 0; i < p->size; ++i) {
    
     /* Outgoing edges */
     if (p->out) {
-      printf("\t /* Arcs outgoing from %d*/ \n",i);
+      vertex_label_hash(label_buffer,20,i);
+      printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i);
       h=p->out[i];
-      while(h) { 
-        printf("\t %d -> %d ;\n",i,h->idx); 
+      while(h) {
+        printf("\t %d -> %d;\n",i,h->idx); 
         h=h->next;
       }
       printf("\n");
@@ -292,7 +399,7 @@ void dispose_list(VertexList *l) {
 /* }}} */
 
 
-/* Utility forproduct_graph */
+/* Utility for product_graph */
 /* {{{ */ void offset_graph(DAG *p,int offset) {
   int i;
   VertexList *h;
@@ -336,9 +443,11 @@ void dispose_list(VertexList *l) {
   p->size=A*B;
   p->in  = (VertexList**)calloc( A*B, sizeof(VertexList*) );
   p->out = (VertexList**)calloc( A*B, sizeof(VertexList*) );
+  p->info= (VertexInfo* )calloc( A*B, sizeof(VertexInfo)  );
 
   ASSERT_NOTNULL(p->in );
   ASSERT_NOTNULL(p->out);
+  ASSERT_NOTNULL(p->info);
   
   /* Several copies of inner graphs are produced and glued together */
   for(i=0;i<B;i++) {
@@ -346,9 +455,12 @@ void dispose_list(VertexList *l) {
     offset_graph(h,i*A);
     memcpy(p->in + i*A, h->in , A*sizeof(VertexList*) );
     memcpy(p->out+ i*A, h->out, A*sizeof(VertexList*) );
-    /* Dispose cloned copy */
+    /* Dispose the cloned copy. Notice that the lists in the cloned copy
+       are not freed, since we keep them attached to the product graph
+       adjacency list.  */
     free(h->in);
     free(h->out);
+    free(h->info);
     free(h);
   }
   /* Add intermediate edges */
@@ -430,13 +542,17 @@ int main(int argc, char *argv[])
 {
   DAG *A,*B,*P;
   A=create_piramid_graph(2);
-  B=create_piramid_graph(3);
+  B=create_piramid_graph(2);
+
+  
+  print_dot_graph(A,"A",NULL,NULL);
+  print_dot_graph(B,"B",NULL,NULL);
 
   P=product_graph(B,A);
   dispose_graph(A);
   dispose_graph(B);
-
-  print_dot_graph(P,"prodotto",NULL);
+ 
+  print_dot_graph(P,"AxB",NULL,NULL);
 
   dispose_graph(P);
   return 0;
