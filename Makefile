@@ -2,7 +2,7 @@
 
 
 all:
-	gcc -ansi -pedantic -Wall -o pebble pebble.c 
+	gcc -g -ansi -pedantic -pedantic-errors -Werror -Wall -o pebble pebble.c 
 
 
 check-syntax:
