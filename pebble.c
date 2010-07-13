@@ -1,7 +1,7 @@
 /*
   Massimo lauria, 2010
   
-  This incomplete program is supposed to test
+  This incomplete program is supposed to compute
   the black white pebbling number of a graph.
 
 */
@@ -20,7 +20,7 @@
 
 /* {{{ Basic datastructures:
    a Vertex is encoded as an int, 
-   a VertexList is a classic List for adjiacency lists */
+   a VertexList is a classic adjiacency list of vertices */
 typedef int Vertex;
 typedef struct _VertexList { Vertex idx;  struct _VertexList *next; } VertexList;
 
