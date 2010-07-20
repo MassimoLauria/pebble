@@ -9,6 +9,8 @@
 *.o
 *.pyc
 pebble
+exposetypes
+*.dot
 GTAGS
 GRTAGS
 GPATH

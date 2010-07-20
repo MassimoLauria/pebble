@@ -1,4 +1,4 @@
-/*B
+/*
   Massimo Lauria, 2010
   
   This incomplete program is supposed to compute
@@ -57,14 +57,15 @@ VertexList *sorted_insertion(VertexList *l,Vertex el) {
   v=(VertexList*)malloc(sizeof(VertexList));
   ASSERT_NOTNULL(v);
   v->idx  = el;
-  
+  /* v->next is not initialized because it will be set in any case */
+
   /* HEAD Insertion*/
   if ( (l==NULL) || (el < l->idx) ) {
     v->next=l;
     return v;
   }
   
-  /* Inner insertion invariant: the new element is always >= then the element 
+  /* Inner insertion invariant: the new element is always >= than the element 
      pointed by t */
   t=l;
   while ( (t->next!=NULL) && (el >= t->next->idx) ) t=t->next;
@@ -487,8 +488,15 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
 
    Notice that any pebbling induce a dual pebbling with a reversed sequence of vertices.
    Thus the output of this function can be interpreted in both directions.
+
+   INPUT: 
+   
+         -- DAG: the graph to pebble.
+         -- upper_bound: the maximum number of pebbles in the configuration,
+                         if such number is not sufficient, the the computation will fail gracefully 
+                         without finding the pebbling
 */   
-/* {{{ */ void pebbling_strategy(DAG *g) {
+/* {{{ */ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   Vertex i;
 
   /* Pebbling sequence */
@@ -511,7 +519,7 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
     
     /* A sink is found */
     if (out[i]==NULL) {
-      if (sink >= g->size ) {
+      if (sink < g->size ) {
         printf("Sorry, DAGs with multiple sinks are not supported");
         ASSERT_NOTNULL(NULL);
       } 
@@ -525,7 +533,18 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
   }
 
   /* SEARCH ALGORITHM */
+  /* The first attempt to implement this program will use a standard
+     graph reachability algorithm for directed graphs */ 
 
+  /* Since graphs of configuration will be very large, we try to
+     represent a configuration with the smallest memory footprint.
+     Furthermore there will be a lot of useless or non valid
+     configurations, thus we produce configurations on demand.
+
+     N.B. As a futue option: we could use a ZDD for keeping track of visited
+     configurations.
+  */
+  
   
 
   /* EPILOGUE --------------------------------- */
