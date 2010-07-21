@@ -1,5 +1,5 @@
 
-CFLAGS=-std=c99 -pedantic -pedantic-errors -Werror -Wall
+CFLAGS=-std=c99 -g -pedantic -pedantic-errors -Werror -Wall
 
 
 

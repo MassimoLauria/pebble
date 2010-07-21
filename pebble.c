@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #define EMPTY_STATUS  0x0
 #define BLACK_PEBBLE  0x1
@@ -45,6 +46,209 @@ typedef struct {
 
 } DAG;
 
+
+/* 
+ *  The graph of configuration is a directed graph in which each node
+ *  is indexed by an hash of the configuration it represents, and
+ *  contains the array of the HASHED configuration that follows.  We
+ *  cache the number of pebbles required to reach a configuration and
+ *  the previous configuration in the chain.  Notice that the
+ *  plausible configurations are not that many.  So we need to use a
+ *  sparse representation.
+ */
+#define MAX_VERTICES sizeof(long unsigned int)*CHAR_BIT
+#define MAX_PEBBLES  10
+/*#define HASH_SIZE    0x0FFFFFFF*/
+#define HASH_SIZE    0x0FFFFF
+#define HASH_WASTE_RANGE  0x0FFFF
+#define ROTATE_RIGHT_AMOUNT (sizeof(long unsigned int)*CHAR_BIT/2)
+/*  
+ *  The basic data structure for a pebbling is essentially a bunch of
+ *  bit vectors, implemented as an array of integers, which represent
+ *  the sets of black and white pebbles in the configuration.
+ *  
+ *  The aux pointer is used to realize the buckets in the hash (Yes, I
+ *  know. Auxiliary data shouldn't go inside the status data
+ *  structure).  Notice that aux data are not hashed, thus two
+ *  idential configuration which different auxiliary data will
+ *  collide, which is what we want.
+ */ 
+typedef struct _PebblingStatus {
+
+  long unsigned int white_pebbled;
+  long unsigned int black_pebbled;
+  long unsigned int active_vertices;
+  int pebbles;
+
+  /* How did we reach this configuration */
+  int pebble_cost;
+  struct _PebblingStatus *previous_configuration;
+
+  struct _PebblingStatus* next;
+} PebblingStatus;
+
+void copy_pebbling_status(PebblingStatus *src,PebblingStatus *dst) {
+
+  ASSERT_NOTNULL(src);
+  ASSERT_NOTNULL(dst);
+
+  dst->white_pebbled=src->white_pebbled;
+  dst->black_pebbled=src->black_pebbled;
+  dst->active_vertices=src->active_vertices;
+  dst->pebbles=src->pebbles;
+  
+  dst->pebble_cost=src->pebble_cost;
+  dst->previous_configuration=src->previous_configuration;
+  dst->next=src->next;
+}
+
+
+
+/* The dictionary has a very simple implementation.  It is an array
+   lists, each list is indexed by an hash which is reduced modulo the
+   size of the array.  Notice that for performance we statically
+   allocate the array, and the actual size is between 15/16 and 16/16
+   of the allocated size.  */
+typedef struct {
+  PebblingStatus *pool[HASH_SIZE];
+  int key;
+} ConfigurationDictionary;
+
+/* 
+ * When the dictionary is queried the result is simply the index of
+ * the bucket in which the record hashes, and a pointer to a matching
+ * occurrence in the dictionary, if there is any. A null pointer
+ * represent no matching record.
+ */
+typedef struct {
+  long unsigned int bucket_idx;
+  PebblingStatus *occurrence;
+} DictionaryQueryResult;
+
+
+
+extern long int random(void);
+
+void dictionary_init(ConfigurationDictionary* d) {
+  long unsigned int r;
+
+  ASSERT_NOTNULL(d);
+  
+  r=random() % HASH_WASTE_RANGE;
+  d->key = HASH_SIZE - HASH_WASTE_RANGE + r; 
+}
+
+DictionaryQueryResult dictionary_find(ConfigurationDictionary* d,PebblingStatus *s) {
+  long unsigned int h;
+  PebblingStatus *t;
+  DictionaryQueryResult res={ 0UL, NULL };
+
+  ASSERT_NOTNULL(d);
+  ASSERT_NOTNULL(s);
+  
+  /* Compute the hash and then find the position in the array */
+  h= ( s->white_pebbled >> ROTATE_RIGHT_AMOUNT ) 
+    | ( s->white_pebbled << ( sizeof(long unsigned int)*8 - ROTATE_RIGHT_AMOUNT) ) 
+    | s->black_pebbled;
+  h = h % d->key;
+
+  t=d->pool[h];
+  while(t) {
+    if ( (t->white_pebbled == s->white_pebbled ) &&
+         (t->black_pebbled == s->black_pebbled ) ) break;
+  }
+
+  res.occurrence = t;
+  res.bucket_idx = h;
+
+  return res;
+}
+
+/* 
+ *  The update function has the following semantic: if the
+ *  configuration is absent from the dictionary, then a new record is
+ *  added to the dictionary, otherwise an old one is updated.  
+ */
+DictionaryQueryResult dictionary_update(ConfigurationDictionary* d,PebblingStatus *s) {
+  DictionaryQueryResult res={ 0UL, NULL };
+  PebblingStatus *n;
+
+  ASSERT_NOTNULL(d);
+  ASSERT_NOTNULL(s);
+
+  res = dictionary_find(d,s);
+
+  if (res.occurrence==NULL) { 
+    /* The configuration does not occur in the dictionary */
+    n = (PebblingStatus*)malloc(sizeof(PebblingStatus));
+    n->white_pebbled= s->white_pebbled;
+    n->black_pebbled= s->black_pebbled;
+    n->active_vertices= s->active_vertices;
+    n->pebble_cost  = s->pebble_cost;
+    n->previous_configuration=s->previous_configuration;
+    
+    n->next=d->pool[res.bucket_idx];
+    d->pool[res.bucket_idx]=n;
+  
+  } else if (res.occurrence->pebble_cost > s->pebble_cost) {
+    /* The configuration occur, so we update the old record if there's the need. */
+    res.occurrence->pebble_cost=s->pebble_cost;
+    res.occurrence->previous_configuration=s->previous_configuration;
+  }
+  return res;
+}
+
+/* A configuration is sane only if linked to configurations in the
+   appropriate dictionary */
+void assert_status_sanity(DAG *g,PebblingStatus *s,ConfigurationDictionary *dict) {
+  DictionaryQueryResult q;
+  int i;
+  int covered=0;
+  VertexList *p;
+
+  ASSERT_NOTNULL(dict);
+  ASSERT_NOTNULL(s);
+  if (g->size > MAX_VERTICES) ASSERT_NOTNULL(NULL);
+
+  if (s->next!=NULL) {
+    q=dictionary_find(dict,s->next);
+    if (q.occurrence != s->next) {
+      fprintf(stderr,"A configuration is linked to some other which is not in the dictionary.");
+      exit(-1);
+    }
+  }
+  if (s->previous_configuration!=NULL) {
+    q=dictionary_find(dict,s->previous_configuration);
+    if (q.occurrence != s->previous_configuration) {
+      fprintf(stderr,"A configuration is linked to some other which is not in the dictionary.");
+      exit(-1);
+    }
+  }
+  /* FIXME: Check that the number of indicated pebbles is correct. */
+  /* Check that the active pebbles are all correct (i.e. a
+     vertex is active if and only if both the predecessors are
+     pebbled. */
+  for (i=0;i<g->size;i++) {
+    p=g->in[i];
+    covered=1;
+    while(p) {
+      /* Is the predecessor pebbled? */
+      if ( (s->white_pebbled | s->black_pebbled) & ( 0x1 << p->idx )) continue;
+      else { covered=0; break; }
+      p=p->next;
+    }
+    /* Should the predecessors be pebbled? */
+    if ( s->active_vertices & (0x1 << i) ) {
+      if (!covered) {
+        fprintf(stderr,"ERROR: A configuration has an active vertex with some unpebbled predecessor.");
+        exit(-1);  }
+    } else {
+      if (covered) {
+        fprintf(stderr,"ERROR: A configuration has an non-active vertex with all pebbled predecessor.");
+        exit(-1);  }
+    }
+  }
+}
 
 
 
@@ -498,6 +702,12 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
 */   
 /* {{{ */ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   Vertex i;
+  
+  /* Dictionary data tructure */
+  ConfigurationDictionary dict;
+  /* Initial and Temporaty Status */
+  PebblingStatus initial_status={0UL,0UL,0UL,0,0,NULL,NULL};
+  /* PebblingStatus temp_status   ={0UL,0UL,0UL,0,0,NULL,NULL}; */
 
   /* Pebbling sequence */
   
@@ -505,17 +715,19 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
   VertexList **in,**out;
   
   /* List of vertices, to keep sorted */
-  VertexList *wpebbles=NULL,*bpebbles=NULL;
-  VertexList *wremovable=NULL, *baddable=NULL;
-  VertexList *sources;
+  VertexList *sources=NULL;
   Vertex     sink;
 
   /* PROLOGUE ----------------------------------- */
+  if (g->size > MAX_VERTICES) {
+    fprintf(stderr,"Error in search procedure: the graph is too big for the optimized data structures.");
+    exit(-1);
+  } 
   /* Find the sink and the sources */
   sink=g->size; /* Dummy value for sink, it signals no sinks has been found yet */
   out=g->out; /* Cache pointers */
   in =g->in;
-  for(i=g->size-1; i>=0; --i) {
+  for(i=g->size-1; i+1 > 0; --i) {
     
     /* A sink is found */
     if (out[i]==NULL) {
@@ -529,7 +741,12 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
     /* A source is found, notice that insertion in sorted list 
        could cost up to the length of the list, but we scan the vertices backwards
        thus all insertions are on the HEAD of the list, which costs O(1) */
-    if (in[i]==NULL) sources=sorted_insertion(sources,i);
+    if (in[i]==NULL) {
+      sources=sorted_insertion(sources,i);
+      /* All source nodes are active for the initial status */
+      initial_status.active_vertices |= (1 << i);
+    }
+
   }
 
   /* SEARCH ALGORITHM */
@@ -540,39 +757,47 @@ void print_dot_graph(DAG *p,char *name,char* options,void (*vertex_label_hash)(c
      represent a configuration with the smallest memory footprint.
      Furthermore there will be a lot of useless or non valid
      configurations, thus we produce configurations on demand.
+     We use an hash to access configurations.
 
      N.B. As a futue option: we could use a ZDD for keeping track of visited
      configurations.
   */
-  
-  
+  dictionary_init(&dict);
+  dictionary_update(&dict,&initial_status);
+  assert_status_sanity(g,&initial_status,&dict);  
 
   /* EPILOGUE --------------------------------- */
   /* free memory, free Mandela! */
   dispose_list(sources);
-  dispose_list(wpebbles);
-  dispose_list(bpebbles);
-  dispose_list(wremovable);
-  dispose_list(baddable);
 }
 /* }}} */
+
+
+
+/* 
+ *  The example test program creates two pyramid graphs and produces
+ *  the OR-product graph of them.  Then it prints the DOT
+ *  representation of such graphs.
+ */ 
 
 int main(int argc, char *argv[])
 {
   DAG *A,*B,*P;
   A=create_piramid_graph(2);
-  B=create_piramid_graph(2);
+  B=create_piramid_graph(3);
 
   
   print_dot_graph(A,"A",NULL,NULL);
   print_dot_graph(B,"B",NULL,NULL);
 
   P=product_graph(B,A);
-  dispose_graph(A);
-  dispose_graph(B);
  
   print_dot_graph(P,"AxB",NULL,NULL);
 
+  pebbling_strategy(B,3);
+
+  dispose_graph(A);
+  dispose_graph(B);
   dispose_graph(P);
   return 0;
 }
