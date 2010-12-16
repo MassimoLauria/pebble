@@ -412,14 +412,17 @@ void dispose_list(VertexList *l) {
 
 int main(int argc, char *argv[])
 {
-  DAG *A,*B;
+  DAG *A,*B,*C;
   A=create_piramid_graph(2);
+  B=create_piramid_graph(3);
 
-  print_dot_graph(A,"A",NULL,NULL);
 
-  pebbling_strategy(A,3);
+  C=product_graph(A,B);
+  print_dot_graph(B,"B",NULL,NULL,NULL);
 
   dispose_graph(A);
+  dispose_graph(B);
+  dispose_graph(C);
 
   exit(0);
 }

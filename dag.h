@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-16, giovedì 18:54 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-16, giovedì 23:18 (CET) Massimo Lauria"
 
    Description::
 
@@ -72,5 +72,7 @@ extern void print_dot_graph(DAG *p,
                             char**vertex_options,
                             void (*vertex_label_to_string)(char*,size_t,Vertex) );
 
+
+DAG *product_graph(DAG *inner,DAG *outer);
 
 #endif /* DAG_H */

@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-16, giovedì 19:02 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-16, giovedì 23:17 (CET) Massimo Lauria"
 
    Description::
 
@@ -371,79 +371,85 @@ void print_dot_graph(DAG *p,
 /* }}} */
 
 
-/* Utility for product_graph */
-/* {{{ */ void offset_graph(DAG *p,int offset) {
-  int i;
-  VertexList *h;
+/* Build the OR product of two DAGs
 
-  /* Ignore null graphs */
-  if (!p) return;
+   The OR product means that there is a vertex (i,j) for every vertex
+   i of the outer graph and vertex j of the inner graph.
 
-  /* Incoming edges */
-  if (p->in) {
-    for (i = 0; i < p->size; ++i) {
-      h=p->in[i];
-      while(h) { h->idx += offset; h=h->next;}
-    }
-  }
- /* Outgoing edges */
-  if (p->out) {
-    for (i = 0; i < p->size; ++i) {
-      h=p->out[i];
-      while(h) { h->idx += offset; h=h->next;}
-    }
-  }
-}
-/* }}} */
+   The predecessors of each (i,j) are the (i,j') for j' predecessor of j
+   plus (i',s) for each inner sink s and i' predecessor of i in the
+   outer graph.
 
-
-/* Build the OR product of two DAGs */
+*/
 /* {{{ */ DAG *product_graph(DAG *inner,DAG *outer) {
   DAG *p=NULL;
-  DAG *h=NULL;
-  VertexList *t;
-  Vertex x,y;
-  int A,B;
-  int i;
-  if (!inner || !outer) return NULL;
-  A=inner->size;
-  B=outer->size;
+
+  Vertex i;
+  Vertex xo,xi,x;
+  size_t So,Si,S;
+
+  ASSERT_NOTNULL(inner);
+  ASSERT_NOTNULL(outer);
+
+  /* Size of the new graph */
+  Si=inner->size;
+  So=outer->size;
+  S =  So * Si;
 
   /* Initial structure */
   p=(DAG*)malloc(sizeof(DAG));
   ASSERT_NOTNULL(p);
-  p->size=A*B;
-  p->in  = (VertexList**)calloc( A*B, sizeof(VertexList*) );
-  p->out = (VertexList**)calloc( A*B, sizeof(VertexList*) );
-  p->info= (VertexInfo* )calloc( A*B, sizeof(VertexInfo)  );
+  p->size=S;
 
+  /* Basic arrays */
+  p->in  = (Vertex**)malloc( S*sizeof(Vertex*) );
+  p->out = (Vertex**)malloc( S*sizeof(Vertex*) );
   ASSERT_NOTNULL(p->in );
   ASSERT_NOTNULL(p->out);
-  ASSERT_NOTNULL(p->info);
+  p->indegree  = (size_t*)malloc( S*sizeof(size_t) );
+  p->outdegree = (size_t*)malloc( S*sizeof(size_t) );
+  ASSERT_NOTNULL(p->indegree );
+  ASSERT_NOTNULL(p->outdegree);
 
-  /* Several copies of inner graphs are produced and glued together */
-  for(i=0;i<B;i++) {
-    h=clone_graph(inner);
-    offset_graph(h,i*A);
-    memcpy(p->in + i*A, h->in , A*sizeof(VertexList*) );
-    memcpy(p->out+ i*A, h->out, A*sizeof(VertexList*) );
-    /* Dispose the cloned copy. Notice that the lists in the cloned copy
-       are not freed, since we keep them attached to the product graph
-       adjacency list.  */
-    free(h->in);
-    free(h->out);
-    free(h->info);
-    free(h);
-  }
-  /* Add intermediate edges */
-  for(i=0;i<B;i++) {
-    t=outer->out[i];
-    while(t) {
-      x=i*A+A-1;
-      for( y=A*(t->idx); y < A*(t->idx+1) ; y++ ) add_arc(p,x,y);
-      t=t->next;
+  /* Computes the degrees */
+  x=0;
+  for(xo=0;xo<So;xo++) {
+    for(xi=0;xi<Si;xi++) {
+      /* Each inner incoming arcs + arcs coming from the sinks of the super-predecessor */
+      p->indegree[x]  = inner->indegree[xi] + (outer->indegree[xo])*inner->sink_number;
+      /* Inner outgoing arcs */
+      p->outdegree[x] = inner->outdegree[xi];
+      x++;
     }
   }
+  for(xo=0;xo<So;xo++) {
+    for(i=0;i<inner->sink_number;i++) {
+      /* There are arcs from each inner sink to all the sources of the
+         outer successors */
+      p->outdegree[xo*Si+inner->sources[i]] += Si*(outer->indegree[xo]);
+    }
+  }
+
+  /* Allocation of in/out arrays */
+  for(x=0;x<S;x++) {
+    p->in[x]  = (Vertex*)malloc(p->indegree[x]*sizeof(Vertex));
+    p->out[x] = (Vertex*)malloc(p->outdegree[x]*sizeof(Vertex*));
+  }
+
+  /* Build the network of links */
+  /* Inner arcs */
+  for(xo=0;xo<So;xo++) {
+    for(xi=0;xi<Si;xi++) {
+      /* Incoming */
+      for(i=0;i<inner->indegree[xi];i++) p->in[xo*Si+xi][i]=inner->in[xi][i]+xo*Si;
+      /* Outgoing */
+      for(i=0;i<inner->outdegree[xi];i++) p->out[xo*Si+xi][i]=inner->out[xi][i]+xo*Si;
+    }
+  }
+
+  /* FIXME: Arcs between blocks */
+
+  dag_precompute_data(p);
   return p;
 }
 /* }}} */
