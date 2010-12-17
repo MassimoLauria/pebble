@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-16, giovedì 23:17 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-17, venerdì 03:57 (CET) Massimo Lauria"
 
    Description::
 
@@ -250,7 +250,7 @@ void dag_precompute_data(DAG *digraph) {
  */
 extern int snprintf(char* buf,size_t size, const char *format, ... );
 static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
-  snprintf(buf,l,"%lud",v);
+  snprintf(buf,l,"%lu",v);
 }
 
 
@@ -384,7 +384,7 @@ void print_dot_graph(DAG *p,
 /* {{{ */ DAG *product_graph(DAG *inner,DAG *outer) {
   DAG *p=NULL;
 
-  Vertex i;
+  Vertex i,j;
   Vertex xo,xi,x;
   size_t So,Si,S;
 
@@ -412,21 +412,24 @@ void print_dot_graph(DAG *p,
   ASSERT_NOTNULL(p->outdegree);
 
   /* Computes the degrees */
-  x=0;
+
+  /* Number of inner edges */
   for(xo=0;xo<So;xo++) {
     for(xi=0;xi<Si;xi++) {
-      /* Each inner incoming arcs + arcs coming from the sinks of the super-predecessor */
-      p->indegree[x]  = inner->indegree[xi] + (outer->indegree[xo])*inner->sink_number;
-      /* Inner outgoing arcs */
-      p->outdegree[x] = inner->outdegree[xi];
-      x++;
+      p->indegree [xo*Si+xi]  = inner->indegree[xi]; // + (outer->indegree[xo])*inner->sink_number;
+      p->outdegree[xo*Si+xi]  = inner->outdegree[xi];
     }
   }
+  /* Incoming edges from predecessors' sinks */
+  for(xo=0;xo<So;xo++) {
+    for(xi=0;xi<Si;xi++) {
+      p->indegree [xo*Si+xi]  += (outer->indegree[xo])*inner->sink_number;
+    }
+  }
+  /* Outgoing edges to successors' sources */
   for(xo=0;xo<So;xo++) {
     for(i=0;i<inner->sink_number;i++) {
-      /* There are arcs from each inner sink to all the sources of the
-         outer successors */
-      p->outdegree[xo*Si+inner->sources[i]] += Si*(outer->indegree[xo]);
+      p->outdegree[xo*Si+inner->sinks[i]] += Si*(outer->outdegree[xo]);
     }
   }
 
@@ -437,17 +440,46 @@ void print_dot_graph(DAG *p,
   }
 
   /* Build the network of links */
-  /* Inner arcs */
+
+  /* Setup inner arcs */
   for(xo=0;xo<So;xo++) {
     for(xi=0;xi<Si;xi++) {
       /* Incoming */
-      for(i=0;i<inner->indegree[xi];i++) p->in[xo*Si+xi][i]=inner->in[xi][i]+xo*Si;
+      for(i=0;i<inner->indegree[xi] ;i++)  p->in[xo*Si+xi][i] =inner->in[xi][i]+xo*Si;
       /* Outgoing */
-      for(i=0;i<inner->outdegree[xi];i++) p->out[xo*Si+xi][i]=inner->out[xi][i]+xo*Si;
+      for(i=0;i<inner->outdegree[xi];i++)  p->out[xo*Si+xi][i]=inner->out[xi][i]+xo*Si;
     }
   }
 
-  /* FIXME: Arcs between blocks */
+  /* Edges between outer copies to be connected */
+  Vertex yo,yi;
+
+  /* Incoming edges from predecessors' sinks */
+  for(yo=0;yo<So;yo++)
+    for(i=0;i<outer->indegree[yo];i++) {
+      xo=outer->in[yo][i];
+      /* (xo -> yo) is the outer pair to be connected */
+      for(yi=0;yi<Si;yi++) for(j=0;j<inner->sink_number;j++)  {
+          xi=inner->sinks[j];
+          /* (xi -> yi) is the inner pair to be connected */
+          p->in[yo*Si+yi][inner->indegree[yi]+i*inner->sink_number+j] = xo*Si+xi;
+      }
+    }
+
+  /* Outgoing edges to successors' vertices */
+  for(xo=0;xo<So;xo++)
+    for(i=0;i<outer->outdegree[xo];i++) {
+      yo=outer->out[xo][i];
+      /* (xo -> yo) is the outer pair to be connected */
+      for(j=0;j<inner->sink_number;j++) for(yi=0;yi<Si;yi++)  {
+          xi=inner->sinks[j];
+          /* (xi -> yi) is the inner pair to be connected
+             notice that inner->outdegree[x0] should be always 0.
+           */
+          p->out[xo*Si+xi][inner->outdegree[xi]+i*Si+yi] = yo*Si+yi;
+      }
+    }
+
 
   dag_precompute_data(p);
   return p;
