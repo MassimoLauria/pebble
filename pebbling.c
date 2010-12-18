@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-17, venerdì 18:29 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-18, sabato 18:47 (CET) Massimo Lauria"
 
    Description::
 
@@ -16,6 +16,7 @@
 /* Preamble */
 #include <stdlib.h>
 #include "common.h"
+#include "dag.h"
 #include "pebbling.h"
 
 PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
@@ -125,5 +126,27 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
     if (!ispebbled(g->in[v][i],g,c)) return FALSE;
   }
   return TRUE;
+}
+
+
+
+/* Print a graph with a pebble configuration, with dot. */
+void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
+                        char *name,char* options) {
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,peb));
+
+  char *vertexopts[g->size];
+
+  for(Vertex v=0;v<g->size;v++) {
+    if (iswhite(v,g,peb)) {
+      vertexopts[v]=",color=gray,fontcolor=black,fillcolor=white";
+    } else if (isblack(v,g,peb)) {
+      vertexopts[v]=",color=gray,fontcolor=white,fillcolor=black";
+    } else {
+      vertexopts[v]=",color=gray,fontcolor=black,fillcolor=lightgray";
+    }
+  }
+  print_dot_DAG(g,name,options,vertexopts,NULL);
 }
 

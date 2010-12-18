@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-17, venerdì 18:28 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-18, sabato 18:50 (CET) Massimo Lauria"
 
    Description::
 
@@ -60,6 +60,9 @@ extern Boolean isblack  (const Vertex v, const DAG *g, const PebbleConfiguration
 extern Boolean iswhite  (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+
+extern void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
+                        char *name,char* options);
 
 
 #endif /* PEBBLING_H */

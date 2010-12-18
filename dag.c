@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-17, venerdì 18:21 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-18, sabato 18:43 (CET) Massimo Lauria"
 
    Description::
 
@@ -286,14 +286,6 @@ void print_dot_DAG(const DAG *p,
        vertex */
     if (vertex_options && vertex_options[i])
       printf(",%s",vertex_options[i]);
-    /*
-    if (p->info[i] & BLACK_PEBBLE) {
-      printf(",color=gray,fontcolor=white,fillcolor=black");
-    } else if (p->info[i] & WHITE_PEBBLE) {
-      printf(",color=gray,fontcolor=black,fillcolor=white");
-    } else {
-      printf(",color=gray,fontcolor=black,fillcolor=lightgray");
-      }*/
     printf("]\n");
   }
 

@@ -145,7 +145,6 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
 /* }}} */
 
 
-
 /*
  *  The example test program creates two pyramid graphs and produces
  *  the OR-product graph of them.  Then it prints the DOT
@@ -155,13 +154,21 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
 int main(int argc, char *argv[])
 {
   DAG *A,*B,*C;
+  PebbleConfiguration pc;
+  pc.white_pebbled=0x2;
+  pc.black_pebbled=0x5;
+  pc.pebbles=3;
+
   A=piramid(3);
   B=piramid(4);
 
   C=orproduct(A,B);
+
+
+
   print_dot_DAG(A,"A",NULL,NULL,NULL);
   print_dot_DAG(B,"B",NULL,NULL,NULL);
-  print_dot_DAG(C,"C",NULL,NULL,NULL);
+  print_dot_Pebbling(C,&pc,"C",NULL);
 
   dispose_DAG(A);
   dispose_DAG(B);
