@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-16, giovedì 23:18 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-17, venerdì 18:26 (CET) Massimo Lauria"
 
    Description::
 
@@ -59,20 +59,24 @@ typedef struct {
 
 } DAG;
 
-extern DAG* create_piramid_graph(int h);
-extern DAG* copy_graph(DAG *src);
-extern void dispose_graph(DAG *ptr);
+/* Data structure management functions */
+extern Boolean isconsistent_DAG(const DAG *ptr);
+extern DAG*    copy_DAG(const DAG *src);
+extern void    dispose_DAG(DAG* ptr);
 
-extern void print_graph(DAG *p,
+/* I/O Functions */
+extern void print_DAG(const DAG *p,
                         void (*vertex_label_to_string)(char*,size_t,Vertex));
 
-extern void print_dot_graph(DAG *p,
+extern void print_dot_DAG(const DAG *p,
                             char *name,
                             char* options,
                             char**vertex_options,
                             void (*vertex_label_to_string)(char*,size_t,Vertex) );
 
 
-DAG *product_graph(DAG *inner,DAG *outer);
+/* Structure building functions */
+extern DAG* piramid(int h);
+extern DAG* orproduct(const DAG *inner,const DAG *outer);
 
 #endif /* DAG_H */

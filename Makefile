@@ -5,7 +5,7 @@ CC=gcc
 #C_STANDARD=-std=c89 -ansi
 C_STANDARD=-std=c99
 
-CFLAGS=-g -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=-DDEBUG -g -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=-g
 
 
@@ -18,7 +18,7 @@ clean:
 	@-rm -fr *.dSYM
 
 check-syntax:
-	gcc ${CFLAGS} -S ${CHK_SOURCES} -o - >/dev/null
+	$(CC) ${CFLAGS} -o - -S ${CHK_SOURCES} >/dev/null
 
 %.o: %.c
 	$(CC) ${CFLAGS} -c $< -o $@
@@ -27,7 +27,7 @@ check-syntax:
 exposetypes: exposetypes.c
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
-pebble: pebble.o dag.o
+pebble: pebble.o dag.o pebbling.o dsbasic.o hashtable.o
 
 test: exposetypes
 	./exposetypes

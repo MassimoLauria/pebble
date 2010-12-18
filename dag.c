@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-17, venerdì 03:57 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-17, venerdì 18:21 (CET) Massimo Lauria"
 
    Description::
 
@@ -19,7 +19,9 @@
 #include "dag.h"
 
 
-/* Code */
+/********************************************************************************
+                     DATA STRUCTURE MANAGEMENT FUNCTIONS
+ ********************************************************************************/
 
 /*
    Graph structure is mostly used statically. Once the graph has been
@@ -57,8 +59,269 @@ void dag_precompute_data(DAG *digraph) {
 }
 
 
+/* This builds a copy of a DAG.
+
+   N.B. The clone of an inconsistent graph maybe inconsistent, but the
+   inconsistency may be different. */
+
+/* {{{ */ DAG* copy_DAG(const DAG *src) {
+
+  DAG *d;
+
+  ASSERT_NOTNULL(src);
+
+  d=(DAG*)malloc(sizeof(DAG));
+  ASSERT_NOTNULL(d);
+
+  /* Allocation for arcs specification */
+  d->size = src->size;
+
+  d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+  d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+
+  ASSERT_NOTNULL(d->in );
+  ASSERT_NOTNULL(d->out);
+
+  /* Copy the degree specifications */
+  d->indegree  = (size_t*)malloc( d->size*sizeof(size_t) );
+  d->outdegree = (size_t*)malloc( d->size*sizeof(size_t) );
+
+  ASSERT_NOTNULL(d->indegree);
+  ASSERT_NOTNULL(d->outdegree);
+
+  memcpy(d->indegree,src->indegree,d->size);
+  memcpy(d->outdegree,src->outdegree,d->size);
+
+  /*
+     If the original graph is not well formed (e.g. it has outgoing
+     edges but not the respective incoming edges) we copy the same
+     defects.
+  */
+  /* Allocation of neighbour informations; INDEGREE */
+  Vertex v;
+  for(v=0;v<d->size;v++) {
+
+    if (d->indegree[v]==0) { d->in[v]=NULL; continue; }
+
+    d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
+    ASSERT_NOTNULL(d->in [v]);
+    ASSERT_NOTNULL(src->in [v]);
+    memcpy(d->in[v],src->in[v],d->size);
+  }
+
+  /* Allocation of neighbour informations; OUTDEGREE */
+  for(v=0;v<d->size;v++) {
+
+    if (d->outdegree[v]==0) { d->out[v]=NULL; continue; }
+
+    d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
+    ASSERT_NOTNULL(d->out[v]);
+    ASSERT_NOTNULL(src->out[v]);
+    memcpy(d->out[v],src->out[v],d->size);
+  }
+
+  dag_precompute_data(d);
+
+  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  return d;
+}
+/* }}} */
+
+
+/* Destroys a DAG structure, freeing memory */
+/* {{{ */ void dispose_DAG(DAG* p) {
+
+
+  /* Ignore null graphs */
+  if (p==NULL) return;
+
+  Vertex v; /* index variable */
+
+  /* Remove incoming arcs arrays */
+  if (p->in!=NULL) {
+    for(v=0;v<p->size;v++)
+      if (p->in[v]!=NULL) free(p->in[v]);
+    free(p->in);
+  }
+  /* Remove outgoing arcs arrays */
+  if (p->out!=NULL) {
+    for(v=0;v< p->size ;v++)
+      if (p->out[v]!=NULL) free(p->out[v]);
+    free(p->out);
+  }
+
+  /* Dispose other arays */
+  if (p->indegree  !=NULL) free(p->indegree );
+  if (p->outdegree !=NULL) free(p->outdegree);
+  if (p->sources   !=NULL) free(p->sources);
+  if (p->sinks     !=NULL) free(p->sinks  );
+
+  /* Dispose the main data structure */
+  free(p);
+}
+/* }}} */
+
+/* TODO: Check that the data structure representing the graph is sound,
+   meaning that any outgoing edge is related with a corresponding
+   incoming edge, that the degrees have been computed appropriately.
+   All checks are rather exprensive but this is not an issue for the
+   application of pebbling. */
+Boolean isconsistent_DAG(const DAG *ptr) {
+
+  ASSERT_NOTNULL(ptr);
+  ASSERT_FALSE(ptr->size==0);
+
+  ASSERT_NOTNULL(ptr->indegree);
+  ASSERT_NOTNULL(ptr->outdegree);
+
+  ASSERT_NOTNULL(ptr->in);
+  ASSERT_NOTNULL(ptr->out);
+
+  ASSERT_NOTNULL(ptr->sinks);
+  ASSERT_NOTNULL(ptr->sources);
+
+  return TRUE;
+}
+
+
+/********************************************************************************
+                     I/O FUNCTIONS
+ ********************************************************************************/
+
+/* This is the default way a label is assigned to a vertex idx Given a
+   buffer and a size limit, it writes on the buffer the label for the
+   vertex v.  The default impletemtation is to map numbers in their
+   string representation.
+ */
+extern int snprintf(char* buf,size_t size, const char *format, ... );
+static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
+  snprintf(buf,l,"%lu",v);
+}
+
+
+/* Prints a string representation of the DAG */
+/* {{{ */ void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
+  Vertex v,w;
+  char label_buffer[20];
+
+  /* Ignore null graphs */
+  if (!p) return;
+
+  ASSERT_NOTNULL(p->indegree);
+  ASSERT_NOTNULL(p->in);
+  ASSERT_NOTNULL(p->outdegree);
+  ASSERT_NOTNULL(p->out);
+
+  /* If no fucntion for computing labels is specified, then we use the
+     default one, which turn a number in its string respresentation */
+  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
+
+  for (v = 0; v < p->size; ++v) {
+
+    vertex_label_hash(label_buffer,20,v);
+    printf("%s ",label_buffer);
+    /* Incoming edges */
+    printf("I:");
+    for(w=0;w < p->indegree[v]; w++) {
+      vertex_label_hash(label_buffer,20,p->in[v][w]);
+      printf(" %s",label_buffer);
+    }
+
+    /* Outgoing edges */
+    printf("O:");
+    for(w=0;w < p->outdegree[v]; w++) {
+      vertex_label_hash(label_buffer,20,p->out[v][w]);
+      printf(" %s",label_buffer);
+    }
+
+    printf("\n");
+  }
+}
+/* }}} */
+
+
+
+/* Prints a representation of the DAG, which can be used by DOT and
+ * graphviz.
+ */
+void print_dot_DAG(const DAG *p,
+                     char *name,
+                     char* options,
+                     char **vertex_options,
+                     void (*vertex_label_hash)(char*,size_t,Vertex) ) {
+  Vertex i,j;
+  char label_buffer[20];
+
+  /* Ignore null graphs */
+  if (!p) return;
+
+  ASSERT_NOTNULL(p->indegree);
+  ASSERT_NOTNULL(p->in);
+  ASSERT_NOTNULL(p->outdegree);
+  ASSERT_NOTNULL(p->out);
+
+  /* If no function for computing labels is specified, then we use the
+   * default one, which turn a number in its string
+   * representation. (setq c-block-comment-prefix "*")
+   */
+  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
+
+  printf("digraph %s {\n",name);
+  printf("\t rankdir=BT;\n");
+  if (options) printf("%s\n",options);
+
+
+
+  /* Print the vertex infos */
+  for (i = 0; i < p->size; ++i) {
+
+    /* Vertex identifier */
+    printf("\t %d [",i);
+
+    /* Start with vertex info */
+    vertex_label_hash(label_buffer,20,i);
+    printf("label=%s,penwidth=2,shape=circle,style=filled,fixedsize=true",label_buffer);
+
+    /* if there are no vertex dependent options, move to the next
+       vertex */
+    if (vertex_options && vertex_options[i])
+      printf(",%s",vertex_options[i]);
+    /*
+    if (p->info[i] & BLACK_PEBBLE) {
+      printf(",color=gray,fontcolor=white,fillcolor=black");
+    } else if (p->info[i] & WHITE_PEBBLE) {
+      printf(",color=gray,fontcolor=black,fillcolor=white");
+    } else {
+      printf(",color=gray,fontcolor=black,fillcolor=lightgray");
+      }*/
+    printf("]\n");
+  }
+
+
+  for (i = 0; i < p->size; ++i) {
+
+    /* Outgoing edges */
+    vertex_label_hash(label_buffer,20,i);
+    printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i);
+
+    for(j=0;j<p->outdegree[i];j++)
+      printf("\t %d -> %d;\n",i,p->out[i][j]);
+
+    printf("\n");
+  }
+
+  printf("}\n");
+
+}
+/* }}} */
+
+
+/********************************************************************************
+                     STRUCTURE BUILDING FUNCTIONS
+ ********************************************************************************/
+
 /* A classic case for pebbling is the piramid graph */
-/* {{{ */ DAG* create_piramid_graph(int h) {
+/* {{{ */ DAG* piramid(int h) {
 /*
 
            14
@@ -138,235 +401,8 @@ void dag_precompute_data(DAG *digraph) {
   }
 
   dag_precompute_data(d);
+  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
-}
-/* }}} */
-
-
-/* This builds a copy of a DAG.
-
-   N.B. The clone of an inconsistent graph maybe inconsistent, but the
-   inconsistency may be different. */
-
-/* {{{ */ DAG* clone_graph(DAG *src) {
-
-  DAG *d;
-
-  if (!src) return NULL;
-
-  d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
-
-  /* Allocation for arcs specification */
-  d->size = src->size;
-
-  d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
-  d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
-
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
-
-  /* Copy the degree specifications */
-  d->indegree  = (size_t*)malloc( d->size*sizeof(size_t) );
-  d->outdegree = (size_t*)malloc( d->size*sizeof(size_t) );
-
-  ASSERT_NOTNULL(d->indegree);
-  ASSERT_NOTNULL(d->outdegree);
-
-  memcpy(d->indegree,src->indegree,d->size);
-  memcpy(d->outdegree,src->outdegree,d->size);
-
-  /*
-     If the original graph is not well formed (e.g. it has outgoing
-     edges but not the respective incoming edges) we copy the same
-     defects.
-  */
-  /* Allocation of neighbour informations; INDEGREE */
-  Vertex v;
-  for(v=0;v<d->size;v++) {
-
-    if (d->indegree[v]==0) { d->in[v]=NULL; continue; }
-
-    d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(src->in [v]);
-    memcpy(d->in[v],src->in[v],d->size);
-  }
-
-  /* Allocation of neighbour informations; OUTDEGREE */
-  for(v=0;v<d->size;v++) {
-
-    if (d->outdegree[v]==0) { d->out[v]=NULL; continue; }
-
-    d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->out[v]);
-    ASSERT_NOTNULL(src->out[v]);
-    memcpy(d->out[v],src->out[v],d->size);
-  }
-
-  dag_precompute_data(d);
-  return d;
-}
-/* }}} */
-
-
-/* Destroys a DAG structure, freeing memory */
-/* {{{ */ void dispose_graph(DAG *p) {
-
-
-  /* Ignore null graphs */
-  if (p==NULL) return;
-
-  Vertex v; /* index variable */
-
-  /* Remove incoming arcs arrays */
-  if (p->in!=NULL) {
-    for(v=0;v<p->size;v++)
-      if (p->in[v]!=NULL) free(p->in[v]);
-    free(p->in);
-  }
-  /* Remove outgoing arcs arrays */
-  if (p->out!=NULL) {
-    for(v=0;v< p->size ;v++)
-      if (p->out[v]!=NULL) free(p->out[v]);
-    free(p->out);
-  }
-
-  /* Dispose other arays */
-  if (p->indegree  !=NULL) free(p->indegree );
-  if (p->outdegree !=NULL) free(p->outdegree);
-  if (p->sources   !=NULL) free(p->sources);
-  if (p->sinks     !=NULL) free(p->sinks  );
-
-  /* Dispose the main data structure */
-  free(p);
-}
-/* }}} */
-
-/* This is the default way a label is assigned to a vertex idx Given a
-   buffer and a size limit, it writes on the buffer the label for the
-   vertex v.  The default impletemtation is to map numbers in their
-   string representation.
- */
-extern int snprintf(char* buf,size_t size, const char *format, ... );
-static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
-  snprintf(buf,l,"%lu",v);
-}
-
-
-/* Prints a string representation of the DAG */
-/* {{{ */ void print_graph(DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
-  Vertex v,w;
-  char label_buffer[20];
-
-  /* Ignore null graphs */
-  if (!p) return;
-
-  ASSERT_NOTNULL(p->indegree);
-  ASSERT_NOTNULL(p->in);
-  ASSERT_NOTNULL(p->outdegree);
-  ASSERT_NOTNULL(p->out);
-
-  /* If no fucntion for computing labels is specified, then we use the
-     default one, which turn a number in its string respresentation */
-  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
-
-  for (v = 0; v < p->size; ++v) {
-
-    vertex_label_hash(label_buffer,20,v);
-    printf("%s ",label_buffer);
-    /* Incoming edges */
-    printf("I:");
-    for(w=0;w < p->indegree[v]; w++) {
-      vertex_label_hash(label_buffer,20,p->in[v][w]);
-      printf(" %s",label_buffer);
-    }
-
-    /* Outgoing edges */
-    printf("O:");
-    for(w=0;w < p->outdegree[v]; w++) {
-      vertex_label_hash(label_buffer,20,p->out[v][w]);
-      printf(" %s",label_buffer);
-    }
-
-    printf("\n");
-  }
-}
-/* }}} */
-
-
-
-/* Prints a representation of the DAG, which can be used by DOT and
- * graphviz.
- */
-void print_dot_graph(DAG *p,
-                     char *name,
-                     char* options,
-                     char **vertex_options,
-                     void (*vertex_label_hash)(char*,size_t,Vertex) ) {
-  Vertex i,j;
-  char label_buffer[20];
-
-  /* Ignore null graphs */
-  if (!p) return;
-
-  ASSERT_NOTNULL(p->indegree);
-  ASSERT_NOTNULL(p->in);
-  ASSERT_NOTNULL(p->outdegree);
-  ASSERT_NOTNULL(p->out);
-
-  /* If no function for computing labels is specified, then we use the
-   * default one, which turn a number in its string
-   * representation. (setq c-block-comment-prefix "*")
-   */
-  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
-
-  printf("digraph %s {\n",name);
-  printf("\t rankdir=BT;\n");
-  if (options) printf("%s\n",options);
-
-
-
-  /* Print the vertex infos */
-  for (i = 0; i < p->size; ++i) {
-
-    /* Vertex identifier */
-    printf("\t %d [",i);
-
-    /* Start with vertex info */
-    vertex_label_hash(label_buffer,20,i);
-    printf("label=%s,penwidth=2,shape=circle,style=filled,fixedsize=true",label_buffer);
-
-    /* if there are no vertex dependent options, move to the next
-       vertex */
-    if (vertex_options && vertex_options[i])
-      printf(",%s",vertex_options[i]);
-    /*
-    if (p->info[i] & BLACK_PEBBLE) {
-      printf(",color=gray,fontcolor=white,fillcolor=black");
-    } else if (p->info[i] & WHITE_PEBBLE) {
-      printf(",color=gray,fontcolor=black,fillcolor=white");
-    } else {
-      printf(",color=gray,fontcolor=black,fillcolor=lightgray");
-      }*/
-    printf("]\n");
-  }
-
-
-  for (i = 0; i < p->size; ++i) {
-
-    /* Outgoing edges */
-    vertex_label_hash(label_buffer,20,i);
-    printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i);
-
-    for(j=0;j<p->outdegree[i];j++)
-      printf("\t %d -> %d;\n",i,p->out[i][j]);
-
-    printf("\n");
-  }
-
-  printf("}\n");
-
 }
 /* }}} */
 
@@ -381,7 +417,7 @@ void print_dot_graph(DAG *p,
    outer graph.
 
 */
-/* {{{ */ DAG *product_graph(DAG *inner,DAG *outer) {
+/* {{{ */ DAG *orproduct(const DAG *inner,const DAG *outer) {
   DAG *p=NULL;
 
   Vertex i,j;
@@ -482,6 +518,7 @@ void print_dot_graph(DAG *p,
 
 
   dag_precompute_data(p);
+  ASSERT_TRUE(isconsistent_DAG(p)); /* Construction should be sound */
   return p;
 }
 /* }}} */
