@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 04:07 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-18, sabato 18:25 (CET) Massimo Lauria"
 
    Description::
 
@@ -24,6 +24,9 @@ Boolean isconsistentDict(Dict *d) {
   ASSERT_NOTNULL(d);
   ASSERT_TRUE(d->size <= d->allocation);
   ASSERT_NOTNULL(d->buckets);
+
+  ASSERT_NOTNULL(d->key_function);
+  ASSERT_NOTNULL(d->eq_function);
 
   for(size_t i=0;i<d->size;i++) {
     if (!isconsistentSL(d->buckets[i])) return FALSE;
@@ -55,6 +58,9 @@ Dict *newDict(size_t allocation) {
   d->allocation = allocation;
   d->size = allocation - (allocation >> 4) + r;
 
+  d->key_function = NULL;
+  d->eq_function  = NULL;
+
   d-> buckets = (LinkedList**)calloc(d->size,sizeof(LinkedList*));
   for(size_t i=0;i<d->size;i++) {
     d->buckets[i]=newSL();
@@ -65,7 +71,7 @@ Dict *newDict(size_t allocation) {
 }
 
 /*
-   The qury consist of a pointer to an object. The unique key of such
+   The query consist of a pointer to an object. The unique key of such
    object is computed.  The corresponding bucket is explored, to find
    out if the object exists there. A DictQueryResult object with value
    field set to NULL means the object is not in the dictionary. The

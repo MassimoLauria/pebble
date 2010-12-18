@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:24 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 04:08 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-18, sabato 18:10 (CET) Massimo Lauria"
 
    Description::
 
@@ -37,8 +37,8 @@ typedef struct {
 
   LinkedList **buckets;
 
-  size_t  (*key_function)(void *data);
-  size_t  ( *eq_function)(void *A,void *B);
+  size_t   (*key_function)(void *data);
+  Boolean  ( *eq_function)(void *A,void *B);
 
 } Dict;
 

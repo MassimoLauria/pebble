@@ -22,6 +22,35 @@
 #define HASH_WASTE_RANGE  0x0FFFF
 #define ROTATE_RIGHT_AMOUNT (sizeof(BitTuple)*CHAR_BIT/2)
 
+/* To use the dictionary with PebbleConfiguration we must tell the
+   dictionary how to compare two configurations and how to hash
+   them.
+*/
+size_t   hashPebbleConfiguration(void *data) {
+
+  if (data==NULL) return 0;
+
+  PebbleConfiguration *ptr=(PebbleConfiguration *)data;
+  size_t hash = ptr->white_pebbled ^ ptr->black_pebbled;
+  return hash;
+}
+
+Boolean  samePebbleConfiguration(void *A,void *B) {
+  if (A==NULL && B==NULL) { return TRUE; } /* Both null */
+  if (A==NULL || B==NULL) { return FALSE;} /* Just one null */
+
+  PebbleConfiguration *pA,*pB;
+  pA=(PebbleConfiguration*)A;
+  pB=(PebbleConfiguration*)B;
+
+  /* Compare the important data */
+  if (pA->black_pebbled != pB->black_pebbled) return FALSE;
+  if (pB->white_pebbled != pB->white_pebbled) return FALSE;
+  if (pA->pebble_cost   != pB->pebble_cost  ) return FALSE;
+
+  return TRUE;
+}
+
 
 /*
  *  The graph of configuration is  a directed graph in which each node
@@ -72,6 +101,10 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
 /* {{{ */ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
   /* Dictionary data structure */
+  Dict *D = newDict(0xFFFFFF);
+  D->key_function = hashPebbleConfiguration;
+  D->eq_function  = samePebbleConfiguration;
+  ASSERT_TRUE(isconsistentDict(D));
 
   /* Initial and Temporaty Status */
 
@@ -124,7 +157,6 @@ int main(int argc, char *argv[])
   DAG *A,*B,*C;
   A=piramid(3);
   B=piramid(4);
-
 
   C=orproduct(A,B);
   print_dot_DAG(A,"A",NULL,NULL,NULL);
