@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:47 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-19, domenica 14:48 (CET) Massimo Lauria"
 
    Description::
 
@@ -56,7 +56,7 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   /* The configuration must not have both a white and a black pebble
      on the same vertex */
-  if (ptr->white_pebbled | ptr->black_pebbled) return FALSE;
+  if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
 
 
   /* Count the number of pebbles in the bitvector and check
@@ -130,21 +130,23 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
 
 
-/* Print a graph with a pebble configuration, with dot. */
+/* Print a graph with a pebble configuration, with dot.  If the `ped'
+   is NULL it does assume that the pebbling to be printed is empty.
+   */
 void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
                         char *name,char* options) {
   ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,peb));
+  ASSERT_TRUE(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
 
   char *vertexopts[g->size];
 
   for(Vertex v=0;v<g->size;v++) {
-    if (iswhite(v,g,peb)) {
-      vertexopts[v]=",color=gray,fontcolor=black,fillcolor=white";
-    } else if (isblack(v,g,peb)) {
-      vertexopts[v]=",color=gray,fontcolor=white,fillcolor=black";
+    if (peb && iswhite(v,g,peb)) {
+      vertexopts[v]="color=gray,fontcolor=black,fillcolor=white";
+    } else if (peb && isblack(v,g,peb)) {
+      vertexopts[v]="color=gray,fontcolor=white,fillcolor=black";
     } else {
-      vertexopts[v]=",color=gray,fontcolor=black,fillcolor=lightgray";
+      vertexopts[v]="color=gray,fontcolor=black,fillcolor=lightgray";
     }
   }
   print_dot_DAG(g,name,options,vertexopts,NULL);

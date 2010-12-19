@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:05 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-19, domenica 15:40 (CET) Massimo Lauria"
 
    Description::
 
@@ -14,52 +14,55 @@
 #define COMMON_H
 /* Preamble */
 #include <stdlib.h>
+#include <stdio.h>
 
-/* Code */
 
-/* Type declarations */
-
+/* Bit and Boolean types declarations */
 /* Several bit tuples  are used in the code.
  */
 typedef long long unsigned int BitTuple;
 typedef unsigned char          Boolean;
-
 
 #define TRUE  1
 #define FALSE 0
 
 
 
-/* Assertion for DEBUG purposes */
-
 
 #ifdef DEBUG
 
-#include <stdio.h>
+/* Assertion for DEBUG purposes:  If DEBUG constant is not defined,
+   then such assertions result in an empty statement. Otherwise they
+   will test the correspondent condition and stop the program with an
+   appropriate error message.
 
+ */
+
+/* Error and warning messages, useful for debugging */
 #define ERRMSG(str) \
   { fprintf(stderr,"ERROR at [%s,%d]: %s",__FILE__,__LINE__,str); }
 
 #define WARNMSG(str) \
   { fprintf(stderr,"WARNING at [%s,%d]: %s",__FILE__,__LINE__,str); }
 
+
 #define ASSERT_NOTNULL(p) {                     \
     if (!(p)) {                                 \
-      ERRMSG("NOT NULL assertion failure.");    \
+      ERRMSG("NOT NULL assertion failed.");     \
       exit(-1);                                 \
   }                                             \
   }
 
 #define ASSERT_NULL(p) {                        \
     if (p) {                                    \
-      ERRMSG("NULL assertion failure.");        \
+      ERRMSG("NULL assertion failed.");         \
       exit(-1);                                 \
   }                                             \
   }
 
 #define ASSERT_TRUE(p) {                        \
     if (!(p)) {                                 \
-      ERRMSG("TRUE assertion failure.");        \
+      ERRMSG("TRUE assertion failed.");         \
       exit(-1);                                 \
   }                                             \
   }
@@ -67,7 +70,7 @@ typedef unsigned char          Boolean;
 
 #define ASSERT_FALSE(p) {                       \
     if (p) {                                    \
-      ERRMSG("NULL assertion failure.");        \
+      ERRMSG("NULL assertion failed.");         \
       exit(-1);                                 \
   }                                             \
   }

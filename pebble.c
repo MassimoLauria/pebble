@@ -166,9 +166,9 @@ int main(int argc, char *argv[])
 
 
 
-  print_dot_DAG(A,"A",NULL,NULL,NULL);
-  print_dot_DAG(B,"B",NULL,NULL,NULL);
-  print_dot_Pebbling(C,&pc,"C",NULL);
+  print_dot_Pebbling(A,NULL,"A",NULL);
+  print_dot_Pebbling(B,&pc ,"B",NULL);
+  print_dot_Pebbling(C,NULL,"C",NULL);
 
   dispose_DAG(A);
   dispose_DAG(B);
