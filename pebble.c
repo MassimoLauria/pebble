@@ -78,6 +78,13 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
   return TRUE;
 }
 
+void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
+  while(ptr) {
+    print_dot_Pebbling(g,ptr,"X",NULL);
+    ptr=ptr->previous_configuration;
+  }
+}
+
 
 /* Explore the space of pebbling strategies.
    The output is given as a sequence of vertices, because
@@ -106,13 +113,18 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
   D->eq_function  = samePebbleConfiguration;
   ASSERT_TRUE(isconsistentDict(D));
 
-  /* Initial and Temporaty Status */
-
   /* PROLOGUE ----------------------------------- */
   if (g->size > MAX_VERTICES) {
     fprintf(stderr,
             "Error in search procedure: the graph is too "
             "big for the optimized data structures.");
+    exit(-1);
+  }
+
+  if (g->sink_number!=1) {
+    fprintf(stderr,
+            "Error in search procedure: the graph has more than "
+            "one sink vertex.");
     exit(-1);
   }
 
@@ -130,10 +142,67 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
      configurations.
   */
 
+  /* Initial status of the search procedure */
+  Queue *Q=newSL();
+  LinkedList *Trash=newSL();
+  DictQueryResult res;
+  PebbleConfiguration *nptr,*ptr=new_PebbleConfiguration();
+  enqueue(Q,ptr);
 
   /* Pick a pebbling status from the queue, produce the followers, and
-     put in the queue the ones that haven't been analized yet */
+     put in the queue the ones that haven't been analized yet or the one with a better cost.*/
+  while(!isemptySL(Q)) {
+    isconsistentDict(D);
+    ptr=(PebbleConfiguration*)getSL(Q);
+    ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
 
+    /* Check if final configuration has been reached. */
+    if (isblack(g->sinks[0],g,ptr)) {
+      printf("Search finished! A upper bound on the pebbling cost is %d.",ptr->pebble_cost);
+      output_pebbling_strategy(g,ptr);
+      return;
+    }
+
+    /* Otherwise compute the next configuration */
+
+    /* Pebble removal */
+
+
+    /* Pebble addition */
+    if (ptr->pebbles >= upper_bound) continue; /* No more pebbles... */
+
+    for(Vertex v=0;v<g->size;v++) {
+      if (!isactive(v,g,ptr))  continue; /* This vertex cannot be pebbled... */
+
+      /* ... but this can. */
+      nptr=copy_PebbleConfiguration(ptr);
+      nptr->black_pebbled |= (0x1 << v);
+      nptr->pebbles     += 1;
+      if (nptr->pebbles > nptr->pebble_cost)
+        nptr->pebble_cost = nptr->pebbles;
+
+      res=queryDict(D,nptr);
+
+      if (res.value==NULL ||
+          ((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
+        /* New or improved configuration */
+        writeDict(D,nptr);
+        enqueue(Q,nptr);
+        nptr->previous_configuration = ptr;
+        nptr->last_changed_vertex = v;
+
+      } else {
+        /* No new configuration */
+        dispose_PebbleConfiguration(nptr);
+
+      }
+    }
+
+    /* Save the analyzed configuration for later retrieval */
+    appendSL(Trash,ptr);
+
+    delete_and_nextSL(Q);
+  }
 
 
 
@@ -151,27 +220,9 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
 
 int main(int argc, char *argv[])
 {
-  DAG *A,*B,*C;
-  PebbleConfiguration pc;
-  pc.white_pebbled=0x2;
-  pc.black_pebbled=0x5;
-  pc.pebbles=3;
 
-  A=piramid(3);
-  B=piramid(4);
-
-  C=orproduct(A,B);
-
-
-
-  print_dot_Pebbling(A,NULL,"A",NULL);
-  print_dot_Pebbling(B,&pc ,"B",NULL);
-  print_dot_Pebbling(C,NULL,"C",NULL);
-
-  dispose_DAG(A);
-  dispose_DAG(B);
-  dispose_DAG(C);
-
+  DAG *A=piramid(2);
+  pebbling_strategy(A,3);
   exit(0);
 }
 

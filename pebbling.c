@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-19, domenica 14:48 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 18:14 (CET) Massimo Lauria"
 
    Description::
 
@@ -18,6 +18,25 @@
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
+
+PebbleConfiguration *new_PebbleConfiguration(void) {
+
+  PebbleConfiguration *ptr=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));
+
+  ASSERT_NOTNULL(ptr);
+
+  ptr->white_pebbled=0;
+  ptr->black_pebbled=0;
+
+  ptr->pebble_cost=0;
+  ptr->pebbles=0;
+
+  ptr->previous_configuration=NULL;
+  ptr->last_changed_vertex=0;
+
+  return ptr;
+}
+
 
 PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
@@ -121,6 +140,8 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
+
+  if (isblack(v,g,c)) return FALSE;
 
   for(size_t i=0;i<g->indegree[v];i++) {
     if (!ispebbled(g->in[v][i],g,c)) return FALSE;

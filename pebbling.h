@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:50 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 16:32 (CET) Massimo Lauria"
 
    Description::
 
@@ -50,6 +50,7 @@ typedef struct _PebbleConfiguration {
 
 } PebbleConfiguration;
 
+extern PebbleConfiguration*  new_PebbleConfiguration();
 extern PebbleConfiguration* copy_PebbleConfiguration(const PebbleConfiguration *src);
 extern void              dispose_PebbleConfiguration(PebbleConfiguration *ptr);
 extern Boolean      isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfiguration *ptr);

@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-19, domenica 15:40 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 17:50 (CET) Massimo Lauria"
 
    Description::
 
@@ -46,31 +46,31 @@ typedef unsigned char          Boolean;
   { fprintf(stderr,"WARNING at [%s,%d]: %s",__FILE__,__LINE__,str); }
 
 
-#define ASSERT_NOTNULL(p) {                     \
-    if (!(p)) {                                 \
-      ERRMSG("NOT NULL assertion failed.");     \
-      exit(-1);                                 \
-  }                                             \
+#define ASSERT_NOTNULL(p) {                       \
+    if (!(p)) {                                   \
+      ERRMSG("NOT NULL assertion failed.\n");     \
+      exit(-1);                                   \
+    }                                             \
   }
 
 #define ASSERT_NULL(p) {                        \
     if (p) {                                    \
-      ERRMSG("NULL assertion failed.");         \
+      ERRMSG("NULL assertion failed.\n");       \
       exit(-1);                                 \
   }                                             \
   }
 
 #define ASSERT_TRUE(p) {                        \
     if (!(p)) {                                 \
-      ERRMSG("TRUE assertion failed.");         \
+      ERRMSG("TRUE assertion failed.\n");       \
       exit(-1);                                 \
-  }                                             \
+    }                                           \
   }
 
 
 #define ASSERT_FALSE(p) {                       \
     if (p) {                                    \
-      ERRMSG("NULL assertion failed.");         \
+      ERRMSG("NULL assertion failed.\n");       \
       exit(-1);                                 \
   }                                             \
   }

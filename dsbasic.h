@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 13:07 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 16:38 (CET) Massimo Lauria"
 
    Description::
 
@@ -49,6 +49,7 @@ void disposeSL(LinkedList *l);
 
 void insertSL(LinkedList *l,void *data,Boolean before);
 void appendSL(LinkedList *l,void *data);
+void delete_and_nextSL(LinkedList *l);
 
 void resetSL(LinkedList *l);
 void nextSL(LinkedList *l);
@@ -83,6 +84,9 @@ void disposeDL(DLinkedList *l);
 
 void insertDL(DLinkedList *l,void *data,Boolean before);
 void extendDL(DLinkedList *l,void *data,Boolean to_tail);
+void delete_and_rightDL(DLinkedList *l);
+void delete_and_leftDL (DLinkedList *l);
+
 
 #define appendheadDL(dl,d) (extendDL((dl),(d),0))
 #define appendDL(dl,d)     (extendDL((dl),(d),1))

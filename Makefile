@@ -1,10 +1,13 @@
 # Copyright (C) 2010 by >>>NAME<<< <>>>EMAIL<<<>
 #
 # Created   : ">>>TIME<<< >>>NAME<<<"
-# Time-stamp: "2010-12-19, domenica 17:02 (CET) Massimo Lauria"
+# Time-stamp: "2010-12-20, lunedì 17:36 (CET) Massimo Lauria"
 
 # ---------- Environment variables ------------
 #
+DEBUG=-DDEBUG -g
+#DEBUG=
+
 CC=gcc
 #CC=cc
 
@@ -12,20 +15,19 @@ C_STANDARD=-std=c99
 #C_STANDARD=-ansi
 #C_STANDARD=-std=c89
 
+
 TAGS=gtags
 #TAGS=etags
 #TAGS=ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=-fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=${DEBUG} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=
 
-DEBUG=-DDEBUG -g
-#DEBUG=
 
 # --------- Project dependent rules ---------------
 TARGET=pebble exposetypes
-all: tags ${TARGET}
+all: ${TARGET}
 
 
 exposetypes: exposetypes.c

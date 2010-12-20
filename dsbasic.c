@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 13:03 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 17:52 (CET) Massimo Lauria"
 
    Description::
 
@@ -40,8 +40,8 @@ Boolean isconsistentSL(LinkedList *list) {
   /* From now on the list is not empty
      i.e. head and tail are not NULL
    */
-  ASSERT_NULL(list->head);
-  ASSERT_NULL(list->tail);
+  ASSERT_NOTNULL(list->head);
+  ASSERT_NOTNULL(list->tail);
   /* Is tail the last element? */
   if (list->tail->next!=NULL) return FALSE;
 
@@ -189,10 +189,14 @@ void appendSL(LinkedList *l,void *data) {
   lelem->next=NULL;
 
   if (l->tail) l->tail->next=lelem; /* Append it! */
-  if (isemptySL(l)) l->head=lelem;    /* Possible new head */
+  if (l->head==NULL) {
+    l->head=lelem;    /* Empty list */
+    l->before_cursor=NULL;
+    l->cursor=lelem;
+  }
   l->tail=lelem;                    /* New tail */
 
-  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(isconsistentSL(l));
 
 }
 
@@ -244,8 +248,8 @@ Boolean isconsistentDL(DLinkedList *list) {
   /* From now on the list is not empty
      i.e. head and tail are not NULL
    */
-  ASSERT_NULL(list->head);
-  ASSERT_NULL(list->tail);
+  ASSERT_NOTNULL(list->head);
+  ASSERT_NOTNULL(list->tail);
   /* Are tail and head at the extremes? */
   if (list->tail->next!=NULL) return FALSE;
   if (list->head->prev!=NULL) return FALSE;
