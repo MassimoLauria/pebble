@@ -129,9 +129,7 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
      N.B. As a futue option: we could use a ZDD for keeping track of visited
      configurations.
   */
-  //dictionary_init(&dict);
-  //dictionary_update(&dict,&initial_status);
-  //assert_status_sanity(g,&initial_status,&dict);
+
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet */

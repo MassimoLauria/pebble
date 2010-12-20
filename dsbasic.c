@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:11 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 12:41 (CET) Massimo Lauria"
 
    Description::
 
@@ -22,20 +22,47 @@
                      LINKED LISTS
  ********************************************************************************/
 
+/* This function check if the list is well formed, if the cursors are
+   correct, and so on. WARNING! It may still fail (and loop
+   indefinitely) if the list has some loops. */
 Boolean isconsistentSL(LinkedList *list) {
 
   ASSERT_NOTNULL(list);
 
+  /* Empty list */
   if (list->head==NULL || list->tail==NULL) {
     if (list->head ||
         list->tail ||
         list->cursor || list->before_cursor) return FALSE;
+    else return TRUE; /* All null pointer */
   }
 
-  /* Is tail the last element */
-  if (list->tail && list->tail->next!=NULL) return FALSE;
+  /* From now on the list is not empty
+     i.e. head and tail are not NULL
+   */
+  ASSERT_NULL(list->head);
+  ASSERT_NULL(list->tail);
+  /* Is tail the last element? */
+  if (list->tail->next!=NULL) return FALSE;
 
-  /* TODO: test for circularity */
+  /* Testing soundess of before_cursor */
+  if(list->before_cursor==NULL) {
+    if (list->cursor!=list->head)  /* NULL before_cursor */
+      return FALSE;
+  } else {
+
+    if(list->before_cursor->next!=list->cursor) return FALSE;
+    /* before_cursor must be on and internal node: let's check if it
+       is inside the list */
+    struct LinkedListHandle *lelem;
+    lelem=list->head;
+    while(lelem) {
+      if(list->before_cursor==lelem) break;
+      lelem=lelem->next;
+    }
+    if (lelem==NULL) return FALSE;
+
+  }
 
   return TRUE;
 }
@@ -110,6 +137,43 @@ void insertSL(LinkedList *l,void *data,Boolean before) {
 
 }
 
+/*
+   If the cursor is after the tail, it is considered to be invalid.
+   Thus an empty list is not considered to have a cursor.
+
+   Remove the element at cursor.
+
+   The cursor will be moved to the next position in the list, assuming
+   such position is valid, otherwise the cursor will be invalidated.
+ */
+void removeSL(LinkedList *l) {
+
+  ASSERT_NOTNULL(l);
+  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(iscursorvalidSL(l));
+  ASSERT_FALSE(isemptySL(l));
+
+  /* Allocation */
+  struct LinkedListHandle *lelem;
+  lelem=l->cursor;
+
+  /* Deletion */
+  l->cursor=lelem->next;
+  if (l->before_cursor) l->before_cursor->next=l->cursor;
+
+  /* Update head and tails */
+  if (lelem==l->head) {
+    l->head=lelem->next;
+  }
+  if (l->tail==lelem) {
+    l->tail=l->before_cursor;
+  }
+
+  ASSERT_NOTNULL(isconsistentSL(l));
+
+}
+
+
 /* Notice that we do not make any check on data pointer. It can be as
    well NULL.  Appended elements will always be after any valid
    cursor. */
@@ -174,23 +238,42 @@ Boolean isconsistentDL(DLinkedList *list) {
 
   /* If anyone is NULL, both must be */
   if (list->head==NULL || list->tail==NULL) {
-    if (list->head || list->tail) return FALSE;
+    if (list->head || list->tail || list->cursor) return FALSE;
+    else return TRUE;
   }
 
+  /* From now on the list is not empty
+     i.e. head and tail are not NULL
+   */
+  ASSERT_NULL(list->head);
+  ASSERT_NULL(list->tail);
   /* Are tail and head at the extremes? */
-  if (list->tail && list->tail->next!=NULL) return FALSE;
-  if (list->head && list->head->prev!=NULL) return FALSE;
+  if (list->tail->next!=NULL) return FALSE;
+  if (list->head->prev!=NULL) return FALSE;
 
   /* Check that prev and next matches */
-  if (list->head==NULL) return TRUE;
-
   struct DLinkedListHandle *ptr=list->head;
   while(ptr->next) {
     if (ptr->next->prev != ptr) return FALSE;
   }
 
+  /* Testing soundess of the cursor */
+  if (list->cursor==NULL) return TRUE;
+  /* Cursor must be on and internal node: let's check if it
+     is inside the list */
+  struct DLinkedListHandle *lelem;
+  lelem=list->head;
+  while(lelem) {
+    if(list->cursor==lelem) break;
+    lelem=lelem->next;
+  }
+  /* Since head is not null, then lelem must have reached the end of
+     the list without findind the cursor element */
+  if (lelem==NULL) return FALSE;
+
   return TRUE;
 }
+
 
 Boolean isemptyDL(DLinkedList *list) {
   ASSERT_NOTNULL(isconsistentDL(list));
