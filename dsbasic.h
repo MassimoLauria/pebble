@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 01:15 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 13:07 (CET) Massimo Lauria"
 
    Description::
 
@@ -36,6 +36,7 @@ typedef struct  {
 
   struct LinkedListHandle *cursor;
   struct LinkedListHandle *before_cursor;  /* In simple lists we need this */
+
 } LinkedList;
 
 
@@ -100,11 +101,12 @@ typedef LinkedList  Queue;
 typedef DLinkedList Deque;
 typedef LinkedList  Stack;
 
-/* Queue is realized with LinkedList */
+/* Queue is realized with LinkedList in which the cursos always stays
+   at the beginning. */
 #define enqueue(q,d) (appendSL((q),(d)))
+#define pop(q)       (delete_and_nextSL(q))
 
-
-/* Deque is realized with LinkedList */
+/* Deque is realized with Double LinkedList */
 #define  leftenqueue(dq,d) (extendDL((dq),(d),0))
 #define rightenqueue(dq,d) (extendDL((dq),(d),1))
 

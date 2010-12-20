@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 12:41 (CET) Massimo Lauria"
+   Time-stamp: "2010-12-20, lunedì 13:03 (CET) Massimo Lauria"
 
    Description::
 
@@ -146,10 +146,10 @@ void insertSL(LinkedList *l,void *data,Boolean before) {
    The cursor will be moved to the next position in the list, assuming
    such position is valid, otherwise the cursor will be invalidated.
  */
-void removeSL(LinkedList *l) {
+void delete_and_nextSL(LinkedList *l) {
 
   ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(isconsistentSL(l));
   ASSERT_TRUE(iscursorvalidSL(l));
   ASSERT_FALSE(isemptySL(l));
 
@@ -168,9 +168,8 @@ void removeSL(LinkedList *l) {
   if (l->tail==lelem) {
     l->tail=l->before_cursor;
   }
-
-  ASSERT_NOTNULL(isconsistentSL(l));
-
+  free(lelem);
+  ASSERT_TRUE(isconsistentSL(l));
 }
 
 
@@ -180,7 +179,7 @@ void removeSL(LinkedList *l) {
 void appendSL(LinkedList *l,void *data) {
 
   ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(isconsistentSL(l));
 
   /* Allocation */
   struct LinkedListHandle *lelem;
@@ -341,6 +340,82 @@ void insertDL(DLinkedList *l,void *data,Boolean before) {
   ASSERT_NOTNULL(isconsistentDL(l));
 
 }
+
+/*
+   If the cursor is after the tail, it is considered to be invalid.
+   Thus an empty list is not considered to have a cursor.
+
+   Remove the element at cursor.
+
+   The cursor will be moved to the next position in the list, assuming
+   such position is valid, otherwise the cursor will be invalidated.
+ */
+void delete_and_nextDL(DLinkedList *l) {
+
+  ASSERT_NOTNULL(l);
+  ASSERT_TRUE(isconsistentDL(l));
+  ASSERT_TRUE(iscursorvalidDL(l));
+  ASSERT_FALSE(isemptyDL(l));
+
+  /* Identification */
+  struct DLinkedListHandle *lelem;
+  lelem=l->cursor;
+
+  /* Deletion */
+  l->cursor=lelem->next;
+  if (lelem->prev) lelem->prev->next=lelem->next;
+  if (lelem->next) lelem->next->prev=lelem->prev;
+
+  /* Update head and tails */
+  if (lelem==l->head) {
+    l->head=lelem->next;
+  }
+  if (l->tail==lelem) {
+    l->tail=lelem->prev;
+  }
+  free(lelem);
+  ASSERT_TRUE(isconsistentDL(l));
+}
+
+
+/*
+   If the cursor is after the tail, it is considered to be invalid.
+   Thus an empty list is not considered to have a cursor.
+
+   Remove the element at cursor.
+
+   The cursor will be moved to the previous position in the list,
+   assuming such position is valid, otherwise the cursor will be
+   invalidated.
+ */
+void delete_and_prevDL(DLinkedList *l) {
+
+  ASSERT_NOTNULL(l);
+  ASSERT_TRUE(isconsistentDL(l));
+  ASSERT_TRUE(iscursorvalidDL(l));
+  ASSERT_FALSE(isemptyDL(l));
+
+  /* Identification */
+  struct DLinkedListHandle *lelem;
+  lelem=l->cursor;
+
+  /* Deletion */
+  l->cursor=lelem->prev;
+  if (lelem->prev) lelem->prev->next=lelem->next;
+  if (lelem->next) lelem->next->prev=lelem->prev;
+
+  /* Update head and tails */
+  if (lelem==l->head) {
+    l->head=lelem->next;
+  }
+  if (l->tail==lelem) {
+    l->tail=lelem->prev;
+  }
+  free(lelem);
+  ASSERT_TRUE(isconsistentDL(l));
+}
+
+
 
 /* Notice that we do not make any check on data pointer. It can be as
    well NULL.  We use on implementation and we use macros to define
