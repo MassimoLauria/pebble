@@ -147,28 +147,61 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
   LinkedList *Trash=newSL();
   DictQueryResult res;
   PebbleConfiguration *nptr,*ptr=new_PebbleConfiguration();
+  PebbleConfiguration *final=NULL;
   enqueue(Q,ptr);
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the one with a better cost.*/
-  while(!isemptySL(Q)) {
+  int i=0; char buffer[20];
+  for(resetSL(Q);!isemptySL(Q);delete_and_nextSL(Q)) {
     isconsistentDict(D);
     ptr=(PebbleConfiguration*)getSL(Q);
     ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
 
-    /* Check if final configuration has been reached. */
-    if (isblack(g->sinks[0],g,ptr)) {
-      printf("Search finished! A upper bound on the pebbling cost is %d.",ptr->pebble_cost);
-      output_pebbling_strategy(g,ptr);
+    /* Print pebbling configuration */
+    sprintf(buffer,"A%d",i++);
+    print_dot_Pebbling(g, ptr,buffer,NULL);
+
+
+    /* Check if final configuration has been reached, and update it. */
+    if ((isblack(g->sinks[0],g,ptr))
+        && (final->pebble_cost > ptr->pebble_cost)) {
+      /*fprintf(stderr,"Search finished! A upper bound on the pebbling cost is %d.\n",ptr->pebble_cost);*/
+      /*output_pebbling_strategy(g,ptr);*/
+      final=ptr;
       return;
     }
 
     /* Otherwise compute the next configuration */
 
-    /* Pebble removal */
+    /* Black Pebble removal */
+    for(Vertex v=0;v<g->size;v++) {
+      if (!isblack(v,g,ptr))  continue; /* This vertex is not pebbled... */
+
+      /* ... but this is. */
+      nptr=copy_PebbleConfiguration(ptr);
+      nptr->black_pebbled ^= (0x1 << v);
+      nptr->pebbles     -= 1;
+
+      res=queryDict(D,nptr);
+
+      if (res.value==NULL ||
+          ((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
+        /* New or improved configuration */
+        writeDict(D,nptr);
+        enqueue(Q,nptr);
+        nptr->previous_configuration = ptr;
+        nptr->last_changed_vertex = v;
+
+      } else {
+        /* No new configuration */
+        dispose_PebbleConfiguration(nptr);
+
+      }
+    }
 
 
-    /* Pebble addition */
+    /* Black Pebble addition */
     if (ptr->pebbles >= upper_bound) continue; /* No more pebbles... */
 
     for(Vertex v=0;v<g->size;v++) {
@@ -201,13 +234,13 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
     /* Save the analyzed configuration for later retrieval */
     appendSL(Trash,ptr);
 
-    delete_and_nextSL(Q);
   }
 
 
 
   /* EPILOGUE --------------------------------- */
   /* free memory, free Mandela! */
+  output_pebbling_strategy(g,final);
 }
 /* }}} */
 
