@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 17:52 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-07, venerdì 18:57 (CET) Massimo Lauria"
 
    Description::
 
@@ -193,8 +193,11 @@ void appendSL(LinkedList *l,void *data) {
     l->head=lelem;    /* Empty list */
     l->before_cursor=NULL;
     l->cursor=lelem;
+  } else if (l->cursor==NULL) {  /* Non empty list and cursor after the end */
+    l->cursor = lelem;
   }
   l->tail=lelem;                    /* New tail */
+
 
   ASSERT_TRUE(isconsistentSL(l));
 
@@ -424,7 +427,9 @@ void delete_and_prevDL(DLinkedList *l) {
 /* Notice that we do not make any check on data pointer. It can be as
    well NULL.  We use on implementation and we use macros to define
    two different functions for attaching either to the head or to the
-   tail.
+   tail.  Since the Double Linked List has no direction, it is
+   impossible to re-validate the invalid cursor as in append operation
+   for single linked list.
  */
 void extendDL(DLinkedList *l,void *data,Boolean to_tail) {
 
