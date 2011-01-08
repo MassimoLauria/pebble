@@ -46,7 +46,7 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   /* Compare the important data */
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
   if (pB->white_pebbled != pB->white_pebbled) return FALSE;
-  if (pA->pebble_cost   != pB->pebble_cost  ) return FALSE;
+  /* if (pA->pebble_cost   != pB->pebble_cost  ) return FALSE; */
 
   return TRUE;
 }
@@ -148,34 +148,41 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
   DictQueryResult res;
   PebbleConfiguration *nptr,*ptr=new_PebbleConfiguration();
   PebbleConfiguration *final=NULL;
+  /* Initial status of dictionary */
+  writeDict(D,ptr);
   enqueue(Q,ptr);
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the one with a better cost.*/
+
+#ifdef DEBUG
   int i=0; char buffer[20];
+#endif
+
   for(resetSL(Q);!isemptySL(Q);delete_and_nextSL(Q)) {
-    isconsistentDict(D);
+    ASSERT_TRUE(isconsistentDict(D));
     ptr=(PebbleConfiguration*)getSL(Q);
     ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
 
+#ifdef DEBUG
     /* Print pebbling configuration */
     sprintf(buffer,"A%d",i++);
     print_dot_Pebbling(g, ptr,buffer,NULL);
-
+#endif
 
     /* Check if final configuration has been reached, and update it. */
     if ((isblack(g->sinks[0],g,ptr))
-        && (final->pebble_cost > ptr->pebble_cost)) {
-      /*fprintf(stderr,"Search finished! A upper bound on the pebbling cost is %d.\n",ptr->pebble_cost);*/
-      /*output_pebbling_strategy(g,ptr);*/
+        && (final==NULL || final->pebble_cost > ptr->pebble_cost)) {
       final=ptr;
-      return;
+      upper_bound = ptr->pebble_cost;
+      continue; /* Correct only for black pebbles */
     }
 
     /* Otherwise compute the next configuration */
 
     /* Black Pebble removal */
     for(Vertex v=0;v<g->size;v++) {
+
       if (!isblack(v,g,ptr))  continue; /* This vertex is not pebbled... */
 
       /* ... but this is. */
@@ -254,8 +261,8 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
 int main(int argc, char *argv[])
 {
 
-  DAG *A=piramid(2);
-  pebbling_strategy(A,3);
+  DAG *A=piramid(3);
+  pebbling_strategy(A,10);
   exit(0);
 }
 

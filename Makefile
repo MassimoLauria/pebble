@@ -1,12 +1,15 @@
-# Copyright (C) 2010 by >>>NAME<<< <>>>EMAIL<<<>
+# Copyright (C) 2010, 2011 by >>>NAME<<< <>>>EMAIL<<<>
 #
 # Created   : ">>>TIME<<< >>>NAME<<<"
-# Time-stamp: "2010-12-20, lunedì 17:36 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-08, sabato 14:23 (CET) Massimo Lauria"
 
 # ---------- Environment variables ------------
 #
-DEBUG=-DDEBUG -g
-#DEBUG=
+#DEBUG=-DDEBUG -g
+#OPTIMIZATION=
+
+DEBUG=
+OPTIMIZATION=-O3
 
 CC=gcc
 #CC=cc
@@ -21,7 +24,7 @@ TAGS=gtags
 #TAGS=ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=${DEBUG} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=${OPTIMIZATION} ${DEBUG} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=
 
 

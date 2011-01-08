@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:25 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-08, sabato 13:21 (CET) Massimo Lauria"
 
    Description::
 
