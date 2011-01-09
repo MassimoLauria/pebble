@@ -1,15 +1,15 @@
-# Copyright (C) 2010, 2011 by >>>NAME<<< <>>>EMAIL<<<>
+# Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
-# Created   : ">>>TIME<<< >>>NAME<<<"
-# Time-stamp: "2011-01-08, sabato 14:23 (CET) Massimo Lauria"
+# Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-09, domenica 18:07 (CET) Massimo Lauria"
 
 # ---------- Environment variables ------------
 #
-#DEBUG=-DDEBUG -g
-#OPTIMIZATION=
+DEBUG=-DDEBUG -g
+OPTIMIZATION=
 
-DEBUG=
-OPTIMIZATION=-O3
+#DEBUG=
+#OPTIMIZATION=-O3
 
 CC=gcc
 #CC=cc
@@ -36,7 +36,7 @@ all: ${TARGET}
 exposetypes: exposetypes.c
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
-pebble: pebble.o dag.o pebbling.o dsbasic.o hashtable.o
+pebble: pebble.o common.o dag.o pebbling.o dsbasic.o hashtable.o
 
 test: exposetypes
 	./exposetypes

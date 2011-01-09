@@ -18,14 +18,12 @@
 
 
 
-#define HASH_TABLE_SPACE_SIZE    0x0FFFFF
-#define HASH_WASTE_RANGE  0x0FFFF
-#define ROTATE_RIGHT_AMOUNT (sizeof(BitTuple)*CHAR_BIT/2)
+#define HASH_TABLE_SPACE_SIZE    0x0FFF
 
-/* To use the dictionary with PebbleConfiguration we must tell the
-   dictionary how to compare two configurations and how to hash
-   them.
-*/
+/*
+ * To  use the dictionary  with PebbleConfiguration  we must  tell the
+ * dictionary how to compare two configurations and how to hash them.
+ */
 size_t   hashPebbleConfiguration(void *data) {
 
   if (data==NULL) return 0;
@@ -43,10 +41,12 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   pA=(PebbleConfiguration*)A;
   pB=(PebbleConfiguration*)B;
 
-  /* Compare the important data */
+  /* Compare the  important data; we just want  configuration to match
+     if the  pebble set is the  same.  We DON'T  want to differentiate
+     because of pebbling cost, since  the collistion is what we use to
+     update the cost function. */
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
   if (pB->white_pebbled != pB->white_pebbled) return FALSE;
-  /* if (pA->pebble_cost   != pB->pebble_cost  ) return FALSE; */
 
   return TRUE;
 }
@@ -86,29 +86,64 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
 }
 
 
-/* Explore the space of pebbling strategies.
-   The output is given as a sequence of vertices, because
-   at any point in a pebbling, there is a unique minimal move that can be
-   performed on a vertex, given its status.
+/* Each pebble configuration has a  number of neightbours less than or
+   equal to  the number of vertices.   For each vertex  you can either
+   add  a pebble  (if  possible)  or remove  one  (if present).
+*/
 
-   If there is a pebble on the vertex, such pebble shoud be removed.
-   If there is not, then either a white or a black pebble should be added.
-   In case both are possible, it is always convenient to add a black one.
+PebbleConfiguration *compute_new_configuration(Vertex v, DAG *g,PebbleConfiguration *old) {
 
-   Notice that any pebbling induce a dual pebbling with a reversed sequence of vertices.
-   Thus the output of this function can be interpreted in both directions.
+  PebbleConfiguration *nconf=NULL;
+
+  if (isactive(v,g,old)==TRUE && isblack(v,g,old)==FALSE) {
+  /* If an unpebbled vertex can be pebbled, place a pebble on it */
+
+    nconf=copy_PebbleConfiguration(old);
+    nconf->black_pebbled |= (0x1 << v);
+    nconf->pebbles     += 1;
+    if (nconf->pebbles > nconf->pebble_cost)
+      nconf->pebble_cost = nconf->pebbles;
+    return nconf;
+
+  } else if (isblack(v,g,old))  {
+  /* If it is a black pebbled vertex, remove it */
+    nconf=copy_PebbleConfiguration(old);
+    nconf->black_pebbled ^= (0x1 << v);
+    nconf->pebbles     -= 1;
+  }
+
+  return nconf;
+}
+
+
+
+/* Explore the space of pebbling strategies.  The output is given as a
+   sequence of vertices, because at  any point in a pebbling, there is
+   a unique minimal move that can  be performed on a vertex, given its
+   status.
+
+   If there is  a pebble on the vertex, such  pebble shoud be removed.
+   If there  is not, then either a  white or a black  pebble should be
+   added.  In case both are possible, it is always convenient to add a
+   black one.
+
+   Notice that  any pebbling  induce a dual  pebbling with  a reversed
+   sequence  of vertices.   Thus the  output of  this function  can be
+   interpreted in both directions.
 
    INPUT:
 
-         -- DAG: the graph to pebble (with few vertices and a single sink).
-         -- upper_bound: the maximum number of pebbles in the configuration,
-                         if such number is not sufficient, the the computation will fail gracefully
-                         without finding the pebbling
-*/
+         -- DAG: the graph  to pebble (with few vertices  and a single
+            sink).
+
+         -- upper_bound:   the  maximum   number  of  pebbles  in  the
+                         configuration,   if   such   number  is   not
+                         sufficient,  the  the  computation will  fail
+                         gracefully without finding the pebblingx */
 /* {{{ */ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
   /* Dictionary data structure */
-  Dict *D = newDict(0xFFFFFF);
+  Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
   D->key_function = hashPebbleConfiguration;
   D->eq_function  = samePebbleConfiguration;
   ASSERT_TRUE(isconsistentDict(D));
@@ -129,17 +164,17 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
   }
 
   /* SEARCH ALGORITHM */
-  /* The first attempt to implement this program will use a standard
+  /* The first attempt  to implement this program will  use a standard
      graph reachability algorithm for directed graphs */
 
-  /* Since graphs of configuration will be very large, we try to
-     represent a configuration with the smallest memory footprint.
-     Furthermore there will be a lot of useless or non valid
-     configurations, thus we produce configurations on demand.
-     We use an hash to access configurations.
+  /* Since  graphs of  configuration will  be  very large,  we try  to
+     represent  a configuration  with the  smallest  memory footprint.
+     Furthermore  there  will  be  a  lot  of  useless  or  non  valid
+     configurations, thus we produce configurations on demand.  We use
+     an hash to access configurations.
 
-     N.B. As a futue option: we could use a ZDD for keeping track of visited
-     configurations.
+     N.B. As a  futue option: we could use a ZDD  for keeping track of
+     visited configurations.
   */
 
   /* Initial status of the search procedure */
@@ -151,45 +186,61 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
   /* Initial status of dictionary */
   writeDict(D,ptr);
   enqueue(Q,ptr);
-
-  /* Pick a pebbling status from the queue, produce the followers, and
-     put in the queue the ones that haven't been analized yet or the one with a better cost.*/
-
 #ifdef DEBUG
-  int i=0; char buffer[20];
+  int i=0; char buffer[20];   /* Buffer for printing debug
+                                 informations. */
 #endif
 
+
+  /* Pick a pebbling status from the queue, produce the followers, and
+     put in the queue the ones that haven't been analized yet or the
+     one with a better cost.*/
   for(resetSL(Q);!isemptySL(Q);delete_and_nextSL(Q)) {
     ASSERT_TRUE(isconsistentDict(D));
     ptr=(PebbleConfiguration*)getSL(Q);
-    ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
 
 #ifdef DEBUG
     /* Print pebbling configuration */
-    sprintf(buffer,"A%d",i++);
+    i++;
+    sprintf(buffer,"A%d",i);
     print_dot_Pebbling(g, ptr,buffer,NULL);
 #endif
 
-    /* Check if final configuration has been reached, and update it. */
+
+    /* Since the value of `upper_bound' is updated during the process,
+       we need to check again if queued element have too many pebbles. */
+    if (ptr->pebble_cost > upper_bound) {
+      appendSL(Trash,ptr);
+      continue;
+    }
+    ASSERT_TRUE(ptr->pebbles <= upper_bound);
+
+
+    /* Check if final configuration has been reached, and update the
+       upper bound. */
     if ((isblack(g->sinks[0],g,ptr))
-        && (final==NULL || final->pebble_cost > ptr->pebble_cost)) {
+        &&
+        (final==NULL || final->pebble_cost > ptr->pebble_cost)) {
       final=ptr;
       upper_bound = ptr->pebble_cost;
       continue; /* Correct only for black pebbles */
     }
 
-    /* Otherwise compute the next configuration */
-
-    /* Black Pebble removal */
+    /* Otherwise compute the next configurations */
     for(Vertex v=0;v<g->size;v++) {
 
-      if (!isblack(v,g,ptr))  continue; /* This vertex is not pebbled... */
 
-      /* ... but this is. */
-      nptr=copy_PebbleConfiguration(ptr);
-      nptr->black_pebbled ^= (0x1 << v);
-      nptr->pebbles     -= 1;
+      /* New configurations */
+      nptr=compute_new_configuration(v,g,ptr);
 
+      if (nptr==NULL) continue;
+
+      if (nptr->pebble_cost > upper_bound) { /* Is it above the upper bound? */
+        dispose_PebbleConfiguration(nptr);
+        continue;
+      }
+
+      /* Valid new configurations */
       res=queryDict(D,nptr);
 
       if (res.value==NULL ||
@@ -199,48 +250,15 @@ void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
         enqueue(Q,nptr);
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
-
       } else {
-        /* No new configuration */
+        /* No improvements */
         dispose_PebbleConfiguration(nptr);
-
       }
-    }
 
-
-    /* Black Pebble addition */
-    if (ptr->pebbles >= upper_bound) continue; /* No more pebbles... */
-
-    for(Vertex v=0;v<g->size;v++) {
-      if (!isactive(v,g,ptr))  continue; /* This vertex cannot be pebbled... */
-
-      /* ... but this can. */
-      nptr=copy_PebbleConfiguration(ptr);
-      nptr->black_pebbled |= (0x1 << v);
-      nptr->pebbles     += 1;
-      if (nptr->pebbles > nptr->pebble_cost)
-        nptr->pebble_cost = nptr->pebbles;
-
-      res=queryDict(D,nptr);
-
-      if (res.value==NULL ||
-          ((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
-        /* New or improved configuration */
-        writeDict(D,nptr);
-        enqueue(Q,nptr);
-        nptr->previous_configuration = ptr;
-        nptr->last_changed_vertex = v;
-
-      } else {
-        /* No new configuration */
-        dispose_PebbleConfiguration(nptr);
-
-      }
     }
 
     /* Save the analyzed configuration for later retrieval */
     appendSL(Trash,ptr);
-
   }
 
 

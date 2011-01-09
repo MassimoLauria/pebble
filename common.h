@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 17:50 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 16:32 (CET) Massimo Lauria"
 
    Description::
 
@@ -32,23 +32,25 @@ typedef unsigned char          Boolean;
 #ifdef DEBUG
 
 /* Assertion for DEBUG purposes:  If DEBUG constant is not defined,
-   then such assertions result in an empty statement. Otherwise they
-   will test the correspondent condition and stop the program with an
-   appropriate error message.
-
+ * then such assertions result in an empty statement. Otherwise they
+ * will test the correspondent condition and stop the program with an
+ * appropriate error message.
  */
 
+extern void debug_trap_bait();
+
 /* Error and warning messages, useful for debugging */
-#define ERRMSG(str) \
+#define ERRMSG(str)                                                 \
   { fprintf(stderr,"ERROR at [%s,%d]: %s",__FILE__,__LINE__,str); }
 
-#define WARNMSG(str) \
+#define WARNMSG(str)                                                    \
   { fprintf(stderr,"WARNING at [%s,%d]: %s",__FILE__,__LINE__,str); }
 
 
 #define ASSERT_NOTNULL(p) {                       \
     if (!(p)) {                                   \
       ERRMSG("NOT NULL assertion failed.\n");     \
+      debug_trap_bait();                          \
       exit(-1);                                   \
     }                                             \
   }
@@ -56,13 +58,15 @@ typedef unsigned char          Boolean;
 #define ASSERT_NULL(p) {                        \
     if (p) {                                    \
       ERRMSG("NULL assertion failed.\n");       \
+      debug_trap_bait();                        \
       exit(-1);                                 \
-  }                                             \
+    }                                           \
   }
 
 #define ASSERT_TRUE(p) {                        \
     if (!(p)) {                                 \
       ERRMSG("TRUE assertion failed.\n");       \
+      debug_trap_bait();                        \
       exit(-1);                                 \
     }                                           \
   }
@@ -71,8 +75,9 @@ typedef unsigned char          Boolean;
 #define ASSERT_FALSE(p) {                       \
     if (p) {                                    \
       ERRMSG("NULL assertion failed.\n");       \
+      debug_trap_bait();                        \
       exit(-1);                                 \
-  }                                             \
+    }                                           \
   }
 
 
