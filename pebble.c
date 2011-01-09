@@ -47,7 +47,7 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
      update the cost function. */
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
   if (pB->white_pebbled != pB->white_pebbled) return FALSE;
-
+  if (pA->sink_touched  != pB->sink_touched ) return FALSE;
   return TRUE;
 }
 
@@ -148,7 +148,7 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   writeDict(D,ptr);
   enqueue(Q,ptr);
 #ifdef DEBUG
-  int i=0; char buffer[20];   /* Buffer for printing debug
+  int i=1; char buffer[20];   /* Buffer for printing debug
                                  informations. */
 #endif
 
@@ -162,9 +162,9 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
 #ifdef DEBUG
     /* Print pebbling configuration */
-    i++;
     sprintf(buffer,"A%d",i);
     print_dot_Pebbling(g, ptr,buffer,NULL);
+    i++;
 #endif
 
 
@@ -239,8 +239,10 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 int main(int argc, char *argv[])
 {
 
-  DAG *A=piramid(3);
-  pebbling_strategy(A,10);
+  DAG *A=piramid(2);
+  DAG *B=piramid(2);
+  DAG *C=orproduct(A,B);
+  pebbling_strategy(C,3);
   exit(0);
 }
 

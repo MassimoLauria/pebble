@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-09, domenica 20:06 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 21:58 (CET) Massimo Lauria"
 
    Description::
 
@@ -210,9 +210,10 @@ void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
 }
 
 
-/* Each pebble configuration has a  number of neightbours less than or
-   equal to  the number of vertices.   For each vertex  you can either
-   add  a pebble  (if  possible)  or remove  one  (if present).
+/* Each pebble configuration has a number of neightbours less than or
+   equal to the number of vertices.  For each vertex you can either
+   add a pebble (if possible) or remove one (if present).  The
+   possible move is unique for every vertex.
 */
 PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, const PebbleConfiguration *old) {
 
@@ -220,27 +221,57 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,old));
 
-  if (isactive(v,g,old) && !isblack(v,g,old)) {
-  /* If an unpebbled vertex can be pebbled, place a pebble on it */
+  if (isactive(v,g,old) &&  iswhite(v,g,old) ) { /* Delete WHITE */
+
+    nconf=copy_PebbleConfiguration(old);
+    nconf->white_pebbled ^= (0x1 << v);
+    nconf->pebbles     -= 1;
+
+    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    return nconf;
+  }
+
+  if (isactive(v,g,old) && !iswhite(v,g,old) ) { /* Place BLACK */
 
     nconf=copy_PebbleConfiguration(old);
     nconf->black_pebbled |= (0x1 << v);
+    nconf->pebbles     += 1;
+
+    if (nconf->pebbles > nconf->pebble_cost)
+      nconf->pebble_cost = nconf->pebbles;
+    if (v==g->sinks[0])
+      nconf->sink_touched=TRUE;
+
+    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    return nconf;
+  }
+
+  if (!isactive(v,g,old) && isblack(v,g,old) ) { /* Delete BLACK */
+
+    nconf=copy_PebbleConfiguration(old);
+    nconf->black_pebbled ^= (0x1 << v);
+    nconf->pebbles     -= 1;
+
+    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    return nconf;
+  }
+
+  if (!isactive(v,g,old) && !iswhite(v,g,old)) { /* Place WHITE */
+
+    nconf=copy_PebbleConfiguration(old);
+    nconf->white_pebbled |= (0x1 << v);
     nconf->pebbles     += 1;
     if (nconf->pebbles > nconf->pebble_cost)
       nconf->pebble_cost = nconf->pebbles;
     if (v==g->sinks[0])
       nconf->sink_touched=TRUE;
-  } else if (isblack(v,g,old))  {
-  /* If it is a black pebbled vertex, remove it */
-    nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled ^= (0x1 << v);
-    nconf->pebbles     -= 1;
+
+    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    return nconf;
   }
 
-  if (nconf==NULL) return NULL;
-
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf))
-  return nconf;
+  /* No allowed operation on the chosen vertex. */
+  return NULL;
 }
 
 
