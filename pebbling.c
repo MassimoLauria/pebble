@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 18:14 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 18:17 (CET) Massimo Lauria"
 
    Description::
 
@@ -154,7 +154,7 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 /* Print a graph with a pebble configuration, with dot.  If the `ped'
    is NULL it does assume that the pebbling to be printed is empty.
    */
-void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
+void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
                         char *name,char* options) {
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
@@ -172,4 +172,42 @@ void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
   }
   print_dot_DAG(g,name,options,vertexopts,NULL);
 }
+
+
+void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
+  while(ptr) {
+    print_dot_Pebbling(g,ptr,"X",NULL);
+    ptr=ptr->previous_configuration;
+  }
+}
+
+
+/* Each pebble configuration has a  number of neightbours less than or
+   equal to  the number of vertices.   For each vertex  you can either
+   add  a pebble  (if  possible)  or remove  one  (if present).
+*/
+PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, const PebbleConfiguration *old) {
+
+  PebbleConfiguration *nconf=NULL;
+
+  if (isactive(v,g,old) && !isblack(v,g,old)) {
+  /* If an unpebbled vertex can be pebbled, place a pebble on it */
+
+    nconf=copy_PebbleConfiguration(old);
+    nconf->black_pebbled |= (0x1 << v);
+    nconf->pebbles     += 1;
+    if (nconf->pebbles > nconf->pebble_cost)
+      nconf->pebble_cost = nconf->pebbles;
+    return nconf;
+
+  } else if (isblack(v,g,old))  {
+  /* If it is a black pebbled vertex, remove it */
+    nconf=copy_PebbleConfiguration(old);
+    nconf->black_pebbled ^= (0x1 << v);
+    nconf->pebbles     -= 1;
+  }
+
+  return nconf;
+}
+
 

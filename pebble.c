@@ -78,45 +78,6 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
   return TRUE;
 }
 
-void output_pebbling_strategy(DAG *g,PebbleConfiguration *ptr) {
-  while(ptr) {
-    print_dot_Pebbling(g,ptr,"X",NULL);
-    ptr=ptr->previous_configuration;
-  }
-}
-
-
-/* Each pebble configuration has a  number of neightbours less than or
-   equal to  the number of vertices.   For each vertex  you can either
-   add  a pebble  (if  possible)  or remove  one  (if present).
-*/
-
-PebbleConfiguration *compute_new_configuration(Vertex v, DAG *g,PebbleConfiguration *old) {
-
-  PebbleConfiguration *nconf=NULL;
-
-  if (isactive(v,g,old)==TRUE && isblack(v,g,old)==FALSE) {
-  /* If an unpebbled vertex can be pebbled, place a pebble on it */
-
-    nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled |= (0x1 << v);
-    nconf->pebbles     += 1;
-    if (nconf->pebbles > nconf->pebble_cost)
-      nconf->pebble_cost = nconf->pebbles;
-    return nconf;
-
-  } else if (isblack(v,g,old))  {
-  /* If it is a black pebbled vertex, remove it */
-    nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled ^= (0x1 << v);
-    nconf->pebbles     -= 1;
-  }
-
-  return nconf;
-}
-
-
-
 /* Explore the space of pebbling strategies.  The output is given as a
    sequence of vertices, because at  any point in a pebbling, there is
    a unique minimal move that can  be performed on a vertex, given its
@@ -139,8 +100,8 @@ PebbleConfiguration *compute_new_configuration(Vertex v, DAG *g,PebbleConfigurat
          -- upper_bound:   the  maximum   number  of  pebbles  in  the
                          configuration,   if   such   number  is   not
                          sufficient,  the  the  computation will  fail
-                         gracefully without finding the pebblingx */
-/* {{{ */ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
+                         gracefully without finding the pebbling. */
+void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
   /* Dictionary data structure */
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
@@ -231,7 +192,7 @@ PebbleConfiguration *compute_new_configuration(Vertex v, DAG *g,PebbleConfigurat
 
 
       /* New configurations */
-      nptr=compute_new_configuration(v,g,ptr);
+      nptr=next_PebbleConfiguration(v,g,ptr);
 
       if (nptr==NULL) continue;
 
@@ -265,9 +226,8 @@ PebbleConfiguration *compute_new_configuration(Vertex v, DAG *g,PebbleConfigurat
 
   /* EPILOGUE --------------------------------- */
   /* free memory, free Mandela! */
-  output_pebbling_strategy(g,final);
+  print_dot_Pebbling_Path(g,final);
 }
-/* }}} */
 
 
 /*

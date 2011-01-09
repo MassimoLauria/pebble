@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 16:32 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 18:17 (CET) Massimo Lauria"
 
    Description::
 
@@ -62,8 +62,14 @@ extern Boolean iswhite  (const Vertex v, const DAG *g, const PebbleConfiguration
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 
-extern void print_dot_Pebbling(const DAG *g, PebbleConfiguration *peb,
+/* Build new configurations */
+extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g,const PebbleConfiguration *old);
+
+
+/* Pretty Print functions */
+extern void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
                         char *name,char* options);
+extern void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *peb);
 
 
 #endif /* PEBBLING_H */
