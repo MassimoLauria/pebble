@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-09, domenica 22:45 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-09, domenica 22:48 (CET) Massimo Lauria"
 
 # ---------- Environment variables ------------
 #
@@ -15,8 +15,8 @@ CC=gcc
 #CC=cc
 
 C_STANDARD=-std=c99
-C_STANDARD=-ansi
-C_STANDARD=-std=c89
+#C_STANDARD=-ansi
+#C_STANDARD=-std=c89
 
 
 TAGS=gtags
