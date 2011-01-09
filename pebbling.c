@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-09, domenica 18:17 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 20:06 (CET) Massimo Lauria"
 
    Description::
 
@@ -28,6 +28,8 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
   ptr->white_pebbled=0;
   ptr->black_pebbled=0;
 
+  ptr->sink_touched =FALSE;
+
   ptr->pebble_cost=0;
   ptr->pebbles=0;
 
@@ -47,6 +49,8 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   dst->white_pebbled=src->white_pebbled;
   dst->black_pebbled=src->black_pebbled;
+
+  dst->sink_touched=src->sink_touched;
 
   dst->pebbles=src->pebbles;
 
@@ -70,13 +74,25 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   ASSERT_NOTNULL(ptr);
   ASSERT_NOTNULL(graph);
 
-  /* The configuration must support the size of the graph */
+  /* The size of the graph and the number of sinks must fit with the
+     pebbling representation. */
   if (graph->size > MAX_VERTICES) return FALSE;
+  if (graph->sink_number != 1)    return FALSE;
 
   /* The configuration must not have both a white and a black pebble
      on the same vertex */
   if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
 
+  /* If there's a pebble on the sink, sink is touched */
+  if ((ptr->white_pebbled | ptr->black_pebbled) & (0x1 << graph->sinks[0])) {
+    if (!ptr->sink_touched) return FALSE;
+  }
+
+  /* If sink is touche in the previous conf, then it must be later */
+  if (ptr->previous_configuration!=NULL &&
+      ptr->previous_configuration->sink_touched==TRUE &&
+      ptr->sink_touched==FALSE
+      ) return FALSE;
 
   /* Count the number of pebbles in the bitvector and check
      consistency with the pebble counter */
@@ -150,6 +166,17 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 }
 
 
+/* Determines if the configuration is a final one */
+Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+
+  if (c->white_pebbled==0 && c->sink_touched==TRUE) return TRUE;
+  else return FALSE;
+}
+
+
 
 /* Print a graph with a pebble configuration, with dot.  If the `ped'
    is NULL it does assume that the pebbling to be printed is empty.
@@ -176,6 +203,7 @@ void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
 
 void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
   while(ptr) {
+    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
     print_dot_Pebbling(g,ptr,"X",NULL);
     ptr=ptr->previous_configuration;
   }
@@ -190,6 +218,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
   PebbleConfiguration *nconf=NULL;
 
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,old));
+
   if (isactive(v,g,old) && !isblack(v,g,old)) {
   /* If an unpebbled vertex can be pebbled, place a pebble on it */
 
@@ -198,8 +228,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
     nconf->pebbles     += 1;
     if (nconf->pebbles > nconf->pebble_cost)
       nconf->pebble_cost = nconf->pebbles;
-    return nconf;
-
+    if (v==g->sinks[0])
+      nconf->sink_touched=TRUE;
   } else if (isblack(v,g,old))  {
   /* If it is a black pebbled vertex, remove it */
     nconf=copy_PebbleConfiguration(old);
@@ -207,6 +237,9 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
     nconf->pebbles     -= 1;
   }
 
+  if (nconf==NULL) return NULL;
+
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf))
   return nconf;
 }
 

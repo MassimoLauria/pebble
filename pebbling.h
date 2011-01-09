@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-09, domenica 18:17 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-09, domenica 20:01 (CET) Massimo Lauria"
 
    Description::
 
@@ -38,6 +38,8 @@ typedef struct _PebbleConfiguration {
   BitTuple white_pebbled;    /* White pebbled vertices */
   BitTuple black_pebbled;    /* Black pebbled vertices */
 
+  Boolean sink_touched;
+
   int pebbles;  /* Number of pebbles in the pebbling */
 
   /* Information regarding the  configuration transition:  what is the
@@ -55,12 +57,17 @@ extern PebbleConfiguration* copy_PebbleConfiguration(const PebbleConfiguration *
 extern void              dispose_PebbleConfiguration(PebbleConfiguration *ptr);
 extern Boolean      isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfiguration *ptr);
 
+extern Boolean isfinal(const DAG *g,const PebbleConfiguration *c);
+
 
 /* Discover vertex status */
 extern Boolean isblack  (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean iswhite  (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+
+
+
 
 /* Build new configurations */
 extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g,const PebbleConfiguration *old);

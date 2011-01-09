@@ -179,7 +179,7 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
     /* Check if final configuration has been reached, and update the
        upper bound. */
-    if ((isblack(g->sinks[0],g,ptr))
+    if (isfinal(g,ptr)
         &&
         (final==NULL || final->pebble_cost > ptr->pebble_cost)) {
       final=ptr;
