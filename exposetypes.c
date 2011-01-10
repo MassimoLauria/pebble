@@ -1,4 +1,4 @@
-/* 
+/*
  *  Massimo Lauria, 2010
  *
  *  This is a little program which expose the size of some common
@@ -17,7 +17,7 @@
 #include <float.h>
 
 
-/* The record of the table containing 
+/* The record of the table containing
    - NAME: name of the data type
    - SIZE: size in byte of the data type
 */
@@ -39,16 +39,25 @@ struct size_record BIT_SIZE_TABLE[]={
   {"long long unsigned int",sizeof(long long unsigned int)},
   {"float",sizeof(float)},
   {"double",sizeof(double)},
-  {"long double",sizeof(double)},
+  {"long double",sizeof(long double)},
   {"float complex",sizeof(float complex)},
   {"double complex",sizeof(double complex)},
-  {"long double complex",sizeof(double complex)},
+  {"long double complex",sizeof(long double complex)},
   {"wchar_t",sizeof(wchar_t)},
   {"wint_t",sizeof(wint_t)},
   {"void *",sizeof(void*)},
   {"ptrdiff_t",sizeof(ptrdiff_t)},
   {"site_t",sizeof(size_t)},
   {"bool",sizeof(bool)},
+  {"0x1"  ,sizeof(-0x1)},
+  {"0x1L" ,sizeof(-0x1L)},
+  {"0x1LL",sizeof(-0x1LL)},
+  {"0x1U"  ,sizeof(0x1U)},
+  {"0x1UL" ,sizeof(0x1UL)},
+  {"0x1ULL",sizeof(0x1ULL)},
+  {"1.0F"  ,sizeof(1.0F)},
+  {"1.0"  ,sizeof(1.0)},
+  {"1.0L" ,sizeof(1.0L)},
   {NULL,0}
 };
 
@@ -66,7 +75,7 @@ char greetings_string[]=
   "|                                                                                  |\n"
   "|----------------------------------------------------------------------------------|\n";
 
-/* The record of the table specific to decimal data types. It contains 
+/* The record of the table specific to decimal data types. It contains
    - NAME
    - NUMBER OF DIGITS OF PRECISION
    - MINIMAL VALUE
@@ -87,7 +96,7 @@ struct float_record FLOAT_PRECISION_TABLE[]={
 };
 
 
-/* The record of the table specific to integral data types. It contains 
+/* The record of the table specific to integral data types. It contains
    - NAME
    - MINIMAL VALUE
    - MAXIMUM VALUE
@@ -121,21 +130,21 @@ struct int_record INTEGRAL_TABLE[]={
 
 /* Main entry point of the program. */
 int main() {
-  
+
   int i=0;
 
   printf("%s\n\n",greetings_string);
-  
+
   /* Print data type dimensions. */
   printf("SIZE: these are the sizes of canonical types of C.\n\n");
   for(i=0;BIT_SIZE_TABLE[i].name;i++)
     printf("* %3d bits for a %s\n",CHAR_BIT*(int)BIT_SIZE_TABLE[i].size,BIT_SIZE_TABLE[i].name);
   printf("\n\n");
-  
+
 
   /* Print float data type precisions. */
   printf("PRECISION: this is the digit precision of float data types of C.\n\n");
-  
+
   for(i=0;FLOAT_PRECISION_TABLE[i].name;i++)
     printf("* Decimal precision of %s is %d digits. <%Lg,%Lg>.\n",
            FLOAT_PRECISION_TABLE[i].name,
@@ -150,5 +159,5 @@ int main() {
   printf("RANGE: these are the intervals of the integer data types.\n\n");
   for(i=0;INTEGRAL_TABLE[i].name;i++)
     printf("* %s gets values between %lld and %llu\n",INTEGRAL_TABLE[i].name,INTEGRAL_TABLE[i].min,INTEGRAL_TABLE[i].max);
-  exit(0);  
+  exit(0);
 }
