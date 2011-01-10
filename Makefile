@@ -1,8 +1,13 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-09, domenica 22:48 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-10, lunedì 11:41 (CET) Massimo Lauria"
 
+# ---------- BUILD FLAGS ----------------------
+BLACK_PEBBLES=1
+WHITE_PEBBLES=0
+
+BUILDFLAGS=-DBLACK_PEBBLES=${BLACK_PEBBLES} -DWHITE_PEBBLES=${WHITE_PEBBLES}
 # ---------- Environment variables ------------
 #
 DEBUG=-DDEBUG -g
@@ -24,7 +29,7 @@ TAGS=gtags
 #TAGS=ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=${OPTIMIZATION} ${DEBUG} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=
 
 

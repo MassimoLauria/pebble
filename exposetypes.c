@@ -1,7 +1,7 @@
 /*
  *  Massimo Lauria, 2010
  *
- *  This is a little program which expose the size of some common
+ *  This is a little program which exposes the size of some common
  *  standard numerical/character data types of C, also showing their
  *  minimal and maximal values.
  */
@@ -69,7 +69,7 @@ char greetings_string[]=
   "| types. Also the very same standards allow some degree of flexibility, maybe      |\n"
   "| requiring only minimum features instead of a precise implementation.  In many    |\n"
   "| cases the standard requirements depends on machine dependant characteristics     |\n"
-  "| like wordsize.  This program audit the characteristics of the system in hand.    |\n"
+  "| like wordsize.  This program audits the characteristics of the system in hand.   |\n"
   "|                                                                                  |\n"
   "| (C) Massimo Lauria, 2010                                                         |\n"
   "|                                                                                  |\n"
