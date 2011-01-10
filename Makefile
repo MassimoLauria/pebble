@@ -1,13 +1,16 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-10, lunedì 11:41 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-10, lunedì 18:33 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
-WHITE_PEBBLES=0
+WHITE_PEBBLES=1
+HASHTABLE_STATISTICS=1
 
-BUILDFLAGS=-DBLACK_PEBBLES=${BLACK_PEBBLES} -DWHITE_PEBBLES=${WHITE_PEBBLES}
+BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
+			-DWHITE_PEBBLES=${WHITE_PEBBLES} \
+			-DHASHTABLE_STATISTICS=${HASHTABLE_STATISTICS}
 # ---------- Environment variables ------------
 #
 DEBUG=-DDEBUG -g

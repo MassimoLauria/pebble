@@ -11,6 +11,10 @@
 #include <string.h>
 #include <limits.h>
 
+#include <signal.h>
+#include <unistd.h>
+#include <sys/time.h>
+
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
@@ -18,7 +22,7 @@
 
 
 
-#define HASH_TABLE_SPACE_SIZE    0x0FFF
+#define HASH_TABLE_SPACE_SIZE    0x0FFFFF
 
 /*
  * To  use the dictionary  with PebbleConfiguration  we must  tell the
@@ -236,15 +240,30 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
  *  representation of such graphs.
  */
 
+
+void one_second_handler(int signal) {
+  printf("Hello!\n");
+}
+
+
 int main(int argc, char *argv[])
 {
+
+  struct itimerval clock;
+  clock.it_interval.tv_sec=1;
+  clock.it_interval.tv_usec=0;
+
+  clock.it_value.tv_sec=1;
+  clock.it_value.tv_usec=0;
+
+  signal(SIGALRM,one_second_handler);
+
+  setitimer(ITIMER_REAL,&clock,NULL);
 
   DAG *A=piramid(2);
   DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
-  pebbling_strategy(C,3);
+  pebbling_strategy(C,4);
   exit(0);
 }
-
-
 

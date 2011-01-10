@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-08, sabato 13:21 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-10, lunedì 13:04 (CET) Massimo Lauria"
 
    Description::
 
@@ -131,7 +131,7 @@ void *writeDict(Dict *d,void *data) {
     ASSERT_NOTNULL(d->eq_function(data,res.value));
     ll->cursor->data=data;
 
-    return res.value; /* Changes in the cost */
+    return res.value;
   }
 }
 
