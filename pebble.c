@@ -18,10 +18,12 @@
 #include "dag.h"
 #include "pebbling.h"
 #include "hashtable.h"
-
+#include "timedflags.h"
 
 
 #define HASH_TABLE_SPACE_SIZE    0x0FFFFF
+
+
 
 /*
  * To  use the dictionary  with PebbleConfiguration  we must  tell the
@@ -154,6 +156,16 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   int i=1; char buffer[20];   /* Buffer for printing debug
                                  informations. */
 #endif
+#ifdef PRINT_RUNNING_STATS
+  unsigned long long int configurations_explored=1;
+  unsigned long long int configurations_queued=1;
+  unsigned long long int configurations_boundary=0;
+
+  unsigned long long int configurations_explored_lsec=0;
+  unsigned long long int configurations_queued_lsec=0;
+  unsigned long long int configurations_boundary_lsec=0;
+  unsigned long long int total_neighbours_lsec=0;
+#endif
 
 
   /* Pick a pebbling status from the queue, produce the followers, and
@@ -168,6 +180,34 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
     sprintf(buffer,"A%d",i);
     print_dot_Pebbling(g, ptr,buffer,NULL);
     i++;
+#endif
+
+#ifdef PRINT_RUNNING_STATS
+    if (print_running_stats_flag) {
+      /* Compute statistics from the heuristic */
+      configurations_explored += configurations_explored_lsec;
+      configurations_queued   += configurations_queued_lsec;
+      configurations_boundary += configurations_boundary_lsec;
+
+      fprintf(stderr,"\nNumber of configurations:\n");
+      fprintf(stderr,"TOTAL\n\n");
+      fprintf(stderr,"[Explored] = %llu\n",configurations_explored);
+      fprintf(stderr,"[   Queue] = %llu\n",configurations_queued);
+      fprintf(stderr,"[Boundary] = %llu\n",configurations_boundary);
+      fprintf(stderr,"\nFROM LAST REPORT\n");
+      fprintf(stderr,"[Explored] = %llu\n",configurations_explored_lsec);
+      fprintf(stderr,"[   Queue] = %llu\n",configurations_queued_lsec);
+      fprintf(stderr,"[Boundary] = %llu\n",configurations_boundary_lsec);
+      if (configurations_explored_lsec==0) configurations_explored_lsec=1;
+      fprintf(stderr,"[A.Neighb] = %llu\n",total_neighbours_lsec/configurations_explored_lsec);
+
+      configurations_explored_lsec=0;
+      configurations_queued_lsec=0;
+      configurations_boundary_lsec=0;
+      total_neighbours_lsec=0;
+
+      print_running_stats_flag=0;
+    }
 #endif
 
 
@@ -191,6 +231,10 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
     }
 
     /* Otherwise compute the next configurations */
+#ifdef PRINT_RUNNING_STATS
+    configurations_explored_lsec += 1;
+#endif
+
     for(Vertex v=0;v<g->size;v++) {
 
 
@@ -199,7 +243,15 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
       if (nptr==NULL) continue;
 
+#ifdef PRINT_RUNNING_STATS
+      total_neighbours_lsec +=1 ;
+#endif
+
+
       if (nptr->pebble_cost > upper_bound) { /* Is it above the upper bound? */
+#ifdef PRINT_RUNNING_STATS
+        configurations_boundary_lsec += 1;
+#endif
         dispose_PebbleConfiguration(nptr);
         continue;
       }
@@ -212,6 +264,9 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
         /* New or improved configuration */
         writeDict(D,nptr);
         enqueue(Q,nptr);
+#ifdef PRINT_RUNNING_STATS
+        configurations_queued_lsec +=1 ;
+#endif
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
       } else {
@@ -239,31 +294,17 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
  *  representation of such graphs.
  */
 
-//extern void one_second_handler(int signal);
-
-void my_handler(int sigl) {
-  alarm(1);
-}
 
 
 int main(int argc, char *argv[])
 {
 
-  int x;
+  install_timed_flags(2,3);
 
-  signal(SIGALRM,my_handler);
-
-  /* setitimer(ITIMER_VIRTUAL,&clock,NULL); */
-  alarm(1);
-
-
-  //DAG *A=piramid(2);
-  //DAG *B=piramid(2);
-  //DAG *C=orproduct(A,B);
-  while(1) {
-    x=1;
-  }
-  /* pebbling_strategy(C,4); */
-  /* exit(0); */
+  DAG *A=piramid(2);
+  DAG *B=piramid(2);
+  DAG *C=orproduct(A,B);
+  pebbling_strategy(C,6);
+  exit(0);
 }
 
