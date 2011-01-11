@@ -13,7 +13,6 @@
 
 #include <signal.h>
 #include <unistd.h>
-#include <sys/time.h>
 
 #include "common.h"
 #include "dag.h"
@@ -240,30 +239,31 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
  *  representation of such graphs.
  */
 
+//extern void one_second_handler(int signal);
 
-void one_second_handler(int signal) {
-  printf("Hello!\n");
+void my_handler(int sigl) {
+  alarm(1);
 }
 
 
 int main(int argc, char *argv[])
 {
 
-  struct itimerval clock;
-  clock.it_interval.tv_sec=1;
-  clock.it_interval.tv_usec=0;
+  int x;
 
-  clock.it_value.tv_sec=1;
-  clock.it_value.tv_usec=0;
+  signal(SIGALRM,my_handler);
 
-  signal(SIGALRM,one_second_handler);
+  /* setitimer(ITIMER_VIRTUAL,&clock,NULL); */
+  alarm(1);
 
-  setitimer(ITIMER_REAL,&clock,NULL);
 
-  DAG *A=piramid(2);
-  DAG *B=piramid(2);
-  DAG *C=orproduct(A,B);
-  pebbling_strategy(C,4);
-  exit(0);
+  //DAG *A=piramid(2);
+  //DAG *B=piramid(2);
+  //DAG *C=orproduct(A,B);
+  while(1) {
+    x=1;
+  }
+  /* pebbling_strategy(C,4); */
+  /* exit(0); */
 }
 

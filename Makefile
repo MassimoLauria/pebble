@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-10, lunedì 18:33 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-11, martedì 16:20 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -37,7 +37,7 @@ LDFLAGS=
 
 
 # --------- Project dependent rules ---------------
-TARGET=pebble exposetypes
+TARGET=prova pebble exposetypes
 all: ${TARGET}
 
 
@@ -45,6 +45,8 @@ exposetypes: exposetypes.c
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
 pebble: pebble.o common.o dag.o pebbling.o dsbasic.o hashtable.o
+prova:  prova.o common.o dag.o pebbling.o dsbasic.o hashtable.o
+
 
 test: exposetypes
 	./exposetypes
