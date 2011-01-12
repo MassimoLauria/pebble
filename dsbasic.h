@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-20, lunedì 16:38 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 16:53 (CET) Massimo Lauria"
 
    Description::
 
@@ -50,6 +50,7 @@ void disposeSL(LinkedList *l);
 void insertSL(LinkedList *l,void *data,Boolean before);
 void appendSL(LinkedList *l,void *data);
 void delete_and_nextSL(LinkedList *l);
+void pushSL(LinkedList *l,void *data);
 
 void resetSL(LinkedList *l);
 void nextSL(LinkedList *l);
@@ -115,7 +116,7 @@ typedef LinkedList  Stack;
 #define rightenqueue(dq,d) (extendDL((dq),(d),1))
 
 /* Stack is realized with LinkedList */
-#define  push(st,d) (extendDL((dq),(d),0))
+#define  push(st,d) (pushSL((q),(d)))
 
 
 #endif /* DSBASIC_H */

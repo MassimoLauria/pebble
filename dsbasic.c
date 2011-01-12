@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-07, venerdì 18:57 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 16:52 (CET) Massimo Lauria"
 
    Description::
 
@@ -105,7 +105,7 @@ LinkedList *newSL(void) {
 void insertSL(LinkedList *l,void *data,Boolean before) {
 
   ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(isconsistentSL(l));
   ASSERT_TRUE(iscursorvalidSL(l));
   ASSERT_FALSE(isemptySL(l));
 
@@ -133,9 +133,40 @@ void insertSL(LinkedList *l,void *data,Boolean before) {
     l->cursor = lelem;
   }
 
-  ASSERT_NOTNULL(isconsistentSL(l));
+  ASSERT_TRUE(isconsistentSL(l));
 
 }
+
+/* Push at the head of the list, and move the cursor at the beginning */
+void pushSL(LinkedList *l,void *data) {
+
+  ASSERT_NOTNULL(l);
+  ASSERT_TRUE(isconsistentSL(l));
+
+  if(isemptySL(l)) {
+    appendSL(l,data);
+    ASSERT_TRUE(iscursorvalidSL(l));
+    ASSERT_TRUE(isconsistentSL(l));
+    return;
+  }
+
+  ASSERT_TRUE(iscursorvalidSL(l));
+  ASSERT_FALSE(isemptySL(l));
+
+  /* Allocation */
+  struct LinkedListHandle *lelem;
+  lelem=(struct LinkedListHandle*)malloc(sizeof(struct LinkedListHandle));
+  ASSERT_NOTNULL(lelem);
+
+  /* Insertion at head */
+  lelem->data=data;
+  lelem->next=l->head;
+  l->head=lelem;
+  l->before_cursor=NULL;
+  l->cursor= l->head;
+  ASSERT_TRUE(isconsistentSL(l));
+}
+
 
 /*
    If the cursor is after the tail, it is considered to be invalid.
