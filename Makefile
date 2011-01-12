@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-12, mercoledì 15:01 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-12, mercoledì 18:32 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -44,7 +44,7 @@ all: ${TARGET}
 exposetypes: exposetypes.c
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
-pebble: pebble.o common.o dag.o pebbling.o dsbasic.o hashtable.o timedflags.o
+pebble: pebble.o common.o dag.o pebbling.o dsbasic.o hashtable.o timedflags.o statistics.o
 
 timedflags.o:timedflags.c
 	$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@

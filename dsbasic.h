@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 16:53 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 16:57 (CET) Massimo Lauria"
 
    Description::
 
@@ -116,7 +116,7 @@ typedef LinkedList  Stack;
 #define rightenqueue(dq,d) (extendDL((dq),(d),1))
 
 /* Stack is realized with LinkedList */
-#define  push(st,d) (pushSL((q),(d)))
+#define  push(q,d) (pushSL((q),(d)))
 
 
 #endif /* DSBASIC_H */
