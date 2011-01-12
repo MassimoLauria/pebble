@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-10, lunedì 13:04 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 21:47 (CET) Massimo Lauria"
 
    Description::
 
@@ -78,61 +78,73 @@ Dict *newDict(size_t allocation) {
    cursor of the LinkedList which implements the bucket stays on the
    found element.
  */
-DictQueryResult queryDict(Dict* d,void *data) {
+void queryDict(Dict* d,DictQueryResult *const result,void *data) {
 
   ASSERT_NOTNULL(d);
-
-  DictQueryResult res={ 0UL, NULL,0,0 };
+  ASSERT_NOTNULL(result);
   LinkedList      *ll=NULL;
 
   /* Compute the hash and then find the position in the array */
-  res.key    = d->key_function(data);
-  res.bucket = res.key % d->size;
-  res.value  = NULL;
-  res.hops=0;
+  result->key    = d->key_function(data);
+  result->bucket = result->key % d->size;
+  result->value  = NULL;
+  result->hops=0;
 
-  ll=d->buckets[res.bucket];
+  ll=d->buckets[result->bucket];
   resetSL(ll);
   while(iscursorvalidSL(ll)) {
     if (  d->eq_function(data,getSL(ll))  ) {
-      res.value=getSL(ll);
-      return res;
+      result->value=getSL(ll);
+      break;
     }
-    res.hops++;
+    result->hops++;
     nextSL(ll);
   }
+  ASSERT_NULL(result->value);
+  return;
+}
 
-  return res;
+
+/*
+ *  It is equivalent to write in behaviour, but assumes it does not
+ *  query the dictionary before insertion. It assumes that the result
+ *  of such query is in `result'.
+ */
+void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data) {
+
+  ASSERT_NOTNULL(d);
+  ASSERT_NOTNULL(result);
+  ASSERT_TRUE(result->key    == d->key_function(data));
+  ASSERT_TRUE(result->bucket == result->key % d->size);
+
+  LinkedList      *ll  = d->buckets[result->bucket];
+  ASSERT_NOTNULL(ll);
+
+  if (result->value==NULL) {
+    /* The configuration does not occur in the dictionary */
+    appendSL(ll,data);
+  } else {
+    /* The configuration occur, so we update the old record if there's the need. */
+    /* We use an internal of LinkedList!! */
+    ASSERT_TRUE(d->eq_function(data,result->value));
+    ll->cursor->data=data;
+  }
+  return;
 }
 
 /*
  *  The update function has the following semantic: if the
  *  configuration is absent from the dictionary, then a new record is
  *  added to the dictionary, otherwise an old one is overwritten.  The
- *  function returns a pointer to the old one (NULL if any).
+ *  DictQueryResult object is filled with the result of the query of
+ *  the old value (may be NULL) query.
  */
-void *writeDict(Dict *d,void *data) {
-
-  DictQueryResult res;
-  LinkedList      *ll;
+void writeDict(Dict *d,DictQueryResult *const result,void *data) {
 
   ASSERT_NOTNULL(d);
+  ASSERT_NOTNULL(result);
 
-  res = queryDict(d,data);
-  ll  = d->buckets[res.bucket];
+  queryDict(d,result,data);
+  unsafe_noquery_writeDict(d,result,data);
 
-  if (res.value==NULL) {
-    /* The configuration does not occur in the dictionary */
-    appendSL(d->buckets[res.bucket],data);
-    return NULL;
-  } else {
-    /* The configuration occur, so we update the old record if there's the need. */
-    /* We use an internal of LinkedList!! */
-    ASSERT_NOTNULL(d->eq_function(data,res.value));
-    ll->cursor->data=data;
-
-    return res.value;
-  }
 }
-
-

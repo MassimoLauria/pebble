@@ -22,7 +22,7 @@
 #include "timedflags.h"
 #include "statistics.h"
 
-#define HASH_TABLE_SPACE_SIZE    0x0FFFFF
+#define HASH_TABLE_SPACE_SIZE    0x01FFFFF
 #define REPORT_INTERVAL          2
 
 
@@ -140,6 +140,7 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
   /* Dictionary data structure */
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
+  DictQueryResult res;               /* Query results */
   D->key_function = hashPebbleConfiguration;
   D->eq_function  = samePebbleConfiguration;
 
@@ -149,14 +150,13 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
   /* Initial empty configuration */
   PebbleConfiguration *empty=new_PebbleConfiguration();
-  writeDict(D,empty);
+  writeDict(D,&res,empty);
   enqueue  (Q,empty);
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
   PebbleConfiguration *nptr=NULL;    /* Configuration to be queued for later processing (maybe) */
   PebbleConfiguration *final=NULL;   /* Cheapest final configuration so far */
-  DictQueryResult res;               /* Query results */
 
   /* Consistency test of data structures */
   ASSERT_TRUE(isconsistentDict(D));
@@ -176,10 +176,15 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
        is integer, then we divide for p!. In this way all intermediate
        values are integers. Since p << n there is no much danger of
        overflow if the total count does not overflow. */
-
+#if WHITE_PEBBLES==1 && BLACK_PEBBLES==1
     for(int k=1;k<=p;k++) { tmp *= 2*( g->size - k + 1); }
     for(int k=2;k<=p;k++) { tmp /= k; }
     STATS_ADD(Stat,search_space,2*tmp); /* Sink maybe touched or not */
+#else
+    for(int k=1;k<=p;k++) { tmp *= ( g->size - k + 1); }
+    for(int k=2;k<=p;k++) { tmp /= k; }
+    STATS_ADD(Stat,search_space,tmp); /* Sink maybe touched or not */
+#endif
   }
 #endif
 
@@ -243,23 +248,28 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
       }
 
       /* Evaluate the configuration... */
-      res=queryDict(D,nptr);
+      queryDict(D,&res,nptr);
+      STATS_INC(Stat,dict_queries);
+      STATS_ADD(Stat,dict_hops,res.hops);
 
       if (res.value==NULL)  {  /* Never encountered before */
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
-        writeDict(D,nptr);
+        unsafe_noquery_writeDict(D,&res,nptr);
         enqueue(Q,nptr);
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
+        STATS_INC(Stat,dict_misses);
+        STATS_INC(Stat,dict_writes);
       } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
                               /* Cost improvement */
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
-        writeDict(D,nptr);
+        unsafe_noquery_writeDict(D,&res,nptr);
         enqueue(Q,nptr);
         STATS_INC(Stat,queued);
         STATS_INC(Stat,requeuing);
+        STATS_INC(Stat,dict_writes);
       } else {               /* Old with no improvements */
         STATS_INC(Stat,suboptimal);
         dispose_PebbleConfiguration(nptr);
@@ -296,7 +306,7 @@ int main(int argc, char *argv[])
   DAG *A=piramid(2);
   DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
-  pebbling_strategy(C,6);
+  pebbling_strategy(C,7);
   exit(0);
 }
 

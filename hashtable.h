@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:24 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:10 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 21:49 (CET) Massimo Lauria"
 
    Description::
 
@@ -58,13 +58,14 @@ typedef struct {
 } DictQueryResult;
 
 
-Dict *newDict(size_t allocation);
-void disposeDict(Dict *d);
+extern Dict *newDict(size_t allocation);
+extern void disposeDict(Dict *d);
 
-Boolean isconsistentDict(Dict *d);
+extern Boolean isconsistentDict(Dict *d);
 
-DictQueryResult queryDict(Dict* d,void *data);
-void *writeDict(Dict *d,void *data);
+extern void queryDict(Dict* d,DictQueryResult *const result,void *data);
+extern void writeDict(Dict *d,DictQueryResult *const result,void *data);
+extern void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data);
 
 
 
