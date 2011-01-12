@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-12, mercoledì 00:48 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-12, mercoledì 15:01 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -16,8 +16,8 @@ BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
 #DEBUG=-DDEBUG -g
 #OPTIMIZATION=
 
-DEBUG=
-OPTIMIZATION=-O3
+#DEBUG=
+#OPTIMIZATION=-O3
 
 CC=gcc
 #CC=cc

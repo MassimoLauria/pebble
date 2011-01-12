@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-17, venerdì 18:26 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 14:11 (CET) Massimo Lauria"
 
    Description::
 
@@ -49,6 +49,9 @@ typedef struct {
 
   Vertex **in;      /* Vector of incoming vertices */
   Vertex **out;     /* Vector of outgoing vertices */
+
+  BitTuple *pred_bitmasks;  /* Bitmask indicating the predecessors of a vertex */
+  BitTuple *succ_bitmasks;  /* Bitmask indicating the predecessors of a vertex */
 
   /* Precomputed data for efficient managing */
   size_t source_number;

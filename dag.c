@@ -2,7 +2,7 @@
    Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2010-12-18, sabato 18:43 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 14:54 (CET) Massimo Lauria"
 
    Description::
 
@@ -56,6 +56,22 @@ void dag_precompute_data(DAG *digraph) {
     if (digraph->outdegree[i] == 0) digraph->sinks[sink_extend++]=i;
   }
 
+  /* Computes the predecessors and successors bitmaks */
+  if (digraph->size > BITTUPLE_SIZE) {
+    digraph->pred_bitmasks = NULL;
+    digraph->succ_bitmasks = NULL;
+  } else {
+    digraph->pred_bitmasks=(BitTuple*)malloc(sizeof(BitTuple)*(digraph->size));
+    digraph->succ_bitmasks=(BitTuple*)malloc(sizeof(BitTuple)*(digraph->size));
+    for(Vertex v=0;v<digraph->size;v++) {
+      digraph->pred_bitmasks[v]=BITTUPLE_ZERO;
+      digraph->succ_bitmasks[v]=BITTUPLE_ZERO;
+      for(size_t j=0;j<digraph->indegree[v];j++)
+        digraph->pred_bitmasks[v] |= (BITTUPLE_UNIT << digraph->in[v][j]);
+      for(size_t j=0;j<digraph->outdegree[v];j++)
+        digraph->succ_bitmasks[v] |= (BITTUPLE_UNIT << digraph->out[v][j]);
+    }
+  }
 }
 
 
@@ -155,6 +171,8 @@ void dag_precompute_data(DAG *digraph) {
   if (p->outdegree !=NULL) free(p->outdegree);
   if (p->sources   !=NULL) free(p->sources);
   if (p->sinks     !=NULL) free(p->sinks  );
+  if (p->pred_bitmasks !=NULL) free(p->pred_bitmasks);
+  if (p->succ_bitmasks !=NULL) free(p->succ_bitmasks);
 
   /* Dispose the main data structure */
   free(p);
@@ -180,6 +198,14 @@ Boolean isconsistent_DAG(const DAG *ptr) {
   ASSERT_NOTNULL(ptr->sinks);
   ASSERT_NOTNULL(ptr->sources);
 
+  /* Bitmasks are present iff they are big enough */
+  if (ptr->size <= BITTUPLE_SIZE) {
+    ASSERT_NOTNULL(ptr->pred_bitmasks);
+    ASSERT_NOTNULL(ptr->succ_bitmasks);
+  } else {
+    ASSERT_NULL(ptr->pred_bitmasks);
+    ASSERT_NULL(ptr->succ_bitmasks);
+  }
   return TRUE;
 }
 

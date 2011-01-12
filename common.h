@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-10, lunedì 12:09 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 14:47 (CET) Massimo Lauria"
 
    Description::
 
@@ -15,7 +15,7 @@
 /* Preamble */
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <limits.h>
 
 /* Bit and Boolean types declarations */
 /* Several bit tuples  are used in the code.
@@ -23,7 +23,9 @@
 typedef long long unsigned int BitTuple;
 typedef unsigned char          Boolean;
 
-#define UNITBITMASK  0x1ULL   /* A bitmask compatible with BitTuple, of value 1 */
+#define BITTUPLE_UNIT 0x1ULL   /* A bitmask compatible with BitTuple, of value 1 */
+#define BITTUPLE_ZERO 0x0ULL   /* A bitmask compatible with BitTuple, of value 0 */
+#define BITTUPLE_SIZE sizeof(BitTuple)*CHAR_BIT
 
 #define TRUE  1
 #define FALSE 0

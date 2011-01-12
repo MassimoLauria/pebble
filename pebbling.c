@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-10, lunedì 12:13 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 15:03 (CET) Massimo Lauria"
 
    Description::
 
@@ -76,7 +76,7 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   /* The size of the graph and the number of sinks must fit with the
      pebbling representation. */
-  if (graph->size > MAX_VERTICES) return FALSE;
+  if (graph->size > BITTUPLE_SIZE) return FALSE;
   if (graph->sink_number != 1)    return FALSE;
 
   /* The configuration must not have both a white and a black pebble
@@ -84,7 +84,7 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
 
   /* If there's a pebble on the sink, sink is touched */
-  if ((ptr->white_pebbled | ptr->black_pebbled) & (UNITBITMASK << graph->sinks[0])) {
+  if ((ptr->white_pebbled | ptr->black_pebbled) & (BITTUPLE_UNIT << graph->sinks[0])) {
     if (!ptr->sink_touched) return FALSE;
   }
 
@@ -99,16 +99,16 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   unsigned int counter=0;
 
   for(size_t i=0; i<graph->size; i++) {
-    if (ptr->white_pebbled & (UNITBITMASK << i)) counter++;
-    if (ptr->black_pebbled & (UNITBITMASK << i)) counter++;
+    if (ptr->white_pebbled & (BITTUPLE_UNIT << i)) counter++;
+    if (ptr->black_pebbled & (BITTUPLE_UNIT << i)) counter++;
   }
 
   if (counter!=ptr->pebbles) return FALSE;
 
   /* Check that the mask is clean in the residual bits */
-  if (MAX_VERTICES != graph->size) {
+  if (BITTUPLE_SIZE != graph->size) {
     if ( (ptr->white_pebbled | ptr->black_pebbled) &  /* The OR of the bitsequences */
-         ~((UNITBITMASK << graph->size) -1) )                   /* A bitmask which is set only on the high bits */
+         ~((BITTUPLE_UNIT << graph->size) -1) )                   /* A bitmask which is set only on the high bits */
       return FALSE;
   }
   /* Everything's fine */
@@ -123,7 +123,7 @@ inline Boolean isblack(const Vertex v,const DAG *g,const PebbleConfiguration *c)
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->black_pebbled & (UNITBITMASK<<v))?TRUE:FALSE;
+  return (c->black_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
 
 /* Determines if a vertex is white pebbled according to a specific
@@ -134,7 +134,7 @@ inline Boolean iswhite(const Vertex v,const DAG *g,const PebbleConfiguration *c)
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->white_pebbled & (UNITBITMASK<<v))?TRUE:FALSE;
+  return (c->white_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
 
 
@@ -146,7 +146,7 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return ((c->white_pebbled | c->black_pebbled) & (UNITBITMASK<<v))?TRUE:FALSE;
+  return ((c->white_pebbled | c->black_pebbled) & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
 
 /* Determines if there is a pebble on all predecessors of agiven
@@ -159,10 +159,13 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (isblack(v,g,c)) return FALSE;
 
-  for(size_t i=0;i<g->indegree[v];i++) {
-    if (!ispebbled(g->in[v][i],g,c)) return FALSE;
-  }
-  return TRUE;
+  return (((c->white_pebbled | c->black_pebbled) & g->pred_bitmasks[v])
+          == g->pred_bitmasks[v])?TRUE:FALSE;
+
+  /* for(size_t i=0;i<g->indegree[v];i++) { */
+  /*   if (!ispebbled(g->in[v][i],g,c)) return FALSE; */
+  /* } */
+  /* return TRUE; */
 }
 
 
@@ -224,7 +227,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
   if (isactive(v,g,old) &&  iswhite(v,g,old) ) { /* Delete WHITE */
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->white_pebbled ^= (UNITBITMASK << v);
+    nconf->white_pebbled ^= (BITTUPLE_UNIT << v);
     nconf->pebbles     -= 1;
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
@@ -235,7 +238,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
   if (isactive(v,g,old) && !iswhite(v,g,old) ) { /* Place BLACK */
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled |= (UNITBITMASK << v);
+    nconf->black_pebbled |= (BITTUPLE_UNIT << v);
     nconf->pebbles     += 1;
 
     if (nconf->pebbles > nconf->pebble_cost)
@@ -251,7 +254,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
   if (!isactive(v,g,old) && isblack(v,g,old) ) { /* Delete BLACK */
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled ^= (UNITBITMASK << v);
+    nconf->black_pebbled ^= (BITTUPLE_UNIT << v);
     nconf->pebbles     -= 1;
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
@@ -266,7 +269,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
   if (!iswhite(v,g,old)) { /* Place WHITE */
 #endif
     nconf=copy_PebbleConfiguration(old);
-    nconf->white_pebbled |= (UNITBITMASK << v);
+    nconf->white_pebbled |= (BITTUPLE_UNIT << v);
     nconf->pebbles     += 1;
     if (nconf->pebbles > nconf->pebble_cost)
       nconf->pebble_cost = nconf->pebbles;

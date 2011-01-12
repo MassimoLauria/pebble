@@ -22,7 +22,7 @@
 
 
 #define HASH_TABLE_SPACE_SIZE    0x0FFFFF
-
+#define REPORT_INTERVAL          2
 
 
 /*
@@ -78,7 +78,7 @@ Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,s));
   ASSERT_TRUE(isconsistentDict(dict));
 
-  ASSERT_TRUE(g->size < MAX_VERTICES);
+  ASSERT_TRUE(g->size < BITTUPLE_SIZE);
 
   return TRUE;
 }
@@ -115,7 +115,7 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   ASSERT_TRUE(isconsistentDict(D));
 
   /* PROLOGUE ----------------------------------- */
-  if (g->size > MAX_VERTICES) {
+  if (g->size > BITTUPLE_SIZE) {
     fprintf(stderr,
             "Error in search procedure: the graph is too "
             "big for the optimized data structures.");
@@ -156,17 +156,40 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
   int i=1; char buffer[20];   /* Buffer for printing debug
                                  informations. */
 #endif
+
 #ifdef PRINT_RUNNING_STATS
-  unsigned long long int configurations_explored=1;
-  unsigned long long int configurations_queued=1;
+  unsigned long long int elapsed_seconds=0;
+  unsigned long long int configurations_explored=0;
+  unsigned long long int configurations_unique=0;
+  unsigned long long int configurations_queued=0;
+  unsigned long long int configurations_requeued=0;
   unsigned long long int configurations_boundary=0;
 
-  unsigned long long int configurations_explored_lsec=0;
-  unsigned long long int configurations_queued_lsec=0;
+  unsigned long long int configurations_explored_lsec=1;
+  unsigned long long int configurations_unique_lsec=1;
+  unsigned long long int configurations_queued_lsec=1;
+  unsigned long long int configurations_requeued_lsec=0;
   unsigned long long int configurations_boundary_lsec=0;
   unsigned long long int total_neighbours_lsec=0;
-#endif
+  unsigned long long int total_neighbours=0;
 
+  unsigned long long int total_potential_configurations=0;
+
+  int p,k;
+  unsigned long long int fixed_size_confs;
+  for(p=0;p<=upper_bound;p++) {
+    fixed_size_confs=1; /* How many configurations with p pebbles? */
+    /* We compute binom(n,p)*2^p, with n=the size of the graph and p
+       the number of pebbles.  We first computing 2^p*n!/(n-p)! which
+       is integer, then we divide for p!. In this way all intermediate
+       values are integers. Since p << n there is no much danger of
+       overflow if the total count does not overflow. */
+
+    for(k=1;k<=p;k++) { fixed_size_confs *= 2*( g->size - k + 1); }
+    for(k=2;k<=p;k++) { fixed_size_confs /= k; }
+    total_potential_configurations += 2*fixed_size_confs; /* Sink maybe touched or not */
+  }
+#endif
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
@@ -185,24 +208,47 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 #ifdef PRINT_RUNNING_STATS
     if (print_running_stats_flag) {
       /* Compute statistics from the heuristic */
+      configurations_unique   += configurations_unique_lsec;
       configurations_explored += configurations_explored_lsec;
       configurations_queued   += configurations_queued_lsec;
+      configurations_requeued   += configurations_requeued_lsec;
       configurations_boundary += configurations_boundary_lsec;
+      total_neighbours        += total_neighbours_lsec;
+      elapsed_seconds += REPORT_INTERVAL;
 
-      fprintf(stderr,"\nNumber of configurations:\n");
-      fprintf(stderr,"TOTAL\n\n");
+      fprintf(stderr,"\nGraph on %u vertices, upper bound=%u, clock %llu:\n\n",
+              g->size,
+              upper_bound,
+              elapsed_seconds);
+
+      fprintf(stderr,"TOTAL\n");
       fprintf(stderr,"[Explored] = %llu\n",configurations_explored);
-      fprintf(stderr,"[   Queue] = %llu\n",configurations_queued);
+      fprintf(stderr,"[  Unique] = %llu of %llu\n",configurations_unique,
+              total_potential_configurations);
+      fprintf(stderr,"[  Queued] = %llu\n",configurations_queued);
+      fprintf(stderr,"[Requeued] = %llu\n",configurations_requeued);
       fprintf(stderr,"[Boundary] = %llu\n",configurations_boundary);
-      fprintf(stderr,"\nFROM LAST REPORT\n");
+      fprintf(stderr,"[A.Neighb] = %llu\n",total_neighbours/configurations_explored);
+
+      fprintf(stderr,"\nLAST INTERVAL\n");
       fprintf(stderr,"[Explored] = %llu\n",configurations_explored_lsec);
-      fprintf(stderr,"[   Queue] = %llu\n",configurations_queued_lsec);
+      fprintf(stderr,"[  Unique] = %llu\n",configurations_unique_lsec);
+      fprintf(stderr,"[  Queued] = %llu\n",configurations_queued_lsec);
+      fprintf(stderr,"[Requeued] = %llu\n",configurations_requeued_lsec);
       fprintf(stderr,"[Boundary] = %llu\n",configurations_boundary_lsec);
-      if (configurations_explored_lsec==0) configurations_explored_lsec=1;
       fprintf(stderr,"[A.Neighb] = %llu\n",total_neighbours_lsec/configurations_explored_lsec);
+
+      fprintf(stderr,"\nPER SECOND\n");
+      fprintf(stderr,"[Explored] = %llu\n",configurations_explored/elapsed_seconds);
+      fprintf(stderr,"[  Unique] = %llu\n",configurations_unique/elapsed_seconds);
+      fprintf(stderr,"[  Queued] = %llu\n",configurations_queued/elapsed_seconds);
+      fprintf(stderr,"[Requeued] = %llu\n",configurations_requeued/elapsed_seconds);
+      fprintf(stderr,"[Boundary] = %llu\n",configurations_boundary/elapsed_seconds);
 
       configurations_explored_lsec=0;
       configurations_queued_lsec=0;
+      configurations_unique_lsec=0;
+      configurations_requeued_lsec=0;
       configurations_boundary_lsec=0;
       total_neighbours_lsec=0;
 
@@ -259,13 +305,20 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
       /* Valid new configurations */
       res=queryDict(D,nptr);
 
-      if (res.value==NULL ||
-          ((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
+      if (nptr->pebble_cost > upper_bound) {
+#ifdef PRINT_RUNNING_STATS
+        configurations_boundary_lsec +=1 ;
+#endif
+        dispose_PebbleConfiguration(nptr);
+      } else if (res.value==NULL ||
+                 ((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
         /* New or improved configuration */
         writeDict(D,nptr);
         enqueue(Q,nptr);
 #ifdef PRINT_RUNNING_STATS
         configurations_queued_lsec +=1 ;
+        if (res.value!=NULL) configurations_requeued_lsec +=1;
+        else configurations_unique_lsec +=1;
 #endif
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;

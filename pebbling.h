@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-09, domenica 20:01 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-12, mercoledì 14:30 (CET) Massimo Lauria"
 
    Description::
 
@@ -17,11 +17,9 @@
 #define  PEBBLING_H
 
 #include <stdlib.h>
-#include <limits.h>
 #include "common.h"
 #include "dag.h"
 
-#define MAX_VERTICES sizeof(BitTuple)*CHAR_BIT
 
 /* Code */
 
