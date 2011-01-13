@@ -258,7 +258,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
 
     /* Otherwise compute the next configurations */
     /* for(v=0;v<g->size;v++) { */
-    for(v=0;v<g->size;v++) {
+    for(Vertex v=0;v<g->size;v++) {
       /* Produce a new configurations */
       nptr=next_PebbleConfiguration(v,g,ptr);
       if (nptr==NULL) {
