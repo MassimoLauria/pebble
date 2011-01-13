@@ -27,8 +27,8 @@ int main(int argc, char *argv[])
 
   install_timed_flags(REPORT_INTERVAL);
 
-  DAG *A=piramid(2);
-  DAG *B=piramid(1);
+  DAG *A=piramid(1);
+  DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
   PebbleConfiguration *solution=bfs_pebbling_strategy(C,6);
   if (solution) {
