@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 16:52 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 14:50 (CET) Massimo Lauria"
 
    Description::
 
@@ -77,7 +77,6 @@ Boolean iscursorvalidSL(LinkedList *list) {
 }
 
 
-
 /* Create an empty linked list */
 LinkedList *newSL(void) {
   LinkedList *list;
@@ -92,6 +91,19 @@ LinkedList *newSL(void) {
 
   return list;
 }
+
+void forkcursorSL(LinkedList *list,LinkedList *sndcursor) {
+
+  ASSERT_NOTNULL(list);
+  ASSERT_NOTNULL(sndcursor);
+
+  sndcursor->head  =list->head;
+  sndcursor->tail  =list->tail;
+  sndcursor->cursor=list->cursor;
+  sndcursor->before_cursor=list->before_cursor;
+
+}
+
 
 /*
    If the cursor is after the tail, it is considered to be invalid.

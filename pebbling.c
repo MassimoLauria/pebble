@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 15:03 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 12:57 (CET) Massimo Lauria"
 
    Description::
 
@@ -83,6 +83,15 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
      on the same vertex */
   if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
 
+  /* Check that only the appropriate pebbles are used */
+#if !BLACK_PEBBLES
+  if (ptr->black_pebbled!=0) return FALSE;
+#endif
+
+#if !WHITE_PEBBLES
+  if (ptr->white_pebbled!=0) return FALSE;
+#endif
+
   /* If there's a pebble on the sink, sink is touched */
   if ((ptr->white_pebbled | ptr->black_pebbled) & (BITTUPLE_UNIT << graph->sinks[0])) {
     if (!ptr->sink_touched) return FALSE;
@@ -111,6 +120,7 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
          ~((BITTUPLE_UNIT << graph->size) -1) )                   /* A bitmask which is set only on the high bits */
       return FALSE;
   }
+
   /* Everything's fine */
   return TRUE;
 }
@@ -151,7 +161,7 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
 
 /* Determines if there is a pebble on all predecessors of agiven
    vertex */
-Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
@@ -170,7 +180,7 @@ Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
 
 /* Determines if the configuration is a final one */
-Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
+inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));

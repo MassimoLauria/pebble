@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 21:47 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 12:08 (CET) Massimo Lauria"
 
    Description::
 
@@ -28,9 +28,24 @@ Boolean isconsistentDict(Dict *d) {
   ASSERT_NOTNULL(d->key_function);
   ASSERT_NOTNULL(d->eq_function);
 
+#if defined(HASHTABLE_DEBUG)
+  LinkedList *l;
+
   for(size_t i=0;i<d->size;i++) {
-    if (!isconsistentSL(d->buckets[i])) return FALSE;
+
+    l=d->buckets[i];
+
+    ASSERT_TRUE(isconsistentSL(l));
+
+    /* Chech if all elements have the same hash and if they are in the
+       appropriate bucket. It uses linked list internals. */
+    for(resetSL(l);iscursorvalidSL(l);nextSL(l)) {
+      if ((d->key_function(getSL(l)) % d->size)!=i) {
+        return FALSE;
+      }
+    }
   }
+#endif
   return TRUE;
 }
 
@@ -95,7 +110,7 @@ void queryDict(Dict* d,DictQueryResult *const result,void *data) {
   while(iscursorvalidSL(ll)) {
     if (  d->eq_function(data,getSL(ll))  ) {
       result->value=getSL(ll);
-      break;
+      return;
     }
     result->hops++;
     nextSL(ll);

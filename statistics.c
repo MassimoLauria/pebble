@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 21:21 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 10:57 (CET) Massimo Lauria"
 
    Description::
 
@@ -71,20 +71,22 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
         fprintf(stream,"[Avg. Hops] = %llu\n\n",s->dict_hops/s->dict_queries);
       }
 
+      if (s->clock!=0) {
 
-      fprintf(stream,"\nPER SECOND\n");
-      fprintf(stream,"[   Queued] = %llu\n"  ,s->queued_T/s->clock);
-      fprintf(stream,"[   Unique] = %llu\n"  ,s->first_queuing_T/s->clock);
-      fprintf(stream,"[ Requeued] = %llu\n\n",s->requeuing_T/s->clock);
-      fprintf(stream,"[Processed] = %llu\n"  ,s->processed_T/s->clock);
-      fprintf(stream,"[Discarded] = %llu\n\n",s->queued_and_discarded_T/s->clock);
-      fprintf(stream,"[Offspring] = %llu\n"  ,s->offspring_T/s->clock);
-      fprintf(stream,"[Sub Optim] = %llu\n"  ,s->suboptimal_T/s->clock);
-      fprintf(stream,"[Expensive] = %llu\n\n",s->above_upper_bound_T/s->clock);
+        fprintf(stream,"\nPER SECOND\n");
+        fprintf(stream,"[   Queued] = %llu\n"  ,s->queued_T/s->clock);
+        fprintf(stream,"[   Unique] = %llu\n"  ,s->first_queuing_T/s->clock);
+        fprintf(stream,"[ Requeued] = %llu\n\n",s->requeuing_T/s->clock);
+        fprintf(stream,"[Processed] = %llu\n"  ,s->processed_T/s->clock);
+        fprintf(stream,"[Discarded] = %llu\n\n",s->queued_and_discarded_T/s->clock);
+        fprintf(stream,"[Offspring] = %llu\n"  ,s->offspring_T/s->clock);
+        fprintf(stream,"[Sub Optim] = %llu\n"  ,s->suboptimal_T/s->clock);
+        fprintf(stream,"[Expensive] = %llu\n\n",s->above_upper_bound_T/s->clock);
 
-      fprintf(stream,"[D.Queries] = %llu\n"  ,s->dict_queries_T/s->clock);
-      fprintf(stream,"[D. Writes] = %llu\n"  ,s->dict_writes_T/s->clock);
-      fprintf(stream,"[D. Misses] = %llu\n"  ,s->dict_misses_T/s->clock);
+        fprintf(stream,"[D.Queries] = %llu\n"  ,s->dict_queries_T/s->clock);
+        fprintf(stream,"[D. Writes] = %llu\n"  ,s->dict_writes_T/s->clock);
+        fprintf(stream,"[D. Misses] = %llu\n"  ,s->dict_misses_T/s->clock);
+      }
 
       /* Reset partial counters */
       s->processed            = 0;
@@ -99,6 +101,8 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
       s->dict_queries         = 0;
       s->dict_writes          = 0;
       s->dict_misses          = 0;
+
+
 }
 
 

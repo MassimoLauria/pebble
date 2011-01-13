@@ -23,7 +23,7 @@
 #include "statistics.h"
 
 #define HASH_TABLE_SPACE_SIZE    0x01FFFFF
-#define REPORT_INTERVAL          2
+#define REPORT_INTERVAL          20
 
 
 /*
@@ -69,18 +69,39 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
  */
 /* A configuration is sane only if linked to configurations in the
    appropriate dictionary */
-Boolean CheckDictConsistency(DAG *g,PebbleConfiguration *s,Dict *dict) {
+Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
 
   ASSERT_NOTNULL(g);
-  ASSERT_NOTNULL(s);
   ASSERT_NOTNULL(dict);
 
   ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,s));
   ASSERT_TRUE(isconsistentDict(dict));
 
   ASSERT_TRUE(g->size < BITTUPLE_SIZE);
 
+#ifdef HASHTABLE_DEBUG
+
+  if (!isconsistentDict(dict)) return FALSE;
+
+  LinkedList cur,*l;
+
+  for(size_t i=0;i<dict->size;i++) {
+
+    l=dict->buckets[i];
+
+    /* Chech if all elements are appropriates pebblings. */
+    for(resetSL(l);iscursorvalidSL(l);nextSL(l)) {
+      isconsistent_PebbleConfiguration(g,getSL(l));
+      forkcursorSL(l,&cur);
+      nextSL(&cur);
+      while(iscursorvalidSL(&cur)) {
+        if (dict->eq_function(getSL(l),getSL(&cur))) return FALSE;
+        nextSL(&cur);
+      }
+    }
+
+  }
+#endif
   return TRUE;
 }
 
@@ -183,7 +204,10 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 #else
     for(int k=1;k<=p;k++) { tmp *= ( g->size - k + 1); }
     for(int k=2;k<=p;k++) { tmp /= k; }
-    STATS_ADD(Stat,search_space,tmp); /* Sink maybe touched or not */
+    if (p!=upper_bound)
+      { STATS_ADD(Stat,search_space,2*tmp);} /* Sink maybe pebbled or not */
+    else
+      { STATS_ADD(Stat,search_space,tmp); }
 #endif
   }
 #endif
@@ -197,10 +221,14 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 #ifdef PRINT_RUNNING_STATS
     if (print_running_stats_flag) {
       STATS_ADD(Stat,clock,REPORT_INTERVAL);
-      fprintf(stderr,"\nGraph on %u vertices, upper bound=%u, clock %llu:\n\n",
+      fprintf(stderr,"\nClock %llu: Report for graph on %u vertices, upper bound=%u:",
+              STATS_GET(Stat,clock),
               g->size,
-              upper_bound,
-              STATS_GET(Stat,clock));
+              upper_bound);
+      if (!CheckRuntimeConsistency(g,D)) {
+        fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!");
+      }
+      fprintf(stderr,"\n\n");
       STATS_REPORT(Stat);
       print_running_stats_flag=0;
     }
@@ -279,13 +307,19 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
     /* Save the analyzed configuration for later retrieval */
     appendSL(Trash,ptr);
-    ASSERT_TRUE(isconsistentDict(D));
   }
 
 
 
   /* EPILOGUE --------------------------------- */
   /* free memory, free Mandela! */
+#ifdef PRINT_RUNNING_STATS
+  fprintf(stderr,"FINAL REPORT:\n\n");
+  if (!CheckRuntimeConsistency(g,D)) {
+    fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!");
+  }
+  STATS_REPORT(Stat);
+#endif
   print_dot_Pebbling_Path(g,final);
 }
 
@@ -295,9 +329,6 @@ void pebbling_strategy(DAG *g,unsigned int upper_bound) {
  *  the OR-product graph of them.  Then it prints the DOT
  *  representation of such graphs.
  */
-
-
-
 int main(int argc, char *argv[])
 {
 
@@ -306,7 +337,7 @@ int main(int argc, char *argv[])
   DAG *A=piramid(2);
   DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
-  pebbling_strategy(C,7);
+  pebbling_strategy(C,6);
   exit(0);
 }
 
