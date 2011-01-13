@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-13, giovedì 14:50 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-13, giovedì 15:31 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -54,7 +54,8 @@ pebble: pebble.o \
 		dsbasic.o  \
 		hashtable.o \
 		timedflags.o \
-		statistics.o
+		statistics.o \
+		bfs.o
 
 timedflags.o:timedflags.c
 	$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@

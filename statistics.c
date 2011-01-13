@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 10:57 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 15:22 (CET) Massimo Lauria"
 
    Description::
 
@@ -29,6 +29,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
       s->above_upper_bound_T    += s->above_upper_bound;
       s->suboptimal_T           += s->suboptimal;
       s->offspring_T            += s->offspring;
+      s->final_T                += s->final;
 
       s->dict_hops_T            +=s->dict_hops;
       s->dict_queries_T         +=s->dict_queries;
@@ -45,6 +46,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
       fprintf(stream,"[Offspring] = %llu\n"  ,s->offspring_T);
       fprintf(stream,"[Sub Optim] = %llu\n"  ,s->suboptimal_T);
       fprintf(stream,"[Expensive] = %llu\n"  ,s->above_upper_bound_T);
+      fprintf(stream,"[    Final] = %llu\n"  ,s->final_T);
       fprintf(stream,"[Avg.Neig.] = %llu\n\n"  ,(s->offspring_T+1)/(s->processed_T+1));
 
       fprintf(stream,"[D.Queries] = %llu\n"  ,s->dict_queries_T);
@@ -63,6 +65,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
       fprintf(stream,"[Offspring] = %llu\n"  ,s->offspring);
       fprintf(stream,"[Sub Optim] = %llu\n"  ,s->suboptimal);
       fprintf(stream,"[Expensive] = %llu\n\n",s->above_upper_bound);
+      fprintf(stream,"[    Final] = %llu\n"  ,s->final);
 
       fprintf(stream,"[D.Queries] = %llu\n"  ,s->dict_queries);
       fprintf(stream,"[D. Writes] = %llu\n"  ,s->dict_writes);
@@ -82,6 +85,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
         fprintf(stream,"[Offspring] = %llu\n"  ,s->offspring_T/s->clock);
         fprintf(stream,"[Sub Optim] = %llu\n"  ,s->suboptimal_T/s->clock);
         fprintf(stream,"[Expensive] = %llu\n\n",s->above_upper_bound_T/s->clock);
+        fprintf(stream,"[    Final] = %llu\n"  ,s->final_T/s->clock);
 
         fprintf(stream,"[D.Queries] = %llu\n"  ,s->dict_queries_T/s->clock);
         fprintf(stream,"[D. Writes] = %llu\n"  ,s->dict_writes_T/s->clock);
@@ -97,6 +101,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
       s->above_upper_bound    = 0;
       s->suboptimal           = 0;
       s->offspring            = 0;
+      s->final                = 0;
       s->dict_hops            = 0;
       s->dict_queries         = 0;
       s->dict_writes          = 0;
