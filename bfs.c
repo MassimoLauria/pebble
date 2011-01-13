@@ -170,7 +170,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   PebbleConfiguration *empty=new_PebbleConfiguration();
   writeDict(D,&res,empty);
   enqueue  (Q,empty);
-  unsigned int upper_bound=final_upper_bound;
+  unsigned int upper_bound=1;
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
@@ -210,10 +210,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   }
 #endif
 
-  /* Setup an array of vertex to sort for next-move analysis */
-  Vertex *next_moves=(Vertex*)malloc(sizeof(Vertex)*g->size);
-  Vertex  next_moves_num=0;
-  Vertex v,w;
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
@@ -260,19 +256,9 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
       return ptr;
     }
 
-    /* Compute list of next-moves (we do this in advance to obtain a
-       preferential order) */
-    next_moves_num=0;
-    for(v=0;v<g->size;v++) {
-      if (ptr->last_changed_vertex==v) continue;
-      next_moves[next_moves_num++]=v;
-    }
-
-
     /* Otherwise compute the next configurations */
     /* for(v=0;v<g->size;v++) { */
-    for(w=0;w<next_moves_num;w++) {
-      v=next_moves[w];
+    for(v=0;v<g->size;v++) {
       /* Produce a new configurations */
       nptr=next_PebbleConfiguration(v,g,ptr);
       if (nptr==NULL) {
