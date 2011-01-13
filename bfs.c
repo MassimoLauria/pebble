@@ -20,7 +20,6 @@
 #include "statistics.h"
 
 #define HASH_TABLE_SPACE_SIZE    0x01FFFFF
-#define REPORT_INTERVAL          20
 
 
 /*
@@ -125,7 +124,7 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
                          configuration,   if   such   number  is   not
                          sufficient,  the  the  computation will  fail
                          gracefully without finding the pebbling. */
-PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
+PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound) {
 
   /* PROLOGUE ----------------------------------- */
   if (g->size > BITTUPLE_SIZE) {
@@ -163,13 +162,15 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
   D->eq_function  = samePebbleConfiguration;
 
   /* Data structures for BFS */
-  Queue          *Q=newSL();    /* Configuration to be processed */
-  LinkedList *Trash=newSL();    /* Fully processed configurations */
+  Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
+  Queue           *NextQ=newSL(); /* Configuration to be processed the next round */
+  LinkedList      *Trash=newSL(); /* Fully processed configurations */
 
   /* Initial empty configuration */
   PebbleConfiguration *empty=new_PebbleConfiguration();
   writeDict(D,&res,empty);
   enqueue  (Q,empty);
+  unsigned int upper_bound=1;
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
@@ -187,7 +188,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
 
 #ifdef PRINT_RUNNING_STATS
   Counter tmp;
-  for(int p=0;p<=upper_bound;p++) {
+  for(int p=0;p<=final_upper_bound;p++) {
     tmp=1; /* How many configurations with p pebbles? */
     /* We compute binom(n,p)*2^p, with n=the size of the graph and p
        the number of pebbles.  We first computing 2^p*n!/(n-p)! which
@@ -201,7 +202,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
 #else
     for(int k=1;k<=p;k++) { tmp *= ( g->size - k + 1); }
     for(int k=2;k<=p;k++) { tmp /= k; }
-    if (p!=upper_bound)
+    if (p!=final_upper_bound)
       { STATS_ADD(Stat,search_space,2*tmp);} /* Sink maybe pebbled or not */
     else
       { STATS_ADD(Stat,search_space,tmp); }
@@ -213,11 +214,22 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
      one with a better cost.*/
-  for(resetSL(Q);!isemptySL(Q);delete_and_nextSL(Q)) {
+  for(resetSL(Q);!isemptySL(Q) || !isemptySL(NextQ) ;delete_and_nextSL(Q)) {
+
+    if (isemptySL(Q)) {  /* No more element to be processed... raise the upper bound. */
+      if (upper_bound<final_upper_bound) {
+        upper_bound++;
+        disposeSL(Q);
+        Q=NextQ;
+        NextQ=newSL();
+      } else {
+        break;           /* Nothing else to be processed */
+      }
+    }
 
 #ifdef PRINT_RUNNING_STATS
     if (print_running_stats_flag) {
-      STATS_ADD(Stat,clock,REPORT_INTERVAL);
+      STATS_ADD(Stat,clock,timedflags_clock_freq);
       fprintf(stderr,"\nClock %llu: Report for graph on %u vertices, upper bound=%u:",
               STATS_GET(Stat,clock),
               g->size,
@@ -236,23 +248,23 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
 
     /* Check because `upper_bound' is updated during the process */
-    if (ptr->pebble_cost > upper_bound) {
-      appendSL(Trash,ptr);
-      STATS_INC(Stat,queued_and_discarded);
-      continue;
-    }
+    /* if (ptr->pebble_cost > upper_bound) { */
+    /*   appendSL(Trash,ptr); */
+    /*   STATS_INC(Stat,queued_and_discarded); */
+    /*   continue; */
+    /* } */
 
     /* This configuration is going to be processed */
     STATS_INC(Stat,processed);
 
     /* Check if it is final */
-    if (isfinal(g,ptr)
-        &&
-        (final==NULL || final->pebble_cost > ptr->pebble_cost)) {
-      final=ptr;
-      upper_bound = ptr->pebble_cost;
-      STATS_INC(Stat,final);
-      continue;
+    if (isfinal(g,ptr)) {
+      /*   && */
+      /*   (final==NULL || final->pebble_cost >= ptr->pebble_cost)) { */
+      /* final=ptr; */
+      /* STATS_INC(Stat,final); */
+      STATS_REPORT(Stat);
+      return ptr;
     }
 
     /* Otherwise compute the next configurations */
@@ -267,7 +279,8 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
       }
 
 
-      if (nptr->pebble_cost > upper_bound) { /* Is it above the upper bound? */
+
+      if (nptr->pebble_cost > final_upper_bound) { /* Is it above the upper bound? */
         STATS_INC(Stat,above_upper_bound);
         dispose_PebbleConfiguration(nptr);
         continue;
@@ -282,7 +295,10 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int upper_bound) {
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
         unsafe_noquery_writeDict(D,&res,nptr);
-        enqueue(Q,nptr);
+
+        if (nptr->pebble_cost > upper_bound) enqueue(NextQ,nptr);
+        else enqueue(Q,nptr);
+
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
         STATS_INC(Stat,dict_misses);
