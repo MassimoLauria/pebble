@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 12:57 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-13, giovedì 21:52 (CET) Massimo Lauria"
 
    Description::
 
@@ -18,6 +18,76 @@
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
+
+
+inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==c->last_changed_vertex) return FALSE;
+
+  /* Never place two pebbles on vertices with decreasing
+     rank. Notice that successors always have bigger rank.  */
+  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
+
+  return FALSE;
+}
+
+inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==c->last_changed_vertex) return FALSE;
+
+  /* Never place two pebbles on vertices with decreasing
+     rank. Notice that successors always have bigger rank.  */
+  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
+
+  return FALSE;
+}
+
+inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  Vertex w=c->last_changed_vertex;
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==w) return FALSE;
+
+  /* Never remove pebbles on vertices with increasing
+     rank. Notice that predecessors always have smaller rank.  */
+  if (!ispebbled(w,g,c) && (v > w)) return TRUE;
+
+  /* If a white pebble removal is after a placement, ... */
+  if (ispebbled(w,g,c)) {
+    /* either the placed pebble is necessary for the removal ... */
+    if ((BITTUPLE_UNIT << w) & g->pred_bitmasks[v]) return FALSE;
+    /* or the white pebble was necessary for the placement ... */
+    if (((BITTUPLE_UNIT << w) & g->succ_bitmasks[v]) && isblack(w,g,c)) return FALSE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==c->last_changed_vertex) return FALSE;
+
+  /* Never remove pebbles on vertices with increasing
+     rank. Notice that predecessors always have smaller rank.  */
+  if (ispebbled(c->last_changed_vertex,g,c) && (v > c->last_changed_vertex)) return TRUE;
+
+  /* If a black pebble removal is after a placement, then the placed
+     vertex must be a black pebbled successor */
+  if (ispebbled(c->last_changed_vertex,g,c)) {
+    if (!isblack(c->last_changed_vertex,g,c)) return TRUE;
+    if (!((BITTUPLE_UNIT << c->last_changed_vertex) & g->succ_bitmasks[v])) return TRUE;
+  }
+
+  return FALSE;
+}
+
+
+
 
 PebbleConfiguration *new_PebbleConfiguration(void) {
 
@@ -236,6 +306,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
   if (isactive(v,g,old) &&  iswhite(v,g,old) ) { /* Delete WHITE */
 
+    if (delete_white_heuristics_cut(v,g,old)) return NULL;
+
     nconf=copy_PebbleConfiguration(old);
     nconf->white_pebbled ^= (BITTUPLE_UNIT << v);
     nconf->pebbles     -= 1;
@@ -246,6 +318,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
 #if BLACK_PEBBLES
   if (isactive(v,g,old) && !iswhite(v,g,old) ) { /* Place BLACK */
+
+    if (place_black_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
     nconf->black_pebbled |= (BITTUPLE_UNIT << v);
@@ -263,6 +337,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
   if (!isactive(v,g,old) && isblack(v,g,old) ) { /* Delete BLACK */
 
+    if (delete_black_heuristics_cut(v,g,old)) return NULL;
+
     nconf=copy_PebbleConfiguration(old);
     nconf->black_pebbled ^= (BITTUPLE_UNIT << v);
     nconf->pebbles     -= 1;
@@ -278,6 +354,9 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 #else
   if (!iswhite(v,g,old)) { /* Place WHITE */
 #endif
+
+    if (place_white_heuristics_cut(v,g,old)) return NULL;
+
     nconf=copy_PebbleConfiguration(old);
     nconf->white_pebbled |= (BITTUPLE_UNIT << v);
     nconf->pebbles     += 1;

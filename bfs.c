@@ -19,7 +19,7 @@
 #include "timedflags.h"
 #include "statistics.h"
 
-#define HASH_TABLE_SPACE_SIZE    0x01FFFFF
+#define HASH_TABLE_SPACE_SIZE    0x02FFFFF
 
 
 /*
@@ -170,7 +170,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   PebbleConfiguration *empty=new_PebbleConfiguration();
   writeDict(D,&res,empty);
   enqueue  (Q,empty);
-  unsigned int upper_bound=1;
+  unsigned int upper_bound=final_upper_bound;
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
@@ -210,6 +210,10 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   }
 #endif
 
+  /* Setup an array of vertex to sort for next-move analysis */
+  Vertex *next_moves=(Vertex*)malloc(sizeof(Vertex)*g->size);
+  Vertex  next_moves_num=0;
+  Vertex v,w;
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
@@ -247,29 +251,28 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
     ptr=(PebbleConfiguration*)getSL(Q);
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
 
-    /* Check because `upper_bound' is updated during the process */
-    /* if (ptr->pebble_cost > upper_bound) { */
-    /*   appendSL(Trash,ptr); */
-    /*   STATS_INC(Stat,queued_and_discarded); */
-    /*   continue; */
-    /* } */
-
     /* This configuration is going to be processed */
     STATS_INC(Stat,processed);
 
     /* Check if it is final */
     if (isfinal(g,ptr)) {
-      /*   && */
-      /*   (final==NULL || final->pebble_cost >= ptr->pebble_cost)) { */
-      /* final=ptr; */
-      /* STATS_INC(Stat,final); */
       STATS_REPORT(Stat);
       return ptr;
     }
 
-    /* Otherwise compute the next configurations */
-    for(Vertex v=0;v<g->size;v++) {
+    /* Compute list of next-moves (we do this in advance to obtain a
+       preferential order) */
+    next_moves_num=0;
+    for(v=0;v<g->size;v++) {
+      if (ptr->last_changed_vertex==v) continue;
+      next_moves[next_moves_num++]=v;
+    }
 
+
+    /* Otherwise compute the next configurations */
+    /* for(v=0;v<g->size;v++) { */
+    for(w=0;w<next_moves_num;w++) {
+      v=next_moves[w];
       /* Produce a new configurations */
       nptr=next_PebbleConfiguration(v,g,ptr);
       if (nptr==NULL) {
