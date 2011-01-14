@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 19:48 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 23:08 (CET) Massimo Lauria"
 
    Description::
 
@@ -171,6 +171,7 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   if (c->pebbles > c->pebble_cost)
     c->pebble_cost = c->pebbles;
   if (v==g->sinks[0] && !c->sink_touched) {
+    c->sink_touched = TRUE;
     SETBIT(c->useful_pebbles,v);
   }
 }
@@ -351,13 +352,14 @@ inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const Peb
   /* If a white pebble removal is after a placement, ... */
   if (ispebbled(w,g,c)) {
     /* either the placed pebble is necessary for the removal ... */
-    if ((BITTUPLE_UNIT << w) & g->pred_bitmasks[v]) return FALSE;
+    if (GETBIT(g->pred_bitmasks[v],w)) return FALSE;
     /* or the white pebble was necessary for the placement ... */
-    if (((BITTUPLE_UNIT << w) & g->succ_bitmasks[v]) && isblack(w,g,c)) return FALSE;
+    if (GETBIT(g->succ_bitmasks[v],w) && isblack(w,g,c)) return FALSE;
     return TRUE;
+  } else {
+    return FALSE;
   }
 
-  return FALSE;
 }
 
 inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
@@ -379,14 +381,11 @@ inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const Peb
      vertex must be a black pebbled successor */
   if (ispebbled(w,g,c)) {
     if (!isblack(w,g,c)) return TRUE;
-    if (!((BITTUPLE_UNIT << w) & g->succ_bitmasks[v])) return TRUE;
+    if (!GETBIT(g->succ_bitmasks[v],w)) return TRUE;
   }
 
   return FALSE;
 }
-
-
-
 
 
 

@@ -30,9 +30,9 @@ int main(int argc, char *argv[])
   DAG *A=piramid(2);
   DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
-  PebbleConfiguration *solution=bfs_pebbling_strategy(A,5);
+  PebbleConfiguration *solution=bfs_pebbling_strategy(C,7);
   if (solution) {
-    print_dot_Pebbling_Path(A,solution);
+    print_dot_Pebbling_Path(C,solution);
   }
   /* else { */
   /*   print_dot_DAG(A,"A",NULL,NULL,NULL); */

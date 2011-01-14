@@ -182,7 +182,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   PebbleConfiguration *empty=new_PebbleConfiguration();
   writeDict(D,&res,empty);
   enqueue  (Q,empty);
-  unsigned int upper_bound=final_upper_bound;
+  unsigned int upper_bound=1;
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
@@ -273,7 +273,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
     }
 
     /* Otherwise compute the next configurations */
-    /* for(v=0;v<g->size;v++) { */
     for(Vertex v=0;v<g->size;v++) {
       /* Produce a new configurations */
       nptr=next_PebbleConfiguration(v,g,ptr);
@@ -300,9 +299,9 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
         nptr->last_changed_vertex = v;
         unsafe_noquery_writeDict(D,&res,nptr);
 
-        /* if (nptr->pebbles == upper_bound) { */
-        /*   enqueue(BoundaryQ,nptr); */
-        /* } */
+        if (nptr->pebbles == upper_bound) {
+          enqueue(BoundaryQ,nptr);
+        }
         enqueue(Q,nptr);
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
@@ -311,7 +310,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
         STATS_INC(Stat,dict_writes);
 
       } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
-                              /* Cost improvement */
+        /* Cost improvement */
         nptr->previous_configuration = ptr;
         nptr->last_changed_vertex = v;
         unsafe_noquery_writeDict(D,&res,nptr);
