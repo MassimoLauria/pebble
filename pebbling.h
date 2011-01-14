@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 14:30 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 12:58 (CET) Massimo Lauria"
 
    Description::
 
@@ -35,6 +35,8 @@ typedef struct _PebbleConfiguration {
    integer type is defined here. */
   BitTuple white_pebbled;    /* White pebbled vertices */
   BitTuple black_pebbled;    /* Black pebbled vertices */
+  BitTuple essential_pebbles;/* Black pebbled vertices */
+  BitTuple useless_pebbles;/* Black pebbled vertices */
 
   Boolean sink_touched;
 
@@ -59,8 +61,14 @@ extern Boolean isfinal(const DAG *g,const PebbleConfiguration *c);
 
 
 /* Discover vertex status */
-extern Boolean isblack  (const Vertex v, const DAG *g, const PebbleConfiguration *c);
-extern Boolean iswhite  (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+extern Boolean iswhite    (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+extern void    placewhite (const Vertex v, const DAG *g, PebbleConfiguration *const c);
+extern void    deletewhite(const Vertex v, const DAG *g, PebbleConfiguration *const c);
+
+extern Boolean isblack    (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+extern void    placeblack (const Vertex v, const DAG *g, PebbleConfiguration *const c);
+extern void    deleteblack(const Vertex v, const DAG *g, PebbleConfiguration *const c);
+
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 

@@ -19,7 +19,7 @@
 #include "timedflags.h"
 #include "statistics.h"
 
-#define HASH_TABLE_SPACE_SIZE    0x02FFFFF
+#define HASH_TABLE_SPACE_SIZE    0x0FFFFF
 
 
 /*
@@ -28,16 +28,16 @@
  */
 size_t   hashPebbleConfiguration(void *data) {
 
-  if (data==NULL) return 0;
+  ASSERT_NOTNULL(data);
 
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
-  size_t hash = ptr->white_pebbled ^ ptr->black_pebbled;
-  return hash;
+  return ptr->white_pebbled ^ ptr->black_pebbled;
 }
 
 Boolean  samePebbleConfiguration(void *A,void *B) {
-  if (A==NULL && B==NULL) { return TRUE; } /* Both null */
-  if (A==NULL || B==NULL) { return FALSE;} /* Just one null */
+
+  ASSERT_NOTNULL(A);
+  ASSERT_NOTNULL(B);
 
   PebbleConfiguration *pA,*pB;
   pA=(PebbleConfiguration*)A;
@@ -81,12 +81,19 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
 
   LinkedList cur,*l;
 
+  unsigned long long int histogram[40];
+  for(int i=0;i<40;i++) { histogram[i]=0; }
+  int cnt;
+  unsigned long long int tot_cnt=0;
+
+
   for(size_t i=0;i<dict->size;i++) {
 
     l=dict->buckets[i];
-
+    cnt=0;
     /* Chech if all elements are appropriates pebblings. */
     for(resetSL(l);iscursorvalidSL(l);nextSL(l)) {
+      cnt++;
       isconsistent_PebbleConfiguration(g,getSL(l));
       forkcursorSL(l,&cur);
       nextSL(&cur);
@@ -95,8 +102,13 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
         nextSL(&cur);
       }
     }
-
+    if (cnt<39) histogram[cnt]++;
+    else histogram[39]++;
+    tot_cnt += cnt;
   }
+  fprintf(stderr,"Hashed elemenents: %15llu\n",tot_cnt);
+  for(int i=0;i<39;i++) { fprintf(stderr," % 2d  = % 15llu\n",i,histogram[i]); }
+  fprintf(stderr," ... = % 15llu\n",histogram[39]);
 #endif
   return TRUE;
 }
@@ -185,6 +197,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   STATS_CREATE(Stat);
   STATS_SET(Stat,first_queuing,1);
   STATS_SET(Stat,queued,1);
+  STATS_SET(Stat,dict_size,D->size);
 
 #ifdef PRINT_RUNNING_STATS
   Counter tmp;

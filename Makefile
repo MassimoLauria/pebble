@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-13, giovedì 16:44 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-14, venerdì 15:59 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -14,9 +14,11 @@ BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
 # ---------- Environment variables ------------
 #
 #DEBUG=-DDEBUG -g
+#PROFILE=-pg
 #OPTIMIZATION=
 
 DEBUG=
+PROFILE=-pg
 OPTIMIZATION=-O3
 
 #DEBUG +=-DHASHTABLE_DEBUG
@@ -35,8 +37,8 @@ TAGS=gtags
 #TAGS=ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
-LDFLAGS=
+CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} -Winline -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+LDFLAGS=${DEBUG} ${PROFILE}
 
 
 # --------- Project dependent rules ---------------
@@ -58,7 +60,7 @@ pebble: pebble.o \
 		bfs.o
 
 timedflags.o:timedflags.c
-	$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@
+	$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -Winline -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@
 
 test: exposetypes
 	./exposetypes

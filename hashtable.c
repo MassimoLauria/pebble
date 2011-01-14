@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 12:08 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 15:11 (CET) Massimo Lauria"
 
    Description::
 
@@ -97,7 +97,8 @@ void queryDict(Dict* d,DictQueryResult *const result,void *data) {
 
   ASSERT_NOTNULL(d);
   ASSERT_NOTNULL(result);
-  LinkedList      *ll=NULL;
+  ASSERT_NOTNULL(d->eq_function);
+  LinkedList *ll=NULL;
 
   /* Compute the hash and then find the position in the array */
   result->key    = d->key_function(data);
@@ -105,11 +106,17 @@ void queryDict(Dict* d,DictQueryResult *const result,void *data) {
   result->value  = NULL;
   result->hops=0;
 
+  Boolean (*cmp)(void *,void *)=d->eq_function;
+  void *ptr;
+
   ll=d->buckets[result->bucket];
   resetSL(ll);
   while(iscursorvalidSL(ll)) {
-    if (  d->eq_function(data,getSL(ll))  ) {
-      result->value=getSL(ll);
+
+    ptr=getSL(ll);
+
+    if (  cmp(data,ptr)  ) {
+      result->value=ptr;
       return;
     }
     result->hops++;

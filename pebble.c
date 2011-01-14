@@ -27,12 +27,10 @@ int main(int argc, char *argv[])
 
   install_timed_flags(REPORT_INTERVAL);
 
-  DAG *A=piramid(1);
-  DAG *B=piramid(2);
-  DAG *C=orproduct(A,B);
-  PebbleConfiguration *solution=bfs_pebbling_strategy(C,6);
+  DAG *A=piramid(6);
+  PebbleConfiguration *solution=bfs_pebbling_strategy(A,6);
   if (solution) {
-    print_dot_Pebbling_Path(C,solution);
+    print_dot_Pebbling_Path(A,solution);
   }
   exit(0);
 }

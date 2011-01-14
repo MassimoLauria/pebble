@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 18:07 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 14:37 (CET) Massimo Lauria"
 
    Description::
 
@@ -82,8 +82,8 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
   fprintf(stream,"[D. Misses]  = % 15llu  |  % 15llu\n",
           s->dict_misses_T/tmp_clock,s->dict_misses_T);
 
-  if (s->dict_queries_T) {
-    fprintf(stream,"[Avg. Hops]  = % 15llu\n\n",s->dict_hops_T/s->dict_queries_T);
+  if (s->dict_queries_T && s->dict_size) {
+    fprintf(stream,"[Avg. Hops]  = % 15llu vs %llu\n\n",s->dict_hops_T/s->dict_queries_T,s->first_queuing_T/s->dict_size);
   }
 
   /* Reset partial counters */
@@ -100,7 +100,6 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
   s->dict_queries         = 0;
   s->dict_writes          = 0;
   s->dict_misses          = 0;
-
 
 }
 

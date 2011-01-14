@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:38 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 16:24 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 14:28 (CET) Massimo Lauria"
 
    Description::
 
@@ -62,6 +62,8 @@ typedef struct {
   Counter dict_misses;                   /* Number of misses */
   Counter dict_misses_T;
 
+  Counter dict_size;
+
 } Statistic;
 
 extern void statistics_make_report(FILE *stream,Statistic *const s);
@@ -69,7 +71,7 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 #ifdef PRINT_RUNNING_STATS
 
 #define STATS_REPORT(S) {statistics_make_report(stderr,&(S));}
-#define STATS_CREATE(s) Statistic s={0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0 }
+#define STATS_CREATE(s) Statistic s={0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0}
 #define STATS_INC(s,n) { (s).n++; }
 #define STATS_SET(s,n,v) { (s).n=(v); }
 #define STATS_ADD(s,n,v) { (s).n+=(v); }

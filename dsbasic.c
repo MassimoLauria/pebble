@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 14:50 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 14:45 (CET) Massimo Lauria"
 
    Description::
 
@@ -66,16 +66,6 @@ Boolean isconsistentSL(LinkedList *list) {
 
   return TRUE;
 }
-
-Boolean isemptySL(LinkedList *list) {
-  ASSERT_NOTNULL(isconsistentSL(list));
-  return (list->head==NULL);
-}
-
-Boolean iscursorvalidSL(LinkedList *list) {
-  return (list->cursor!=NULL);
-}
-
 
 /* Create an empty linked list */
 LinkedList *newSL(void) {
@@ -150,7 +140,7 @@ void insertSL(LinkedList *l,void *data,Boolean before) {
 }
 
 /* Push at the head of the list, and move the cursor at the beginning */
-void pushSL(LinkedList *l,void *data) {
+void consSL(void *data,LinkedList *l) {
 
   ASSERT_NOTNULL(l);
   ASSERT_TRUE(isconsistentSL(l));
@@ -255,25 +245,6 @@ void disposeSL(LinkedList *l) {
   free(lh);
 }
 
-/* Cursor managing */
-void resetSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
-  l->cursor=l->head;
-  l->before_cursor=NULL;
-}
-
-void nextSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
-  l->before_cursor=l->cursor;
-  l->cursor=l->cursor->next;
-}
-
-void *getSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
-  return l->cursor->data;
-}
 
 
 

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 22:47 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 16:31 (CET) Massimo Lauria"
 
    Description::
 
@@ -20,74 +20,6 @@
 #include "pebbling.h"
 
 
-inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  if (c->previous_configuration==NULL) return FALSE;
-  if (v==c->last_changed_vertex) return FALSE;
-
-  /* Never place two pebbles on vertices with decreasing
-     rank. Notice that successors always have bigger rank.  */
-  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
-
-  return FALSE;
-}
-
-inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  if (c->previous_configuration==NULL) return FALSE;
-  if (v==c->last_changed_vertex) return FALSE;
-
-  /* Never place two pebbles on vertices with decreasing
-     rank. Notice that successors always have bigger rank.  */
-  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
-
-  return FALSE;
-}
-
-inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  Vertex w=c->last_changed_vertex;
-
-  if (c->previous_configuration==NULL) return FALSE;
-  if (v==w) return FALSE;
-
-  /* Never remove pebbles on vertices with increasing
-     rank. Notice that predecessors always have smaller rank.  */
-  if (!ispebbled(w,g,c) && (v > w)) return TRUE;
-
-  /* If a white pebble removal is after a placement, ... */
-  if (ispebbled(w,g,c)) {
-    /* either the placed pebble is necessary for the removal ... */
-    if ((BITTUPLE_UNIT << w) & g->pred_bitmasks[v]) return FALSE;
-    /* or the white pebble was necessary for the placement ... */
-    if (((BITTUPLE_UNIT << w) & g->succ_bitmasks[v]) && isblack(w,g,c)) return FALSE;
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  if (c->previous_configuration==NULL) return FALSE;
-  if (v==c->last_changed_vertex) return FALSE;
-
-  /* Never remove pebbles on vertices with increasing
-     rank. Notice that predecessors always have smaller rank.  */
-  if (ispebbled(c->last_changed_vertex,g,c) && (v > c->last_changed_vertex)) return TRUE;
-
-  /* If a black pebble removal is after a placement, then the placed
-     vertex must be a black pebbled successor */
-  if (ispebbled(c->last_changed_vertex,g,c)) {
-    if (!isblack(c->last_changed_vertex,g,c)) return TRUE;
-    if (!((BITTUPLE_UNIT << c->last_changed_vertex) & g->succ_bitmasks[v])) return TRUE;
-  }
-
-  return FALSE;
-}
-
-
-
 
 PebbleConfiguration *new_PebbleConfiguration(void) {
 
@@ -97,6 +29,8 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   ptr->white_pebbled=0;
   ptr->black_pebbled=0;
+  ptr->useless_pebbles=0;
+  ptr->essential_pebbles=BITTUPLE_FULL;
 
   ptr->sink_touched =FALSE;
 
@@ -119,6 +53,8 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   dst->white_pebbled=src->white_pebbled;
   dst->black_pebbled=src->black_pebbled;
+  dst->useless_pebbles  =src->useless_pebbles;
+  dst->essential_pebbles=src->essential_pebbles;
 
   dst->sink_touched=src->sink_touched;
 
@@ -195,6 +131,25 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   return TRUE;
 }
 
+
+/* ------------------------------ Manipulation of pebble stauts -----------------------------*/
+
+/* Black */
+inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  c->black_pebbled ^= (BITTUPLE_UNIT << v);
+  c->pebbles       -= 1;
+
+  if ((g->succ_bitmasks[v] & c->useless_pebbles) == g->succ_bitmasks[v]) {
+    c->useless_pebbles |=(BITTUPLE_UNIT << v);
+  }
+
+}
+
 /* Determines if a vertex is black pebbled according to a specific
    configuration */
 inline Boolean isblack(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
@@ -205,6 +160,39 @@ inline Boolean isblack(const Vertex v,const DAG *g,const PebbleConfiguration *c)
 
   return (c->black_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
+
+inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  c->black_pebbled |= (BITTUPLE_UNIT << v);
+  c->pebbles       += 1;
+
+  if (c->pebbles > c->pebble_cost)
+    c->pebble_cost = c->pebbles;
+  if (v==g->sinks[0])
+    c->sink_touched=TRUE;
+}
+
+
+/* White */
+inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  c->white_pebbled ^= (BITTUPLE_UNIT << v);
+  c->pebbles       -= 1;
+
+  if ((g->succ_bitmasks[v] & c->useless_pebbles) == g->succ_bitmasks[v]) {
+    c->useless_pebbles |=(BITTUPLE_UNIT << v);
+  }
+
+}
+
 
 /* Determines if a vertex is white pebbled according to a specific
    configuration */
@@ -217,6 +205,24 @@ inline Boolean iswhite(const Vertex v,const DAG *g,const PebbleConfiguration *c)
   return (c->white_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
 
+inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  c->white_pebbled |= (BITTUPLE_UNIT << v);
+  c->pebbles       += 1;
+
+  if (c->pebbles > c->pebble_cost)
+    c->pebble_cost = c->pebbles;
+  if (v==g->sinks[0])
+    c->sink_touched=TRUE;
+
+}
+
+
+/* Vertex Statuses */
 
 /* Determines if a vertex is pebbled according to a specific
    configuration */
@@ -228,6 +234,25 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
 
   return ((c->white_pebbled | c->black_pebbled) & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
 }
+
+inline Boolean isuseless(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  return (c->useless_pebbles & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+}
+
+inline Boolean isessential(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  ASSERT_TRUE(isconsistent_DAG(g));
+  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  ASSERT_TRUE(v<g->size);
+
+  return (c->essential_pebbles & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+}
+
 
 /* Determines if there is a pebble on all predecessors of agiven
    vertex */
@@ -241,12 +266,10 @@ inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c
 
   return (((c->white_pebbled | c->black_pebbled) & g->pred_bitmasks[v])
           == g->pred_bitmasks[v])?TRUE:FALSE;
-
-  /* for(size_t i=0;i<g->indegree[v];i++) { */
-  /*   if (!ispebbled(g->in[v][i],g,c)) return FALSE; */
-  /* } */
-  /* return TRUE; */
 }
+
+
+
 
 
 /* Determines if the configuration is a final one */
@@ -293,6 +316,96 @@ void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
 }
 
 
+/* Heuristics */
+
+inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+
+  /* Never pebble a useless pebble*/
+  if (isuseless(v,g,c)) return TRUE;
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==c->last_changed_vertex) return FALSE;
+
+  /* Never place two pebbles on vertices with decreasing
+     rank. Notice that successors always have bigger rank.  */
+  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
+
+  return FALSE;
+}
+
+inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  /* Never remove a pebble if it is hasn't been essential*/
+  if (isuseless(v,g,c)) return TRUE;
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==c->last_changed_vertex) return FALSE;
+
+  /* Never place two pebbles on vertices with decreasing
+     rank. Notice that successors always have bigger rank.  */
+  if (ispebbled(c->last_changed_vertex,g,c) && (v < c->last_changed_vertex)) return TRUE;
+
+  return FALSE;
+}
+
+inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  Vertex w=c->last_changed_vertex;
+
+  /* Never remove a pebble if it is hasn't been essential*/
+  if (!isessential(v,g,c)) return TRUE;
+
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==w) return FALSE;
+
+  /* Never remove pebbles on vertices with increasing
+     rank. Notice that predecessors always have smaller rank.  */
+  if (!ispebbled(w,g,c) && (v > w)) return TRUE;
+
+  /* If a white pebble removal is after a placement, ... */
+  if (ispebbled(w,g,c)) {
+    /* either the placed pebble is necessary for the removal ... */
+    if ((BITTUPLE_UNIT << w) & g->pred_bitmasks[v]) return FALSE;
+    /* or the white pebble was necessary for the placement ... */
+    if (((BITTUPLE_UNIT << w) & g->succ_bitmasks[v]) && isblack(w,g,c)) return FALSE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+
+  Vertex w=c->last_changed_vertex;
+
+
+  /* Never remove a pebble if it is hasn't been essential*/
+  if (!isessential(v,g,c)) return TRUE;
+
+  if (c->previous_configuration==NULL) return FALSE;
+  if (v==w) return FALSE;
+
+  /* Never remove pebbles on vertices with increasing
+     rank. Notice that predecessors always have smaller rank.  */
+  if (ispebbled(w,g,c) && (v > w)) return TRUE;
+
+  /* If a black pebble removal is after a placement, then the placed
+     vertex must be a black pebbled successor */
+  if (ispebbled(w,g,c)) {
+    if (!isblack(w,g,c)) return TRUE;
+    if (!((BITTUPLE_UNIT << w) & g->succ_bitmasks[v])) return TRUE;
+  }
+
+  return FALSE;
+}
+
+
+
+
+
+
 /* Each pebble configuration has a number of neightbours less than or
    equal to the number of vertices.  For each vertex you can either
    add a pebble (if possible) or remove one (if present).  The
@@ -309,8 +422,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
     if (delete_white_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->white_pebbled ^= (BITTUPLE_UNIT << v);
-    nconf->pebbles     -= 1;
+    deletewhite(v,g,nconf);
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
@@ -322,13 +434,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
     if (place_black_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled |= (BITTUPLE_UNIT << v);
-    nconf->pebbles     += 1;
-
-    if (nconf->pebbles > nconf->pebble_cost)
-      nconf->pebble_cost = nconf->pebbles;
-    if (v==g->sinks[0])
-      nconf->sink_touched=TRUE;
+    placeblack(v,g,nconf);
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
@@ -340,8 +446,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
     if (delete_black_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
-    nconf->black_pebbled ^= (BITTUPLE_UNIT << v);
-    nconf->pebbles     -= 1;
+    deleteblack(v,g,nconf);
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
@@ -357,13 +462,9 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 
     if (place_white_heuristics_cut(v,g,old)) return NULL;
 
+
     nconf=copy_PebbleConfiguration(old);
-    nconf->white_pebbled |= (BITTUPLE_UNIT << v);
-    nconf->pebbles     += 1;
-    if (nconf->pebbles > nconf->pebble_cost)
-      nconf->pebble_cost = nconf->pebbles;
-    if (v==g->sinks[0])
-      nconf->sink_touched=TRUE;
+    placewhite(v,g,nconf);
 
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;

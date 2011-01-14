@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 15:51 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 13:02 (CET) Massimo Lauria"
 
    Description::
 
@@ -24,8 +24,9 @@ typedef long long unsigned int BitTuple;
 typedef long long unsigned int Counter;
 typedef unsigned char          Boolean;
 
-#define BITTUPLE_UNIT 0x1ULL   /* A bitmask compatible with BitTuple, of value 1 */
-#define BITTUPLE_ZERO 0x0ULL   /* A bitmask compatible with BitTuple, of value 0 */
+#define BITTUPLE_UNIT 0x1ULL       /* A bitmask compatible with BitTuple, of value 1 */
+#define BITTUPLE_ZERO 0x0ULL       /* A bitmask compatible with BitTuple, of value 0 */
+#define BITTUPLE_FULL ULLONG_MAX   /* A bitmask compatible with BitTuple, of value 1 */
 #define BITTUPLE_SIZE sizeof(BitTuple)*CHAR_BIT
 
 #define TRUE  1

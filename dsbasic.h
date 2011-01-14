@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-13, giovedì 13:08 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 14:45 (CET) Massimo Lauria"
 
    Description::
 
@@ -41,8 +41,8 @@ typedef struct  {
 
 
 Boolean isconsistentSL(LinkedList *list);
-Boolean isemptySL(LinkedList *list);
-Boolean iscursorvalidSL(LinkedList *list);
+/* Boolean isemptySL(LinkedList *list); */
+/* Boolean iscursorvalidSL(LinkedList *list); */
 
 LinkedList *newSL();
 void disposeSL(LinkedList *l);
@@ -52,10 +52,40 @@ void appendSL(LinkedList *l,void *data);
 void delete_and_nextSL(LinkedList *l);
 void pushSL(LinkedList *l,void *data);
 
-void resetSL(LinkedList *l);
-void nextSL(LinkedList *l);
-void *getSL(LinkedList *l);
+/* void resetSL(LinkedList *l); */
+/* void nextSL(LinkedList *l); */
+/* void *getSL(LinkedList *l); */
 void forkcursorSL(LinkedList *list,LinkedList *sndcursor);
+
+inline void nextSL(LinkedList *l) {
+  ASSERT_NOTNULL(l);
+  ASSERT_NOTNULL(l->cursor);
+  l->before_cursor=l->cursor;
+  l->cursor=l->cursor->next;
+}
+
+inline void *getSL(LinkedList *l) {
+  ASSERT_NOTNULL(l);
+  ASSERT_NOTNULL(l->cursor);
+  return l->cursor->data;
+}
+
+inline Boolean isemptySL(LinkedList *list) {
+  ASSERT_NOTNULL(isconsistentSL(list));
+  return (list->head==NULL);
+}
+
+inline Boolean iscursorvalidSL(LinkedList *list) {
+  return (list->cursor!=NULL);
+}
+
+/* Cursor managing */
+inline void resetSL(LinkedList *l) {
+  ASSERT_NOTNULL(l);
+  l->cursor=l->head;
+  l->before_cursor=NULL;
+}
+
 
 /********************************************************************************
                      DOUBLE LINKED LISTS
@@ -117,7 +147,7 @@ typedef LinkedList  Stack;
 #define rightenqueue(dq,d) (extendDL((dq),(d),1))
 
 /* Stack is realized with LinkedList */
-#define  push(q,d) (pushSL((q),(d)))
+#define  push(q,d) (consSL((d),(q)))
 
 
 #endif /* DSBASIC_H */
