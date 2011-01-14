@@ -301,6 +301,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
 
         if (nptr->pebbles == upper_bound) {
           enqueue(BoundaryQ,nptr);
+          STATS_INC(Stat,delayed);
         }
         enqueue(Q,nptr);
         STATS_INC(Stat,queued);
@@ -311,10 +312,19 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
 
       } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
         /* Cost improvement */
-        nptr->previous_configuration = ptr;
-        nptr->last_changed_vertex = v;
-        unsafe_noquery_writeDict(D,&res,nptr);
-        enqueue(Q,nptr);
+        /* nptr->previous_configuration = ptr; */
+        /* nptr->last_changed_vertex = v; */
+        /* unsafe_noquery_writeDict(D,&res,nptr); */
+        /* enqueue(Q,nptr); */
+        ((PebbleConfiguration*)res.value)->pebble_cost=nptr->pebble_cost;
+        ((PebbleConfiguration*)res.value)->last_changed_vertex=v;
+        ((PebbleConfiguration*)res.value)->previous_configuration=ptr;
+        enqueue(Q,res.value);
+        dispose_PebbleConfiguration(nptr);
+        /* nptr->previous_configuration = ptr; */
+        /* nptr->last_changed_vertex = v; */
+        /* unsafe_noquery_writeDict(D,&res,nptr); */
+        /* enqueue(Q,nptr); */
         STATS_INC(Stat,queued);
         STATS_INC(Stat,requeuing);
         STATS_INC(Stat,dict_writes);
