@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:38 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 14:28 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 20:55 (CET) Massimo Lauria"
 
    Description::
 
@@ -32,6 +32,7 @@ typedef struct {
   Counter queued;                 /* Element inserted in the queue */
   Counter queued_and_discarded;   /* Element inserted in the queue */
   Counter first_queuing;          /* Queued elements encountered for the first time */
+  Counter delayed;                /* Elements queued for the next round */
 
   Counter requeuing;              /* Old elements pushed back in the queue */
   Counter above_upper_bound;      /* Element above the upper bounds */
@@ -44,6 +45,7 @@ typedef struct {
   Counter queued_T;                 /* Element inserted in the queue */
   Counter queued_and_discarded_T;   /* Element inserted in the queue */
   Counter first_queuing_T;          /* Queued elements encountered for the first time */
+  Counter delayed_T;                /* Elements queued for the next round */
 
   Counter requeuing_T;              /* Old elements pushed back in the queue */
   Counter above_upper_bound_T;      /* Element above the upper bounds */
@@ -71,7 +73,7 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 #ifdef PRINT_RUNNING_STATS
 
 #define STATS_REPORT(S) {statistics_make_report(stderr,&(S));}
-#define STATS_CREATE(s) Statistic s={0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0}
+#define STATS_CREATE(s) Statistic s={0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0, 0,0,0,0, 0}
 #define STATS_INC(s,n) { (s).n++; }
 #define STATS_SET(s,n,v) { (s).n=(v); }
 #define STATS_ADD(s,n,v) { (s).n+=(v); }

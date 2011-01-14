@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 14:37 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 20:56 (CET) Massimo Lauria"
 
    Description::
 
@@ -24,6 +24,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
   /* Add to the total amount */
   s->processed_T            += s->processed;
   s->queued_T               += s->queued;
+  s->delayed_T              += s->delayed;
   s->queued_and_discarded_T += s->queued_and_discarded;
   s->first_queuing_T        += s->first_queuing;
 
@@ -51,6 +52,8 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
           s->first_queuing_T/tmp_clock,s->first_queuing_T,s->search_space);
   fprintf(stream,"[ Requeued]  = % 15llu  |  % 15llu\n",
           s->requeuing_T/tmp_clock,s->requeuing_T);
+  fprintf(stream,"[  Delayed]  = % 15llu  |  % 15llu\n",
+          s->delayed_T/tmp_clock,s->delayed_T);
 
   fprintf(stderr,"\n");
 
@@ -89,6 +92,7 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
   /* Reset partial counters */
   s->processed            = 0;
   s->queued               = 0;
+  s->delayed              = 0;
   s->queued_and_discarded = 0;
   s->first_queuing        = 0;
   s->requeuing            = 0;

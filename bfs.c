@@ -2,7 +2,7 @@
   Massimo Lauria, 2010
 
   Implementation of a Breadth-First-Search for the Black-White
-  Pebbling fo A Graph.
+  Pebbling of a directed acyclic graph.
 
 */
 
@@ -107,7 +107,7 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
     tot_cnt += cnt;
   }
   fprintf(stderr,"Hashed elemenents: %15llu\n",tot_cnt);
-  for(int i=0;i<39;i++) { fprintf(stderr," % 2d  = % 15llu\n",i,histogram[i]); }
+  for(int i=0;i<39;i++) { fprintf(stderr," %2d  = % 15llu\n",i,histogram[i]); }
   fprintf(stderr," ... = % 15llu\n",histogram[39]);
 #endif
   return TRUE;
@@ -175,14 +175,14 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
 
   /* Data structures for BFS */
   Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
-  Queue           *NextQ=newSL(); /* Configuration to be processed the next round */
+  Queue       *BoundaryQ=newSL(); /* Configuration to be processed the next round */
   LinkedList      *Trash=newSL(); /* Fully processed configurations */
 
   /* Initial empty configuration */
   PebbleConfiguration *empty=new_PebbleConfiguration();
   writeDict(D,&res,empty);
   enqueue  (Q,empty);
-  unsigned int upper_bound=1;
+  unsigned int upper_bound=final_upper_bound;
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
@@ -227,14 +227,20 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
      one with a better cost.*/
-  for(resetSL(Q);!isemptySL(Q) || !isemptySL(NextQ) ;delete_and_nextSL(Q)) {
+  for(resetSL(Q);!isemptySL(Q) || !isemptySL(BoundaryQ) ;delete_and_nextSL(Q)) {
 
     if (isemptySL(Q)) {  /* No more element to be processed... raise the upper bound. */
       if (upper_bound<final_upper_bound) {
+#ifdef PRINT_RUNNING_STATS
+        fprintf(stderr,"\nRaising the upper bound from %u to %u / %u\n",
+                upper_bound,upper_bound+1,final_upper_bound);
+        fprintf(stderr,"\n\n");
+        STATS_REPORT(Stat);
+#endif
         upper_bound++;
         disposeSL(Q);
-        Q=NextQ;
-        NextQ=newSL();
+        Q=BoundaryQ;
+        BoundaryQ=newSL();
       } else {
         break;           /* Nothing else to be processed */
       }
@@ -247,9 +253,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
               STATS_GET(Stat,clock),
               g->size,
               upper_bound);
-      if (!CheckRuntimeConsistency(g,D)) {
-        fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!");
-      }
       fprintf(stderr,"\n\n");
       STATS_REPORT(Stat);
       print_running_stats_flag=0;
@@ -281,8 +284,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
       }
 
 
-
-      if (nptr->pebble_cost > final_upper_bound) { /* Is it above the upper bound? */
+      if (nptr->pebble_cost > upper_bound) { /* Is it above the upper bound? */
         STATS_INC(Stat,above_upper_bound);
         dispose_PebbleConfiguration(nptr);
         continue;
@@ -298,13 +300,16 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
         nptr->last_changed_vertex = v;
         unsafe_noquery_writeDict(D,&res,nptr);
 
-        if (nptr->pebble_cost > upper_bound) enqueue(NextQ,nptr);
-        else enqueue(Q,nptr);
-
+        /* if (nptr->pebbles == upper_bound) { */
+        /*   enqueue(BoundaryQ,nptr); */
+        /* } */
+        enqueue(Q,nptr);
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
+
         STATS_INC(Stat,dict_misses);
         STATS_INC(Stat,dict_writes);
+
       } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
                               /* Cost improvement */
         nptr->previous_configuration = ptr;
@@ -331,10 +336,12 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   /* free memory, free Mandela! */
 #ifdef PRINT_RUNNING_STATS
   fprintf(stderr,"FINAL REPORT:\n\n");
-  if (!CheckRuntimeConsistency(g,D)) {
-    fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!");
-  }
   STATS_REPORT(Stat);
+#ifdef HASHTABLE_DEBUG
+  if (!CheckRuntimeConsistency(g,D)) {
+    fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!\n");
+  }
+#endif
 #endif
   return final;
 }

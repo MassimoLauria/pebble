@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 18:56 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 19:48 (CET) Massimo Lauria"
 
    Description::
 
@@ -140,6 +140,7 @@ inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c
   ASSERT_TRUE(isblack(v,g,c));
 
   RESETBIT(c->black_pebbled,v);
+  RESETBIT(c->useful_pebbles,v);
   c->pebbles       -= 1;
 
 }
@@ -185,6 +186,7 @@ inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c
   ASSERT_TRUE(isactive(v,g,c));
 
   RESETBIT(c->white_pebbled,v);
+  RESETBIT(c->useful_pebbles,v);
   c->pebbles       -= 1;
   c->useful_pebbles |= g->pred_bitmasks[v];
 

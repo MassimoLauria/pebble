@@ -25,13 +25,18 @@
 int main(int argc, char *argv[])
 {
 
-  install_timed_flags(REPORT_INTERVAL);
+  /* install_timed_flags(REPORT_INTERVAL); */
 
-  DAG *A=piramid(6);
-  PebbleConfiguration *solution=bfs_pebbling_strategy(A,6);
+  DAG *A=piramid(2);
+  DAG *B=piramid(2);
+  DAG *C=orproduct(A,B);
+  PebbleConfiguration *solution=bfs_pebbling_strategy(A,5);
   if (solution) {
     print_dot_Pebbling_Path(A,solution);
   }
+  /* else { */
+  /*   print_dot_DAG(A,"A",NULL,NULL,NULL); */
+  /* } */
   exit(0);
 }
 
