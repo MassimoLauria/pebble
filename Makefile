@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-01-14, venerdì 15:59 (CET) Massimo Lauria"
+# Time-stamp: "2011-01-14, venerdì 17:08 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -37,7 +37,7 @@ TAGS=gtags
 #TAGS=ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} -Winline -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=${DEBUG} ${PROFILE}
 
 

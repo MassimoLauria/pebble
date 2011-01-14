@@ -19,7 +19,7 @@
 #include "timedflags.h"
 #include "statistics.h"
 
-#define HASH_TABLE_SPACE_SIZE    0x0FFFFF
+#define HASH_TABLE_SPACE_SIZE    0x07FFFFF
 
 
 /*

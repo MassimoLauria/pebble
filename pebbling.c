@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 16:31 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 18:24 (CET) Massimo Lauria"
 
    Description::
 
@@ -20,7 +20,6 @@
 #include "pebbling.h"
 
 
-
 PebbleConfiguration *new_PebbleConfiguration(void) {
 
   PebbleConfiguration *ptr=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));
@@ -29,8 +28,8 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   ptr->white_pebbled=0;
   ptr->black_pebbled=0;
-  ptr->useless_pebbles=0;
-  ptr->essential_pebbles=BITTUPLE_FULL;
+  ptr->blacklisted  =0;
+  ptr->useful_pebbles=BITTUPLE_FULL;
 
   ptr->sink_touched =FALSE;
 
@@ -53,8 +52,8 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   dst->white_pebbled=src->white_pebbled;
   dst->black_pebbled=src->black_pebbled;
-  dst->useless_pebbles  =src->useless_pebbles;
-  dst->essential_pebbles=src->essential_pebbles;
+  dst->useful_pebbles=src->useful_pebbles;
+  dst->blacklisted=src->blacklisted;
 
   dst->sink_touched=src->sink_touched;
 
@@ -114,8 +113,8 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   unsigned int counter=0;
 
   for(size_t i=0; i<graph->size; i++) {
-    if (ptr->white_pebbled & (BITTUPLE_UNIT << i)) counter++;
-    if (ptr->black_pebbled & (BITTUPLE_UNIT << i)) counter++;
+    if GETBIT(ptr->white_pebbled,i) counter++;
+    if GETBIT(ptr->black_pebbled,i) counter++;
   }
 
   if (counter!=ptr->pebbles) return FALSE;
@@ -140,13 +139,10 @@ inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
+  ASSERT_TRUE(isblack(v,g,c));
 
-  c->black_pebbled ^= (BITTUPLE_UNIT << v);
+  RESETBIT(c->black_pebbled,v);
   c->pebbles       -= 1;
-
-  if ((g->succ_bitmasks[v] & c->useless_pebbles) == g->succ_bitmasks[v]) {
-    c->useless_pebbles |=(BITTUPLE_UNIT << v);
-  }
 
 }
 
@@ -158,7 +154,7 @@ inline Boolean isblack(const Vertex v,const DAG *g,const PebbleConfiguration *c)
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->black_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+  return GETBIT(c->black_pebbled,v);
 }
 
 inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
@@ -166,14 +162,20 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
+  ASSERT_FALSE(ispebbled(v,g,c));
+  ASSERT_TRUE(isactive(v,g,c));
 
-  c->black_pebbled |= (BITTUPLE_UNIT << v);
+  SETBIT(c->black_pebbled,v);
   c->pebbles       += 1;
+  c->useful_pebbles |= g->pred_bitmasks[v];
 
   if (c->pebbles > c->pebble_cost)
     c->pebble_cost = c->pebbles;
-  if (v==g->sinks[0])
+  if (v==g->sinks[0]) {
     c->sink_touched=TRUE;
+    SETBIT(c->useful_pebbles,v);
+    SETBIT(c->blacklisted,v);
+  }
 }
 
 
@@ -183,13 +185,12 @@ inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
+  ASSERT_TRUE(iswhite(v,g,c));
+  ASSERT_TRUE(isactive(v,g,c));
 
-  c->white_pebbled ^= (BITTUPLE_UNIT << v);
+  RESETBIT(c->white_pebbled,v);
   c->pebbles       -= 1;
-
-  if ((g->succ_bitmasks[v] & c->useless_pebbles) == g->succ_bitmasks[v]) {
-    c->useless_pebbles |=(BITTUPLE_UNIT << v);
-  }
+  c->useful_pebbles |= g->pred_bitmasks[v];
 
 }
 
@@ -202,7 +203,7 @@ inline Boolean iswhite(const Vertex v,const DAG *g,const PebbleConfiguration *c)
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->white_pebbled & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+  return GETBIT(c->white_pebbled,v);
 }
 
 inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
@@ -210,15 +211,17 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
+  ASSERT_FALSE(ispebbled(v,g,c));
 
-  c->white_pebbled |= (BITTUPLE_UNIT << v);
+  SETBIT(c->white_pebbled,v);
   c->pebbles       += 1;
 
   if (c->pebbles > c->pebble_cost)
     c->pebble_cost = c->pebbles;
-  if (v==g->sinks[0])
+  if (v==g->sinks[0]) {
     c->sink_touched=TRUE;
-
+    SETBIT(c->useful_pebbles,v);
+  }
 }
 
 
@@ -232,25 +235,25 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return ((c->white_pebbled | c->black_pebbled) & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+  return GETBIT(c->white_pebbled | c->black_pebbled,v);
 }
 
-inline Boolean isuseless(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->useless_pebbles & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+  return GETBIT(c->useful_pebbles,v);
 }
 
-inline Boolean isessential(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+inline Boolean isblacklisted(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
   ASSERT_TRUE(v<g->size);
 
-  return (c->essential_pebbles & (BITTUPLE_UNIT<<v))?TRUE:FALSE;
+  return GETBIT(c->blacklisted,v);
 }
 
 
@@ -322,7 +325,7 @@ inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const Pebb
 
 
   /* Never pebble a useless pebble*/
-  if (isuseless(v,g,c)) return TRUE;
+  if (isblacklisted(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==c->last_changed_vertex) return FALSE;
@@ -337,7 +340,7 @@ inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const Pebb
 inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   /* Never remove a pebble if it is hasn't been essential*/
-  if (isuseless(v,g,c)) return TRUE;
+  if (isblacklisted(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==c->last_changed_vertex) return FALSE;
@@ -354,7 +357,7 @@ inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const Peb
   Vertex w=c->last_changed_vertex;
 
   /* Never remove a pebble if it is hasn't been essential*/
-  if (!isessential(v,g,c)) return TRUE;
+  if (!isuseful(v,g,c)) return TRUE;
 
 
   if (c->previous_configuration==NULL) return FALSE;
@@ -382,7 +385,7 @@ inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const Peb
 
 
   /* Never remove a pebble if it is hasn't been essential*/
-  if (!isessential(v,g,c)) return TRUE;
+  if (!isuseful(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==w) return FALSE;
