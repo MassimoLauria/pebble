@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 17:30 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 18:49 (CET) Massimo Lauria"
 
    Description::
 
@@ -36,7 +36,6 @@ typedef struct _PebbleConfiguration {
   BitTuple white_pebbled;    /* White pebbled vertices */
   BitTuple black_pebbled;    /* Black pebbled vertices */
   BitTuple useful_pebbles;   /* Pebbled used for other pebbles */
-  BitTuple blacklisted;      /* This vertices must not be pebbled anymore */
 
   Boolean sink_touched;
 

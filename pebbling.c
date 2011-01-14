@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 18:24 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-14, venerdì 18:56 (CET) Massimo Lauria"
 
    Description::
 
@@ -28,8 +28,7 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   ptr->white_pebbled=0;
   ptr->black_pebbled=0;
-  ptr->blacklisted  =0;
-  ptr->useful_pebbles=BITTUPLE_FULL;
+  ptr->useful_pebbles=0;
 
   ptr->sink_touched =FALSE;
 
@@ -53,7 +52,6 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
   dst->white_pebbled=src->white_pebbled;
   dst->black_pebbled=src->black_pebbled;
   dst->useful_pebbles=src->useful_pebbles;
-  dst->blacklisted=src->blacklisted;
 
   dst->sink_touched=src->sink_touched;
 
@@ -171,10 +169,8 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
 
   if (c->pebbles > c->pebble_cost)
     c->pebble_cost = c->pebbles;
-  if (v==g->sinks[0]) {
-    c->sink_touched=TRUE;
+  if (v==g->sinks[0] && !c->sink_touched) {
     SETBIT(c->useful_pebbles,v);
-    SETBIT(c->blacklisted,v);
   }
 }
 
@@ -218,7 +214,7 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
 
   if (c->pebbles > c->pebble_cost)
     c->pebble_cost = c->pebbles;
-  if (v==g->sinks[0]) {
+  if (v==g->sinks[0] && !c->sink_touched) {
     c->sink_touched=TRUE;
     SETBIT(c->useful_pebbles,v);
   }
@@ -246,16 +242,6 @@ inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c
 
   return GETBIT(c->useful_pebbles,v);
 }
-
-inline Boolean isblacklisted(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
-
-  return GETBIT(c->blacklisted,v);
-}
-
 
 /* Determines if there is a pebble on all predecessors of agiven
    vertex */
@@ -323,12 +309,8 @@ void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
 
 inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-
-  /* Never pebble a useless pebble*/
-  if (isblacklisted(v,g,c)) return TRUE;
-
   if (c->previous_configuration==NULL) return FALSE;
-  if (v==c->last_changed_vertex) return FALSE;
+  if (v==c->last_changed_vertex) return TRUE;
 
   /* Never place two pebbles on vertices with decreasing
      rank. Notice that successors always have bigger rank.  */
@@ -339,11 +321,8 @@ inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const Pebb
 
 inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  /* Never remove a pebble if it is hasn't been essential*/
-  if (isblacklisted(v,g,c)) return TRUE;
-
   if (c->previous_configuration==NULL) return FALSE;
-  if (v==c->last_changed_vertex) return FALSE;
+  if (v==c->last_changed_vertex) return TRUE;
 
   /* Never place two pebbles on vertices with decreasing
      rank. Notice that successors always have bigger rank.  */
