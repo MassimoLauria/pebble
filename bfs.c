@@ -176,7 +176,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   /* Data structures for BFS */
   Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
   Queue       *BoundaryQ=newSL(); /* Configuration to be processed the next round */
-  LinkedList      *Trash=newSL(); /* Fully processed configurations */
 
   /* Initial empty configuration */
   PebbleConfiguration *empty=new_PebbleConfiguration();
@@ -312,19 +311,11 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
 
       } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
         /* Cost improvement */
-        /* nptr->previous_configuration = ptr; */
-        /* nptr->last_changed_vertex = v; */
-        /* unsafe_noquery_writeDict(D,&res,nptr); */
-        /* enqueue(Q,nptr); */
         ((PebbleConfiguration*)res.value)->pebble_cost=nptr->pebble_cost;
         ((PebbleConfiguration*)res.value)->last_changed_vertex=v;
         ((PebbleConfiguration*)res.value)->previous_configuration=ptr;
         enqueue(Q,res.value);
         dispose_PebbleConfiguration(nptr);
-        /* nptr->previous_configuration = ptr; */
-        /* nptr->last_changed_vertex = v; */
-        /* unsafe_noquery_writeDict(D,&res,nptr); */
-        /* enqueue(Q,nptr); */
         STATS_INC(Stat,queued);
         STATS_INC(Stat,requeuing);
         STATS_INC(Stat,dict_writes);
@@ -336,7 +327,15 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
     }
 
     /* Save the analyzed configuration for later retrieval */
-    appendSL(Trash,ptr);
+    /* appendSL(Trash,ptr); */
+
+    /* Do regular cleaning of the memory. Remove all configurations
+       which are not in the dictionary anymore. */
+    if (clean_memory_flag) {
+
+      clean_memory_flag=0;
+    }
+
   }
 
 
