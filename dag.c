@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 14:54 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 12:50 (CET) Massimo Lauria"
 
    Description::
 
@@ -66,10 +66,14 @@ void dag_precompute_data(DAG *digraph) {
     for(Vertex v=0;v<digraph->size;v++) {
       digraph->pred_bitmasks[v]=BITTUPLE_ZERO;
       digraph->succ_bitmasks[v]=BITTUPLE_ZERO;
-      for(size_t j=0;j<digraph->indegree[v];j++)
+      for(size_t j=0;j<digraph->indegree[v];j++) {
+        ASSERT_TRUE(digraph->in[v][j] < v );
         digraph->pred_bitmasks[v] |= (BITTUPLE_UNIT << digraph->in[v][j]);
-      for(size_t j=0;j<digraph->outdegree[v];j++)
+      }
+      for(size_t j=0;j<digraph->outdegree[v];j++) {
+        ASSERT_TRUE(digraph->out[v][j] > v);
         digraph->succ_bitmasks[v] |= (BITTUPLE_UNIT << digraph->out[v][j]);
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 01:49 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 12:59 (CET) Massimo Lauria"
 
    Description::
 
@@ -117,10 +117,11 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   if (counter!=ptr->pebbles) return FALSE;
 
+
   /* Check that the mask is clean in the residual bits */
   if (BITTUPLE_SIZE != graph->size) {
-    if ( (ptr->white_pebbled | ptr->black_pebbled) &  /* The OR of the bitsequences */
-         ~((BITTUPLE_UNIT << graph->size) -1) )                   /* A bitmask which is set only on the high bits */
+    if ( (ptr->useful_pebbles | ptr->white_pebbled | ptr->black_pebbled) &  /* The OR of the bitmaks */
+         ~((BITTUPLE_UNIT << graph->size) -1) )      /* A bitmask which is set only on the high bits */
       return FALSE;
   }
 
@@ -344,7 +345,8 @@ static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,co
 
 
   if (c->previous_configuration==NULL) return FALSE;
-  if (v==w) return FALSE;
+  if (v==w) return TRUE;  /* White pebble can't be placed and removed,
+                             not even of the sink */
 
   /* Never remove pebbles on vertices with increasing
      rank. Notice that predecessors always have smaller rank.  */
@@ -372,7 +374,9 @@ static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,co
   if (!isuseful(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
-  if (v==w) return FALSE;
+  if (v==w) return (g->sinks[0]!=w);    /* A black pebble may pe
+                                           placed and then removed iff
+                                           it's on the sink. */
 
   /* Never remove pebbles on vertices with increasing
      rank. Notice that predecessors always have smaller rank.  */
