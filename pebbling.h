@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 18:49 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 01:44 (CET) Massimo Lauria"
 
    Description::
 
@@ -70,12 +70,16 @@ extern void    deleteblack(const Vertex v, const DAG *g, PebbleConfiguration *co
 
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+extern Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c);
 
 
 
 
 /* Build new configurations */
-extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g,const PebbleConfiguration *old);
+extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
+                                                     const DAG *g,
+                                                     const PebbleConfiguration *old,
+                                                     unsigned int max_pebbles);
 
 
 /* Pretty Print functions */

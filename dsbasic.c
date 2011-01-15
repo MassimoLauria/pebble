@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 14:45 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 02:13 (CET) Massimo Lauria"
 
    Description::
 
@@ -81,6 +81,7 @@ LinkedList *newSL(void) {
 
   return list;
 }
+
 
 void forkcursorSL(LinkedList *list,LinkedList *sndcursor) {
 
@@ -244,6 +245,7 @@ void disposeSL(LinkedList *l) {
   while(lh) { ch=lh; lh=lh->next; free(ch); }
   free(lh);
 }
+
 
 
 

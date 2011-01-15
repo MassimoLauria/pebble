@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 16:49 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 01:55 (CET) Massimo Lauria"
 
    Description::
 
@@ -86,7 +86,7 @@ extern void debug_trap_bait();
 
 #define ASSERT_FALSE(p) {                       \
     if (p) {                                    \
-      ERRMSG("NULL assertion failed.\n");       \
+      ERRMSG("FALSE assertion failed.\n");      \
       debug_trap_bait();                        \
       exit(-1);                                 \
     }                                           \

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 23:08 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-15, sabato 01:49 (CET) Massimo Lauria"
 
    Description::
 
@@ -237,6 +237,7 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   return GETBIT(c->white_pebbled | c->black_pebbled,v);
 }
 
+
 inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   ASSERT_TRUE(isconsistent_DAG(g));
@@ -310,7 +311,7 @@ void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
 
 /* Heuristics */
 
-inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+static inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==c->last_changed_vertex) return TRUE;
@@ -322,7 +323,7 @@ inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const Pebb
   return FALSE;
 }
 
-inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+static inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==c->last_changed_vertex) return TRUE;
@@ -334,7 +335,7 @@ inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const Pebb
   return FALSE;
 }
 
-inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   Vertex w=c->last_changed_vertex;
 
@@ -362,7 +363,7 @@ inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const Peb
 
 }
 
-inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
+static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   Vertex w=c->last_changed_vertex;
 
@@ -394,7 +395,10 @@ inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const Peb
    add a pebble (if possible) or remove one (if present).  The
    possible move is unique for every vertex.
 */
-PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, const PebbleConfiguration *old) {
+PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
+                                              const DAG *g,
+                                              const PebbleConfiguration *old,
+                                              unsigned int max_pebbles) {
 
   PebbleConfiguration *nconf=NULL;
 
@@ -414,6 +418,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
 #if BLACK_PEBBLES
   if (isactive(v,g,old) && !iswhite(v,g,old) ) { /* Place BLACK */
 
+    if (old->pebbles >= max_pebbles) return NULL;
     if (place_black_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
@@ -443,6 +448,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v, const DAG *g, cons
   if (!iswhite(v,g,old)) { /* Place WHITE */
 #endif
 
+    if (old->pebbles >= max_pebbles) return NULL;
     if (place_white_heuristics_cut(v,g,old)) return NULL;
 
 

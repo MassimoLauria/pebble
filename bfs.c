@@ -186,7 +186,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
   PebbleConfiguration *nptr=NULL;    /* Configuration to be queued for later processing (maybe) */
-  PebbleConfiguration *final=NULL;   /* Cheapest final configuration so far */
 
   /* Consistency test of data structures */
   ASSERT_TRUE(isconsistentDict(D));
@@ -261,82 +260,70 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
     /* Get an element from the queue */
     ptr=(PebbleConfiguration*)getSL(Q);
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
-
-    /* This configuration is going to be processed */
+    ASSERT_TRUE(ptr->pebble_cost == upper_bound-1 || ptr->pebble_cost == upper_bound);
+    ASSERT_FALSE(isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
-    /* Check if it is final */
-    if (isfinal(g,ptr)) {
-      STATS_REPORT(Stat);
-      return ptr;
-    }
-
-    /* Otherwise compute the next configurations */
+    /* Explore all configurations reachable in one step.  */
     for(Vertex v=0;v<g->size;v++) {
-      /* Produce a new configurations */
-      nptr=next_PebbleConfiguration(v,g,ptr);
-      if (nptr==NULL) {
-        continue;
-      } else {
-        STATS_INC(Stat,offspring);
-      }
 
+      nptr=next_PebbleConfiguration(v,g,ptr,upper_bound);
+      if (nptr==NULL) continue; /* Step corresponding to vertex v is invalid/useless */
 
-      if (nptr->pebble_cost > upper_bound) { /* Is it above the upper bound? */
-        STATS_INC(Stat,above_upper_bound);
-        dispose_PebbleConfiguration(nptr);
-        continue;
-      }
+      STATS_INC(Stat,offspring);
 
-      /* Evaluate the configuration... */
+      /* Find out if it has already been encountered (check in the dictionary) */
       queryDict(D,&res,nptr);
       STATS_INC(Stat,dict_queries);
       STATS_ADD(Stat,dict_hops,res.hops);
 
-      if (res.value==NULL)  {  /* Never encountered before */
-        nptr->previous_configuration = ptr;
-        nptr->last_changed_vertex = v;
-        unsafe_noquery_writeDict(D,&res,nptr);
+      if (res.value==NULL)  {  /* A configuration never encountered before */
 
-        if (nptr->pebbles == upper_bound) {
+        nptr->previous_configuration = ptr;  /* It's origin */
+        nptr->last_changed_vertex = v;
+        ASSERT_TRUE(nptr->pebble_cost == upper_bound);
+
+        if (isfinal(g,nptr)) {               /* Is it the end of the search? */
+          return nptr;
+        }
+
+        unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
+
+        if (nptr->pebbles == upper_bound) {    /* Boundary configuration will be
+                                                  reprocessed with a larger upper bound */
           enqueue(BoundaryQ,nptr);
           STATS_INC(Stat,delayed);
         }
-        enqueue(Q,nptr);
+
+        enqueue(Q,nptr);                       /* Put in queue for later processing */
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
 
         STATS_INC(Stat,dict_misses);
         STATS_INC(Stat,dict_writes);
 
-      } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) {
-        /* Cost improvement */
-        ((PebbleConfiguration*)res.value)->pebble_cost=nptr->pebble_cost;
-        ((PebbleConfiguration*)res.value)->last_changed_vertex=v;
-        ((PebbleConfiguration*)res.value)->previous_configuration=ptr;
-        enqueue(Q,res.value);
-        dispose_PebbleConfiguration(nptr);
-        STATS_INC(Stat,queued);
-        STATS_INC(Stat,requeuing);
-        STATS_INC(Stat,dict_writes);
-      } else {               /* Old with no improvements */
+      /* } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) { */
+      /*   /\* THIS IS OLD CODE! */
+      /*      With this algorithm we first analyze all configurations of */
+      /*      cost 1, then 2, ... so we should never encounter a smaller */
+      /*      pebble cost for earlier configurations. *\/ */
+      /*   ASSERT_FALSE(TRUE); */
+      /*   ((PebbleConfiguration*)res.value)->pebble_cost=nptr->pebble_cost; */
+      /*   ((PebbleConfiguration*)res.value)->last_changed_vertex=v; */
+      /*   ((PebbleConfiguration*)res.value)->previous_configuration=ptr; */
+      /*   enqueue(Q,res.value); */
+      /*   dispose_PebbleConfiguration(nptr); */
+      /*   STATS_INC(Stat,queued); */
+      /*   STATS_INC(Stat,requeuing); */
+      /*   STATS_INC(Stat,dict_writes); */
+      } else {                                 /* Already encountered. No new information. */
         STATS_INC(Stat,suboptimal);
         dispose_PebbleConfiguration(nptr);
       }
 
-    }
+    }/* End of loop on one-step reachable configurations */
 
-    /* Save the analyzed configuration for later retrieval */
-    /* appendSL(Trash,ptr); */
-
-    /* Do regular cleaning of the memory. Remove all configurations
-       which are not in the dictionary anymore. */
-    if (clean_memory_flag) {
-
-      clean_memory_flag=0;
-    }
-
-  }
+  }/* Queue of configurations empty */
 
 
 
@@ -351,6 +338,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   }
 #endif
 #endif
-  return final;
+  return NULL;
 }
 
