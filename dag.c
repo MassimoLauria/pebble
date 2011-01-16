@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 12:50 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-16, Domenica 16:28 (CET) Massimo Lauria"
 
    Description::
 
@@ -223,7 +223,10 @@ Boolean isconsistent_DAG(const DAG *ptr) {
    vertex v.  The default impletemtation is to map numbers in their
    string representation.
  */
+#ifndef __APPLE__
 extern int snprintf(char* buf,size_t size, const char *format, ... );
+#endif
+
 static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
   snprintf(buf,l,"%lu",v);
 }
