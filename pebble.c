@@ -27,16 +27,19 @@ int main(int argc, char *argv[])
 
   install_timed_flags(REPORT_INTERVAL);
 
-  DAG *A=piramid(6);
-  PebbleConfiguration *solution=bfs_pebbling_strategy(A,6);
+  unsigned int UB=5;
+
+  DAG *A=path(1);
+  DAG *B=piramid(2);
+  DAG *C=orproduct(A,B);
+  PebbleConfiguration *solution=bfs_pebbling_strategy(C,UB);
 
   if (solution) {
-    print_dot_Pebbling_Path(A,solution);
+    print_dot_Pebbling_Path(C,solution);
     exit(0);
   } else {
-    fprintf(stderr,"Graph does not have a pebbling of cost %u",6);
+    fprintf(stderr,"Graph does not have a pebbling of cost %u",UB);
     exit(-1);
-
   }
 }
 
