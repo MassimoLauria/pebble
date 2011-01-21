@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-21, venerdì 01:00 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-21, venerdì 15:23 (CET) Massimo Lauria"
 
    Description::
 
@@ -345,6 +345,69 @@ void print_dot_DAG(const DAG *p,
                      STRUCTURE BUILDING FUNCTIONS
  ********************************************************************************/
 
+/* A classic case for pebbling is the complete tree */
+/* {{{ */ DAG* tree(int height) {
+
+  Vertex u,v;
+  DAG *d=(DAG*)malloc(sizeof(DAG));
+  ASSERT_NOTNULL(d);
+  ASSERT_FALSE(height<0);
+
+  /* Size of the vertex set */
+  d->size=(2<<height) + ((2 << height) - 1);
+
+  /* Allocation of degree information */
+
+  d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+  d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+
+  ASSERT_NOTNULL(d->in );
+  ASSERT_NOTNULL(d->out);
+
+  d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
+  d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
+
+  ASSERT_NOTNULL(d->indegree );
+  ASSERT_NOTNULL(d->outdegree);
+
+  /* Computing of degree information */
+  for(v=0; v < (2<<height); v++)       d->indegree[v]=0;  /* Source elements */
+  for(v=(2<<height); v < d->size; v++) d->indegree[v]=2;  /* Non source elements */
+  for(v=0; v < d->size-1; v++)         d->outdegree[v]=1; /* Non sink elements */
+  d->outdegree[v]=0;
+
+  /* Allocation of neighbour informations */
+  for(v=0;v<d->size;v++) {
+    d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
+    d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
+    ASSERT_NOTNULL(d->in [v]);
+    ASSERT_NOTNULL(d->out[v]);
+  }
+
+  /* Incoming vertices */
+  /* Notice that in a level by level enumeration from root to leafs,
+     pred(x)={2x+1,2x+2}
+     Thus in our enumeration: pred(x)={N-1-2*(N-x),N-2*(N-x)}
+  */
+  u=0;
+  for(v=(2<<height); v < d->size; v++) { /* Non source elements */
+    d->in[v][0]=u++;
+    d->in[v][1]=u++;
+  }
+  u=(2<<height);
+  for(v=0; v < d->size-2; v+=2) { /* Non sink elements */
+    d->out[v  ][0]=u;
+    d->out[v+1][0]=u;
+    u++;
+  }
+
+  dag_precompute_data(d);
+  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  return d;
+}
+/* }}} */
+
+
 /* A classic case for pebbling is the piramid graph */
 /* {{{ */ DAG* piramid(int h) {
 /*
@@ -364,7 +427,7 @@ void print_dot_DAG(const DAG *p,
   int i,j,v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
   ASSERT_NOTNULL(d);
-
+  ASSERT_FALSE(height<0);
   /* Allocation of degree information */
   d->size = (h+2)*(h+1) / 2;
 

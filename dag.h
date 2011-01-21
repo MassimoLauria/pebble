@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-20, giovedì 23:33 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-21, venerdì 13:51 (CET) Massimo Lauria"
 
    Description::
 
@@ -82,7 +82,7 @@ extern void print_dot_DAG(const DAG *p,
 extern DAG* piramid(int h);
 extern DAG* path(int n);
 extern DAG* leader(int n);
-/* extern DAG* tree(int h); */
+extern DAG* tree(int h);
 
 extern DAG* orproduct(const DAG *outer,const DAG *inner);
 
