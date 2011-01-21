@@ -27,11 +27,12 @@ int main(int argc, char *argv[])
 
   install_timed_flags(REPORT_INTERVAL);
 
-  unsigned int UB=5;
+  unsigned int UB=6;
 
-  DAG *A=path(1);
+  DAG *A=leader(3);
   DAG *B=piramid(2);
   DAG *C=orproduct(A,B);
+
   PebbleConfiguration *solution=bfs_pebbling_strategy(C,UB);
 
   if (solution) {

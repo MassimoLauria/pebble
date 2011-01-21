@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-20, giovedì 19:48 (CET) Massimo Lauria"
+   Time-stamp: "2011-01-21, venerdì 01:00 (CET) Massimo Lauria"
 
    Description::
 
@@ -485,6 +485,68 @@ void print_dot_DAG(const DAG *p,
   return d;
 }
 /* }}} */
+
+
+/* Build a path. */
+/* {{{ */ DAG* leader(int n) {
+/*
+
+   0 ---\
+   1 ----\
+   2 -----> 6   All sources but one, and a sink.
+   3 ----/
+   4 ---/
+   5 --/
+*/
+
+  int v;
+  DAG *d=(DAG*)malloc(sizeof(DAG));
+  ASSERT_NOTNULL(d);
+
+  /* Allocation of degree information */
+  d->size = n+1;
+
+  d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+  d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
+
+  ASSERT_NOTNULL(d->in );
+  ASSERT_NOTNULL(d->out);
+
+  d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
+  d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
+
+  ASSERT_NOTNULL(d->indegree );
+  ASSERT_NOTNULL(d->outdegree);
+
+  /* Computing of degree information */
+  for(v=0; v < n; ++v)
+  {
+    d->outdegree[v]=1;      /* Except for last vertex: outdegree is 1 */
+    d->indegree [v]=0;      /* Except for last vertex: indegree is  0 */
+  }
+  d->outdegree[n]=0;
+  d->indegree [n]=n;
+
+  /* Allocation of neighbour informations */
+  for(v=0;v<d->size;v++) {
+    d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
+    d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
+    ASSERT_NOTNULL(d->in [v]);
+    ASSERT_NOTNULL(d->out[v]);
+  }
+
+  /* Fix the incoming vertices */
+  for(v=0; v < n; ++v)
+  {
+    d->out[v][0] = n;      /* Except for last vertex: outdegree is 1 */
+    d-> in[n][v] = v;
+  }
+  dag_precompute_data(d);
+  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  return d;
+}
+/* }}} */
+
 
 
 /* Build the OR product of two DAGs
