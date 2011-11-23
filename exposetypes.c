@@ -135,6 +135,10 @@ int main() {
 
   printf("%s\n\n",greetings_string);
 
+#ifdef __WORDSIZE
+  printf("NUMBITS=%d\n\n",__WORDSIZE);
+#endif
+
   /* Print data type dimensions. */
   printf("SIZE: these are the sizes of canonical types of C.\n\n");
   for(i=0;BIT_SIZE_TABLE[i].name;i++)

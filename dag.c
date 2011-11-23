@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-21, venerdì 15:23 (CET) Massimo Lauria"
+   Time-stamp: "2011-11-23, mercoledì 10:24 (CET) Massimo Lauria"
 
    Description::
 
@@ -227,8 +227,16 @@ Boolean isconsistent_DAG(const DAG *ptr) {
 extern int snprintf(char* buf,size_t size, const char *format, ... );
 #endif
 
+#if defined(_MSC_VER)
+  #define SIZE_T_SPECIFIER    "%Iu"
+#elif defined(__GNUC__)
+  #define SIZE_T_SPECIFIER    "%zu"
+#else
+  #define SIZE_T_SPECIFIER    "%lu"
+#endif
+
 static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
-  snprintf(buf,l,"%lu",v);
+   snprintf(buf,l,SIZE_T_SPECIFIER,v);
 }
 
 
