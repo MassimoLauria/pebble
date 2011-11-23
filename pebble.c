@@ -29,16 +29,18 @@ int main(int argc, char *argv[])
 
   unsigned int UB=6;
 
-  DAG *A=leader(3);
-  DAG *B=piramid(2);
-  DAG *C=orproduct(A,B);
+  /* DAG *A=leader(3); */
+  /* DAG *B=piramid(2); */
+  /* DAG *C=orproduct(A,B); */
 
-  DAG *D=tree(3);
+  /* DAG *D=tree(3); */
 
-  PebbleConfiguration *solution=bfs_pebbling_strategy(D,UB);
+  DAG *C=piramid(8);
+
+  PebbleConfiguration *solution=bfs_pebbling_strategy(C,UB);
 
   if (solution) {
-    print_dot_Pebbling_Path(D,solution);
+    print_dot_Pebbling_Path(C,solution);
     exit(0);
   } else {
     fprintf(stderr,"Graph does not have a pebbling of cost %u",UB);
