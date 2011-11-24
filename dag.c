@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-11-23, mercoledì 10:24 (CET) Massimo Lauria"
+   Time-stamp: "2011-11-24, giovedì 11:27 (CET) Massimo Lauria"
 
    Description::
 
@@ -416,8 +416,8 @@ void print_dot_DAG(const DAG *p,
 /* }}} */
 
 
-/* A classic case for pebbling is the piramid graph */
-/* {{{ */ DAG* piramid(int h) {
+/* A classic case for pebbling is the pyramid graph */
+/* {{{ */ DAG* pyramid(int h) {
 /*
 
            14
