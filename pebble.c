@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "dag.h"
@@ -17,6 +18,15 @@
 
 #define REPORT_INTERVAL          5
 
+#define USAGEMESSAGE "\n\
+Usage: %s [-h] [-p N] [-b M] \n\
+\n\
+       -h     help message;\n\
+       -p N   N>0 height of the pyramid graph;\n\
+       -b M   M>0 maximum number of pebbles.\n\
+"
+
+
 /*
  *  The example test program creates two pyramid graphs and produces
  *  the OR-product graph of them.  Then it prints the DOT
@@ -25,28 +35,53 @@
 int main(int argc, char *argv[])
 {
 
-  install_timed_flags(REPORT_INTERVAL);
+  int pebbling_bound=3;
+  int pyramid_height=1;
+  int option_code=0;
 
-  unsigned int UB=5;
   PebbleConfiguration *solution=NULL;
 
-  /* DAG *A=leader(3); */
-  /* DAG *B=piramid(2); */
-  /* DAG *C=orproduct(A,B); */
 
-  /* DAG *D=tree(3); */
+  /* Parse option to set Pyramid height,
+     pebbling upper bound. */
+  while((option_code=getopt(argc,argv,"b:p:h"))!=-1) {
+    switch (option_code) {
+    case 'h':
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(0);
+      break;
+    case 'b':
+      pebbling_bound=atoi(optarg);
+      if (pebbling_bound>0) break;
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
+      break;
+    case 'p':
+      pyramid_height=atoi(optarg);
+      if (pyramid_height>0) break;
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
+      break;
+    case '?':
+    default:
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
+    }
+  }
 
-  DAG *C=pyramid(5);
+  install_timed_flags(REPORT_INTERVAL);
 
-  solution=bfs_pebbling_strategy(C,UB);
+  DAG *C=pyramid(pyramid_height);
+
+  solution=bfs_pebbling_strategy(C,pebbling_bound);
 
   if (solution) {
     fprintf(stderr,"Graph does have a pebbling of cost %u",solution->pebble_cost);
     print_dot_Pebbling_Path(C,solution);
     exit(0);
   } else {
-    fprintf(stderr,"Graph does not have a pebbling of cost %u",UB);
-    exit(-1);
+    fprintf(stderr,"Graph does not have a pebbling of cost %u",pebbling_bound);
+    exit(1);
   }
 }
 
