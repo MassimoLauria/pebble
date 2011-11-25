@@ -1,12 +1,12 @@
 # Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-11-24, giovedì 11:41 (CET) Massimo Lauria"
+# Time-stamp: "2011-11-25, Friday 01:05 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
 WHITE_PEBBLES=1
-PRINT_RUNNING_STATS=1
+PRINT_RUNNING_STATS=0
 
 BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
 			-DWHITE_PEBBLES=${WHITE_PEBBLES} \

@@ -76,11 +76,11 @@ int main(int argc, char *argv[])
   solution=bfs_pebbling_strategy(C,pebbling_bound);
 
   if (solution) {
-    fprintf(stderr,"Graph does have a pebbling of cost %u",solution->pebble_cost);
+    fprintf(stderr,"Graph does have a pebbling of cost %u.\n",solution->pebble_cost);
     print_dot_Pebbling_Path(C,solution);
     exit(0);
   } else {
-    fprintf(stderr,"Graph does not have a pebbling of cost %u",pebbling_bound);
+    fprintf(stderr,"Graph does not have a pebbling of cost %u.\n",pebbling_bound);
     exit(1);
   }
 }
