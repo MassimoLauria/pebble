@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include "common.h"
 #include "dag.h"
@@ -19,11 +20,12 @@
 #define REPORT_INTERVAL          5
 
 #define USAGEMESSAGE "\n\
-Usage: %s [-h] [-p N] [-b M] \n\
+Usage: %s [-hZ] -p<int> -b<int> \n\
 \n\
        -h     help message;\n\
-       -p N   N>0 height of the pyramid graph;\n\
-       -b M   M>0 maximum number of pebbles.\n\
+       -p N   height of the pyramid graph (mandatory);\n\
+       -b M   maximum number of pebbles (mandatory);\n\
+       -Z     search for a 'persistent pebbling' (optional).\n\
 "
 
 
@@ -35,8 +37,9 @@ Usage: %s [-h] [-p N] [-b M] \n\
 int main(int argc, char *argv[])
 {
 
-  int pebbling_bound=3;
-  int pyramid_height=1;
+  int pebbling_bound=0;
+  int pyramid_height=0;
+  int persistent_pebbling=0;
   int option_code=0;
 
   PebbleConfiguration *solution=NULL;
@@ -44,11 +47,14 @@ int main(int argc, char *argv[])
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code=getopt(argc,argv,"b:p:h"))!=-1) {
+  while((option_code = getopt(argc,argv,"hZb:p:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
       exit(0);
+      break;
+    case 'Z':
+      persistent_pebbling=1;
       break;
     case 'b':
       pebbling_bound=atoi(optarg);
@@ -67,6 +73,11 @@ int main(int argc, char *argv[])
       fprintf(stderr,USAGEMESSAGE,argv[0]);
       exit(-1);
     }
+  }
+
+  if (pebbling_bound==0 || pyramid_height==0) {
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
   }
 
   install_timed_flags(REPORT_INTERVAL);

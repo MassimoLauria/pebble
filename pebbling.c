@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 12:59 (CET) Massimo Lauria"
+   Time-stamp: "2011-11-25, venerdì 15:32 (CET) Massimo Lauria"
 
    Description::
 
@@ -248,7 +248,7 @@ inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c
   return GETBIT(c->useful_pebbles,v);
 }
 
-/* Determines if there is a pebble on all predecessors of agiven
+/* Determines if there is a pebble on all predecessors of a given
    vertex */
 inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
