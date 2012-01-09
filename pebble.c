@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
   DAG *C=pyramid(pyramid_height);
 
-  solution=bfs_pebbling_strategy(C,pebbling_bound);
+  solution=bfs_pebbling_strategy(C,pebbling_bound,persistent_pebbling);
 
   if (solution) {
     fprintf(stderr,"Graph does have a pebbling of cost %u.\n",solution->pebble_cost);

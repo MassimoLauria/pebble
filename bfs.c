@@ -127,6 +127,9 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
    sequence  of vertices.   Thus the  output of  this function  can be
    interpreted in both directions.
 
+   Persisten pebbling is actually measured by placing a white pebble
+   on the sink and by trying to complete the pebbling.
+
    INPUT:
 
          -- DAG: the graph  to pebble (with few vertices  and a single
@@ -135,8 +138,15 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
          -- upper_bound:   the  maximum   number  of  pebbles  in  the
                          configuration,   if   such   number  is   not
                          sufficient,  the  the  computation will  fail
-                         gracefully without finding the pebbling. */
-PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound) {
+                         gracefully without finding the pebbling.
+
+         -- persisten_pebbling: whether we count the black white
+                                pebbling number for a pebbling which
+                                leaves a black pebble in the sink.
+  */
+PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
+                                           unsigned int final_upper_bound,
+                                           Boolean persistent_pebbling) {
 
   /* PROLOGUE ----------------------------------- */
   if (g->size > BITTUPLE_SIZE) {
@@ -178,10 +188,22 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,unsigned int final_upper_bound
   Queue       *BoundaryQ=newSL(); /* Configuration to be processed the next round */
 
   /* Initial empty configuration */
-  PebbleConfiguration *empty=new_PebbleConfiguration();
-  writeDict(D,&res,empty);
-  enqueue  (Q,empty);
+  PebbleConfiguration *initial=new_PebbleConfiguration();
   unsigned int upper_bound=1;
+
+  if (persistent_pebbling) {
+    /* To compute persisten pebbling put awhite pebble on top and try
+       to finish the pebbling. This is dual start with an empty pebble
+       and finish with a black pebble on top.
+       We already verified that the graph has a single sink.
+    */
+    placewhite(g->sinks[0],g,initial);
+    enqueue  (BoundaryQ,initial);
+  } else {
+    enqueue  (Q,initial);
+  }
+  writeDict(D,&res,initial);
+
 
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */

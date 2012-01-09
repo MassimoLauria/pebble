@@ -1,7 +1,7 @@
-# Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+# Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2011-11-25, Friday 01:05 (CET) Massimo Lauria"
+# Time-stamp: "2012-01-09, 18:24 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -13,9 +13,9 @@ BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
 			-DPRINT_RUNNING_STATS=${PRINT_RUNNING_STATS}
 # ---------- Environment variables ------------
 #
-# DEBUG=-DDEBUG -g
-# PROFILE=-pg
-# OPTIMIZATION=
+#DEBUG=-DDEBUG -g
+#PROFILE=-pg
+#OPTIMIZATION=
 
 DEBUG=
 #PROFILE=-pg

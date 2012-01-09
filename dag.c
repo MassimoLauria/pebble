@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2011-11-24, giovedì 11:27 (CET) Massimo Lauria"
+   Time-stamp: "2012-01-09, 17:38 (CET) Massimo Lauria"
 
    Description::
 
@@ -361,6 +361,12 @@ void print_dot_DAG(const DAG *p,
   ASSERT_NOTNULL(d);
   ASSERT_FALSE(height<0);
 
+  /* Set to null sinks and source vector */
+  d->pred_bitmasks=NULL;
+  d->succ_bitmasks=NULL;
+  d->sources=NULL;
+  d->sinks=NULL;
+
   /* Size of the vertex set */
   d->size=(2<<height) + ((2 << height) - 1);
 
@@ -435,7 +441,15 @@ void print_dot_DAG(const DAG *p,
   int i,j,v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
   ASSERT_NOTNULL(d);
-  ASSERT_FALSE(height<0);
+  ASSERT_FALSE(h<0);
+
+  /* Set to null sinks and source vector */
+  d->pred_bitmasks=NULL;
+  d->succ_bitmasks=NULL;
+  d->sources=NULL;
+  d->sinks=NULL;
+
+
   /* Allocation of degree information */
   d->size = (h+2)*(h+1) / 2;
 
