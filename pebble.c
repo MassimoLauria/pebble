@@ -26,6 +26,7 @@ Usage: %s [-hZ] -p<int> -b<int> \n\
        -p N   height of the pyramid graph (mandatory);\n\
        -b M   maximum number of pebbles (mandatory);\n\
        -Z     search for a 'persistent pebbling' (optional).\n\
+       -t     find shortest pebbling within space limits, instead of minimizing space (optional).\n\
 "
 
 
@@ -38,16 +39,22 @@ int main(int argc, char *argv[])
 {
 
   int pebbling_bound=0;
+  int pebbling_length=0;
   int pyramid_height=0;
+  int optimize_time=0;
   int persistent_pebbling=0;
   int option_code=0;
+
+  unsigned int bottom=0;
+  unsigned int top=0;
+
 
   PebbleConfiguration *solution=NULL;
 
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code = getopt(argc,argv,"hZb:p:"))!=-1) {
+  while((option_code = getopt(argc,argv,"hZtb:p:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
@@ -55,6 +62,9 @@ int main(int argc, char *argv[])
       break;
     case 'Z':
       persistent_pebbling=1;
+      break;
+    case 't':
+      optimize_time=1;
       break;
     case 'b':
       pebbling_bound=atoi(optarg);
@@ -80,15 +90,31 @@ int main(int argc, char *argv[])
       exit(-1);
   }
 
+  if (optimize_time) {
+    bottom=pebbling_bound;
+    top=pebbling_bound;
+  } else {
+    bottom=1;
+    top=pebbling_bound;
+  }
+
+
   install_timed_flags(REPORT_INTERVAL);
 
   DAG *C=pyramid(pyramid_height);
 
-  solution=bfs_pebbling_strategy(C,pebbling_bound,persistent_pebbling);
+  solution=bfs_pebbling_strategy(C,bottom,top,persistent_pebbling);
 
   if (solution) {
-    fprintf(stderr,"Graph does have a pebbling of cost %u.\n",solution->pebble_cost);
-    print_dot_Pebbling_Path(C,solution);
+
+    pebbling_length=print_dot_Pebbling_Path(C,solution);
+
+    /* We stop before removing the remaining black pebbles. */
+    pebbling_length+=solution->pebbles;
+    /* In non-persisten pebbling, we count the additional empty configuration. */
+    if (!persistent_pebbling) pebbling_length--;
+
+    fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->pebble_cost,pebbling_length);
     exit(0);
   } else {
     fprintf(stderr,"Graph does not have a pebbling of cost %u.\n",pebbling_bound);

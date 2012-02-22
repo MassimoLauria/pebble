@@ -135,17 +135,20 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
          -- DAG: the graph  to pebble (with few vertices  and a single
             sink).
 
-         -- upper_bound:   the  maximum   number  of  pebbles  in  the
-                         configuration,   if   such   number  is   not
-                         sufficient,  the  the  computation will  fail
-                         gracefully without finding the pebbling.
+         -- bottom: the initial cap to the pebble number. It is raised
+                    one by one up to the value of `top'.
+
+         -- top: the maximum number of pebbles in the configuration,
+                 if such number is not sufficient, the the computation
+                 will fail gracefully without finding the pebbling.
 
          -- persisten_pebbling: whether we count the black white
                                 pebbling number for a pebbling which
                                 leaves a black pebble in the sink.
   */
 PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
-                                           unsigned int final_upper_bound,
+                                           unsigned int bottom,
+                                           unsigned int top,
                                            Boolean persistent_pebbling) {
 
   /* PROLOGUE ----------------------------------- */
@@ -162,6 +165,13 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
             "one sink vertex.");
     exit(-1);
   }
+
+  if (bottom > top ) {
+    fprintf(stderr,
+            "Pebbling number range is empty: bottom=%u, top=%u.",bottom,top);
+    exit(-1);
+  }
+
 
   /* SEARCH ALGORITHM */
   /* The first attempt  to implement this program will  use a standard
@@ -189,7 +199,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
   /* Initial empty configuration */
   PebbleConfiguration *initial=new_PebbleConfiguration();
-  unsigned int upper_bound=1;
+  unsigned int upper_bound=bottom;
 
   if (persistent_pebbling) {
     /* To compute persisten pebbling put awhite pebble on top and try
@@ -221,7 +231,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
 #ifdef PRINT_RUNNING_STATS
   Counter tmp;
-  for(int p=0;p<=final_upper_bound;p++) {
+  for(int p=0;p<=top;p++) {
     tmp=1; /* How many configurations with p pebbles? */
     /* We compute binom(n,p)*2^p, with n=the size of the graph and p
        the number of pebbles.  We first computing 2^p*n!/(n-p)! which
@@ -250,10 +260,10 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   for(resetSL(Q);!isemptySL(Q) || !isemptySL(BoundaryQ) ;delete_and_nextSL(Q)) {
 
     if (isemptySL(Q)) {  /* No more element to be processed... raise the upper bound. */
-      if (upper_bound<final_upper_bound) {
+      if (upper_bound<top) {
 #ifdef PRINT_RUNNING_STATS
         fprintf(stderr,"\nRaising the upper bound from %u to %u / %u\n",
-                upper_bound,upper_bound+1,final_upper_bound);
+                upper_bound,upper_bound+1,top);
         fprintf(stderr,"\n\n");
         STATS_REPORT(Stat);
 #endif

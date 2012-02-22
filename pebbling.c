@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2011-11-25, venerdì 15:32 (CET) Massimo Lauria"
+   Time-stamp: "2012-02-22, 14:17 (CET) Massimo Lauria"
 
    Description::
 
@@ -278,7 +278,7 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 
 
 
-/* Print a graph with a pebble configuration, with dot.  If the `ped'
+/* Print a graph with a pebble configuration, with dot.  If the `peb'
    is NULL it does assume that the pebbling to be printed is empty.
    */
 void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
@@ -300,13 +300,17 @@ void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
   print_dot_DAG(g,name,options,vertexopts,NULL);
 }
 
-
-void print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
+/* Print a pebbling, with dot.  Return the number of steps.
+   */
+int print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
+  int step=0;
   while(ptr) {
+    step++;
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
     print_dot_Pebbling(g,ptr,"X",NULL);
     ptr=ptr->previous_configuration;
   }
+  return step;
 }
 
 
