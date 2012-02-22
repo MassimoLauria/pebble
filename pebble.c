@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
 
   PebbleConfiguration *solution=NULL;
 
-
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
   while((option_code = getopt(argc,argv,"hZtb:p:"))!=-1) {
@@ -111,7 +110,7 @@ int main(int argc, char *argv[])
 
     /* We stop before removing the remaining black pebbles. */
     pebbling_length+=solution->pebbles;
-    /* In non-persisten pebbling, we count the additional empty configuration. */
+    /* In non-persistent pebbling, we count an additional empty configuration. */
     if (!persistent_pebbling) pebbling_length--;
 
     fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->pebble_cost,pebbling_length);
@@ -121,4 +120,3 @@ int main(int argc, char *argv[])
     exit(1);
   }
 }
-
