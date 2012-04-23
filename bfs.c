@@ -205,18 +205,22 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   PebbleConfiguration *initial=new_PebbleConfiguration();
   unsigned int upper_bound=bottom;
 
-  if (persistent_pebbling) {
-    /* To compute persistent pebbling put a white pebble on top and
-       try to finish the pebbling. This is dual of a pebbling which
-       starts with an empty configuration and finishes with a black
-       pebble on the sink. We already verified that the graph has a
-       single sink.
-    */
-    placewhite(g->sinks[0],g,initial);
-    enqueue  (BoundaryQ,initial);
-  } else {
-    enqueue  (Q,initial);
+  /* To compute persistent pebbling put a white pebble on top and
+     try to finish the pebbling. This is dual of a pebbling which
+     starts with an empty configuration and finishes with a black
+     pebble on the sink. We already verified that the graph has a
+     single sink.
+  */
+  if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
+
+  /* Initial configuration may contains a pebble and so be right on the boundary */
+  if (initial->pebbles == upper_bound && upper_bound<top) {
+    enqueue(BoundaryQ,initial);
+    STATS_INC(Stat,delayed);
   }
+
+  /* Put the initial configuration in line to be processed. */
+  enqueue  (Q,initial);
   writeDict(D,&res,initial);
 
 

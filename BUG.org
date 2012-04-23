@@ -3,7 +3,8 @@
 
   `pebble -b 3 -p 1 -Z' output 6 instead of 5
 
-* TODO <2012-04-23 lun 12:06>  Does not work if -Z and -t are on simultaneously.
+* DONE <2012-04-23 lun 12:06>  Does not work if -Z and -t are on simultaneously.
+  CLOSED: [2012-04-23 lun 19:53]
 
   `pebble -b 3 -p 1 -Z -t' output “no pebble”.
 
