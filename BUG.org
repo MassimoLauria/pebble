@@ -1,0 +1,13 @@
+* DONE <2012-04-23 lun 12:05>  Pebble length is too big for persistent pebbling.
+  CLOSED: [2012-04-23 lun 14:26]
+
+  `pebble -b 3 -p 1 -Z' output 6 instead of 5
+
+* TODO <2012-04-23 lun 12:06>  Does not work if -Z and -t are on simultaneously.
+
+  `pebble -b 3 -p 1 -Z -t' output “no pebble”.
+
+* DONE <2012-04-23 lun 12:08>  Assertion failure on -t
+  CLOSED: [2012-04-23 lun 14:26]
+
+  `pebble -b 3 -p 1 -t'

@@ -108,10 +108,14 @@ int main(int argc, char *argv[])
 
     pebbling_length=print_dot_Pebbling_Path(C,solution);
 
-    /* We stop before removing the remaining black pebbles. */
-    pebbling_length+=solution->pebbles;
-    /* In non-persistent pebbling, we count an additional empty configuration. */
-    if (!persistent_pebbling) pebbling_length--;
+    /* Since the last configuration contains black pebbles, in order
+       to count the number of steps we need to add steps for removing
+       them.
+
+       We subtract one to count pebbling steps, not just the number of
+       configurations.
+    */
+    pebbling_length+=solution->pebbles-1;
 
     fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->pebble_cost,pebbling_length);
     exit(0);

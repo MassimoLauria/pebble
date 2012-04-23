@@ -166,11 +166,15 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
     exit(-1);
   }
 
+  if (bottom < 1 ) { bottom=1; } /* We start with at least space 1
+                                    pebblings. */
+
   if (bottom > top ) {
     fprintf(stderr,
-            "Pebbling number range is empty: bottom=%u, top=%u.",bottom,top);
+            "Pebbling number range is empty: [%u, %u]",bottom,top);
     exit(-1);
   }
+
 
 
   /* SEARCH ALGORITHM */
@@ -202,10 +206,11 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   unsigned int upper_bound=bottom;
 
   if (persistent_pebbling) {
-    /* To compute persisten pebbling put awhite pebble on top and try
-       to finish the pebbling. This is dual start with an empty pebble
-       and finish with a black pebble on top.
-       We already verified that the graph has a single sink.
+    /* To compute persistent pebbling put a white pebble on top and
+       try to finish the pebbling. This is dual of a pebbling which
+       starts with an empty configuration and finishes with a black
+       pebble on the sink. We already verified that the graph has a
+       single sink.
     */
     placewhite(g->sinks[0],g,initial);
     enqueue  (BoundaryQ,initial);
@@ -229,7 +234,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   STATS_SET(Stat,queued,1);
   STATS_SET(Stat,dict_size,D->size);
 
-#ifdef PRINT_RUNNING_STATS
+#if PRINT_RUNNING_STATS==1
   Counter tmp;
   for(int p=0;p<=top;p++) {
     tmp=1; /* How many configurations with p pebbles? */
@@ -261,7 +266,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
     if (isemptySL(Q)) {  /* No more element to be processed... raise the upper bound. */
       if (upper_bound<top) {
-#ifdef PRINT_RUNNING_STATS
+#if PRINT_RUNNING_STATS==1
         fprintf(stderr,"\nRaising the upper bound from %u to %u / %u\n",
                 upper_bound,upper_bound+1,top);
         fprintf(stderr,"\n\n");
@@ -276,7 +281,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
       }
     }
 
-#ifdef PRINT_RUNNING_STATS
+#if PRINT_RUNNING_STATS==1
     if (print_running_stats_flag) {
       STATS_ADD(Stat,clock,timedflags_clock_freq);
       fprintf(stderr,"\nClock %llu: Report for graph on %u vertices, upper bound=%u:",
@@ -292,7 +297,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
     /* Get an element from the queue */
     ptr=(PebbleConfiguration*)getSL(Q);
     ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
-    ASSERT_TRUE(ptr->pebble_cost == upper_bound-1 || ptr->pebble_cost == upper_bound);
+    ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
     ASSERT_FALSE(isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
@@ -313,7 +318,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
         nptr->previous_configuration = ptr;  /* It's origin */
         nptr->last_changed_vertex = v;
-        ASSERT_TRUE(nptr->pebble_cost == upper_bound);
+        ASSERT_TRUE(nptr->pebble_cost <= upper_bound);
 
         if (isfinal(g,nptr)) {               /* Is it the end of the search? */
           return nptr;
@@ -321,8 +326,9 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
         unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
 
-        if (nptr->pebbles == upper_bound) {    /* Boundary configuration will be
-                                                  reprocessed with a larger upper bound */
+        if (nptr->pebbles == upper_bound && upper_bound<top) {
+          /* Boundary configuration will be
+             reprocessed with a larger upper bound */
           enqueue(BoundaryQ,nptr);
           STATS_INC(Stat,delayed);
         }
@@ -361,7 +367,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
   /* EPILOGUE --------------------------------- */
   /* free memory, free Mandela! */
-#ifdef PRINT_RUNNING_STATS
+#if PRINT_RUNNING_STATS==1
   fprintf(stderr,"FINAL REPORT:\n\n");
   STATS_REPORT(Stat);
 #ifdef HASHTABLE_DEBUG
