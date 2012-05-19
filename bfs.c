@@ -29,9 +29,8 @@
 size_t   hashPebbleConfiguration(void *data) {
 
   ASSERT_NOTNULL(data);
-
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
-  return ptr->white_pebbled ^ ptr->black_pebbled;
+  return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
 }
 
 Boolean  samePebbleConfiguration(void *A,void *B) {
@@ -191,6 +190,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
      visited configurations.
   */
 
+
   /* Dictionary data structure */
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
   DictQueryResult res;               /* Query results */
@@ -204,6 +204,10 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   /* Initial empty configuration */
   PebbleConfiguration *initial=new_PebbleConfiguration();
   unsigned int upper_bound=bottom;
+
+  /* Data structure for statistics collection */
+  STATS_CREATE(Stat);
+
 
   /* To compute persistent pebbling put a white pebble on top and
      try to finish the pebbling. This is dual of a pebbling which
@@ -232,8 +236,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   ASSERT_TRUE(isconsistentDict(D));
   ASSERT_TRUE(isconsistentSL(Q));
 
-  /* Data structure for statistics collection */
-  STATS_CREATE(Stat);
   STATS_SET(Stat,first_queuing,1);
   STATS_SET(Stat,queued,1);
   STATS_SET(Stat,dict_size,D->size);
@@ -344,20 +346,6 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
         STATS_INC(Stat,dict_misses);
         STATS_INC(Stat,dict_writes);
 
-      /* } else if (((PebbleConfiguration*)res.value)->pebble_cost > nptr->pebble_cost ) { */
-      /*   /\* THIS IS OLD CODE! */
-      /*      With this algorithm we first analyze all configurations of */
-      /*      cost 1, then 2, ... so we should never encounter a smaller */
-      /*      pebble cost for earlier configurations. *\/ */
-      /*   ASSERT_FALSE(TRUE); */
-      /*   ((PebbleConfiguration*)res.value)->pebble_cost=nptr->pebble_cost; */
-      /*   ((PebbleConfiguration*)res.value)->last_changed_vertex=v; */
-      /*   ((PebbleConfiguration*)res.value)->previous_configuration=ptr; */
-      /*   enqueue(Q,res.value); */
-      /*   dispose_PebbleConfiguration(nptr); */
-      /*   STATS_INC(Stat,queued); */
-      /*   STATS_INC(Stat,requeuing); */
-      /*   STATS_INC(Stat,dict_writes); */
       } else {                                 /* Already encountered. No new information. */
         STATS_INC(Stat,suboptimal);
         dispose_PebbleConfiguration(nptr);

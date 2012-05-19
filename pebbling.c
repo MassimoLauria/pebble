@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2012-02-22, 14:17 (CET) Massimo Lauria"
+   Time-stamp: "2012-05-19, 16:48 (CEST) Massimo Lauria"
 
    Description::
 
@@ -20,6 +20,12 @@
 #include "pebbling.h"
 
 
+/**
+ * Create a new empty pebble configuration allocated on the heap
+ * memory.
+ *
+ * @return a pointer to a the configuration.
+ */
 PebbleConfiguration *new_PebbleConfiguration(void) {
 
   PebbleConfiguration *ptr=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));

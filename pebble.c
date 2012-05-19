@@ -30,10 +30,11 @@ Usage: %s [-hZ] -p<int> -b<int> \n\
 "
 
 
-/*
+/**
  *  The example test program creates two pyramid graphs and produces
  *  the OR-product graph of them.  Then it prints the DOT
  *  representation of such graphs.
+ *
  */
 int main(int argc, char *argv[])
 {
