@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:24 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-12, mercoledì 21:49 (CET) Massimo Lauria"
+   Time-stamp: "2012-05-19, 19:08 (CEST) Massimo Lauria"
 
    Description::
 
@@ -67,6 +67,7 @@ extern void queryDict(Dict* d,DictQueryResult *const result,void *data);
 extern void writeDict(Dict *d,DictQueryResult *const result,void *data);
 extern void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data);
 
+extern void histogramDict(FILE *stream,Dict *d);
 
 
 #endif /* HASHTABLE_H */

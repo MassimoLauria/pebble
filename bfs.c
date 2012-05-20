@@ -31,7 +31,7 @@ size_t   hashPebbleConfiguration(void *data) {
   ASSERT_NOTNULL(data);
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
   return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
-}
+ }
 
 Boolean  samePebbleConfiguration(void *A,void *B) {
 
@@ -231,6 +231,7 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   /* Additional variables */
   PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
   PebbleConfiguration *nptr=NULL;    /* Configuration to be queued for later processing (maybe) */
+  PebbleConfiguration *output=NULL;  /* Configuration to be returned */
 
   /* Consistency test of data structures */
   ASSERT_TRUE(isconsistentDict(D));
@@ -327,7 +328,8 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
         ASSERT_TRUE(nptr->pebble_cost <= upper_bound);
 
         if (isfinal(g,nptr)) {               /* Is it the end of the search? */
-          return nptr;
+          output=nptr;
+          goto epilogue;
         }
 
         unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
@@ -356,18 +358,21 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   }/* Queue of configurations empty */
 
 
+ epilogue:
 
-  /* EPILOGUE --------------------------------- */
-  /* free memory, free Mandela! */
 #if PRINT_RUNNING_STATS==1
+
   fprintf(stderr,"FINAL REPORT:\n\n");
   STATS_REPORT(Stat);
+
 #ifdef HASHTABLE_DEBUG
   if (!CheckRuntimeConsistency(g,D)) {
     fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!\n");
   }
 #endif
+
 #endif
-  return NULL;
+
+  return output;
 }
 

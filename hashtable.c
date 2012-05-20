@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 15:11 (CET) Massimo Lauria"
+   Time-stamp: "2012-05-20, 02:48 (CEST) Massimo Lauria"
 
    Description::
 
@@ -170,3 +170,42 @@ void writeDict(Dict *d,DictQueryResult *const result,void *data) {
   unsafe_noquery_writeDict(d,result,data);
 
 }
+
+/**
+ * Print the histogram of the hashtable
+ *
+ * @param stream Output file
+ * @param d Pointer to the dictionary
+ */
+void histogramDict(FILE *stream,Dict *d) {
+
+  unsigned int len;
+  unsigned int tot;
+
+  struct LinkedListHandle *cursor;
+
+  if (d==NULL) return;
+
+  fprintf(stream,"HASHTABLE_HISTOGRAM\n");
+  fprintf(stream,"SIZE %u\nALLOCATION %u\n",d->size,d->allocation);
+
+  tot=0;
+  for(size_t i=0;i<d->size;i++) {
+    if (i % 50 == 0) fprintf(stream,"\n");
+    len=0;
+    cursor=d->buckets[i]->head;
+    while(cursor) { len++; cursor=cursor->next;}
+    tot+=len;
+    fprintf(stream,"%u ",len);
+  }
+
+  fprintf(stream,"\nHASHTABLE_HISTOGRAM\n");
+}
+
+
+
+
+
+
+
+
