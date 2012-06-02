@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2012-02-22, 14:16 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-02, 16:40 (CEST) Massimo Lauria"
 
    Description::
 
@@ -50,6 +50,26 @@ typedef struct _PebbleConfiguration {
   Vertex last_changed_vertex;
 
 } PebbleConfiguration;
+
+/**
+ *  A pebbling can be described as a sequence of vertices, since given
+ *  a vertex in the graph, of all action possible there is at most one
+ *  which is legal and locally optimal.  We also include pebbling
+ *  length and cost in order to avoid the recomputation.
+ */
+typedef struct {
+
+  Vertex *steps;
+  size_t  length;
+  int     cost;
+
+  const DAG *dag;
+
+} Pebbling;
+
+
+/* extern Pebbling*  new_Pebbling(size_t length); */
+/* extern void       dispose_Pebbling(); */
 
 extern PebbleConfiguration*  new_PebbleConfiguration();
 extern PebbleConfiguration* copy_PebbleConfiguration(const PebbleConfiguration *src);
