@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2012-06-04, 03:37 (CEST) Massimo Lauria"
+# Time-stamp: "2012-06-04, 19:37 (CEST) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 BLACK_PEBBLES=1
@@ -13,13 +13,13 @@ BUILDFLAGS=	-DBLACK_PEBBLES=${BLACK_PEBBLES} \
 			-DPRINT_RUNNING_STATS=${PRINT_RUNNING_STATS}
 # ---------- Environment variables ------------
 #
-# DEBUG=-DDEBUG -g
-# PROFILE=-pg
-# OPTIMIZATION=
-
-DEBUG=
+DEBUG=-g
 PROFILE=-pg
-OPTIMIZATION=-O
+OPTIMIZATION=
+
+# DEBUG=-DNDEBUG
+# #PROFILE=-pg
+# OPTIMIZATION=-O
 
 # DEBUG+=-DHASHTABLE_DEBUG
 
@@ -71,7 +71,7 @@ clean:
 	@-rm -f ${TARGET}
 	@-rm -f *.o
 	@-rm -fr *.dSYM
-#	@-rm -f ${TAGFILES}
+	@-rm -f ${TAGFILES}
 
 tags:
 	$(TAGS) -I .

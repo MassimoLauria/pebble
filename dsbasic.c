@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 02:40 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:35 (CEST) Massimo Lauria"
 
    Description::
 
@@ -13,6 +13,7 @@
 
 /* Preamble */
 #include <stdlib.h>
+#include <assert.h>
 
 #include "common.h"
 #include "dsbasic.h"
@@ -27,7 +28,7 @@
    indefinitely) if the list has some loops. */
 Boolean isconsistentSL(LinkedList *list) {
 
-  ASSERT_NOTNULL(list);
+  assert(list);
 
   /* Empty list */
   if (list->head==NULL || list->tail==NULL) {
@@ -40,8 +41,8 @@ Boolean isconsistentSL(LinkedList *list) {
   /* From now on the list is not empty
      i.e. head and tail are not NULL
    */
-  ASSERT_NOTNULL(list->head);
-  ASSERT_NOTNULL(list->tail);
+  assert(list->head);
+  assert(list->tail);
   /* Is tail the last element? */
   if (list->tail->next!=NULL) return FALSE;
 
@@ -72,7 +73,7 @@ LinkedList *newSL(void) {
   LinkedList *list;
   list=(LinkedList*)malloc(sizeof(LinkedList));
 
-  ASSERT_NOTNULL(list);
+  assert(list);
 
   list->head=NULL;
   list->tail=NULL;
@@ -85,8 +86,8 @@ LinkedList *newSL(void) {
 
 void forkcursorSL(LinkedList *list,LinkedList *sndcursor) {
 
-  ASSERT_NOTNULL(list);
-  ASSERT_NOTNULL(sndcursor);
+  assert(list);
+  assert(sndcursor);
 
   sndcursor->head  =list->head;
   sndcursor->tail  =list->tail;
@@ -107,15 +108,15 @@ void forkcursorSL(LinkedList *list,LinkedList *sndcursor) {
 */
 void insertSL(LinkedList *l,void *data,Boolean before) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentSL(l));
-  ASSERT_TRUE(iscursorvalidSL(l));
-  ASSERT_FALSE(isemptySL(l));
+  assert(l);
+  assert(isconsistentSL(l));
+  assert(iscursorvalidSL(l));
+  assert(!isemptySL(l));
 
   /* Allocation */
   struct LinkedListHandle *lelem;
   lelem=(struct LinkedListHandle*)malloc(sizeof(struct LinkedListHandle));
-  ASSERT_NOTNULL(lelem);
+  assert(lelem);
 
   /* Insertion */
   lelem->data=data;
@@ -136,30 +137,30 @@ void insertSL(LinkedList *l,void *data,Boolean before) {
     l->cursor = lelem;
   }
 
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(isconsistentSL(l));
 
 }
 
 /* Push at the head of the list, and move the cursor at the beginning */
 void consSL(void *data,LinkedList *l) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(l);
+  assert(isconsistentSL(l));
 
   if(isemptySL(l)) {
     appendSL(l,data);
-    ASSERT_TRUE(iscursorvalidSL(l));
-    ASSERT_TRUE(isconsistentSL(l));
+    assert(iscursorvalidSL(l));
+    assert(isconsistentSL(l));
     return;
   }
 
-  ASSERT_TRUE(iscursorvalidSL(l));
-  ASSERT_FALSE(isemptySL(l));
+  assert(iscursorvalidSL(l));
+  assert(!isemptySL(l));
 
   /* Allocation */
   struct LinkedListHandle *lelem;
   lelem=(struct LinkedListHandle*)malloc(sizeof(struct LinkedListHandle));
-  ASSERT_NOTNULL(lelem);
+  assert(lelem);
 
   /* Insertion at head */
   lelem->data=data;
@@ -167,7 +168,7 @@ void consSL(void *data,LinkedList *l) {
   l->head=lelem;
   l->before_cursor=NULL;
   l->cursor= l->head;
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(isconsistentSL(l));
 }
 
 
@@ -182,10 +183,10 @@ void consSL(void *data,LinkedList *l) {
  */
 void delete_and_nextSL(LinkedList *l) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentSL(l));
-  ASSERT_TRUE(iscursorvalidSL(l));
-  ASSERT_FALSE(isemptySL(l));
+  assert(l);
+  assert(isconsistentSL(l));
+  assert(iscursorvalidSL(l));
+  assert(!isemptySL(l));
 
   /* Allocation */
   struct LinkedListHandle *lelem;
@@ -203,7 +204,7 @@ void delete_and_nextSL(LinkedList *l) {
     l->tail=l->before_cursor;
   }
   free(lelem);
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(isconsistentSL(l));
 }
 
 
@@ -212,13 +213,13 @@ void delete_and_nextSL(LinkedList *l) {
    cursor. */
 void appendSL(LinkedList *l,void *data) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(l);
+  assert(isconsistentSL(l));
 
   /* Allocation */
   struct LinkedListHandle *lelem;
   lelem=(struct LinkedListHandle*)malloc(sizeof(struct LinkedListHandle));
-  ASSERT_NOTNULL(lelem);
+  assert(lelem);
   lelem->data=data;
   lelem->next=NULL;
 
@@ -233,14 +234,14 @@ void appendSL(LinkedList *l,void *data) {
   l->tail=lelem;                    /* New tail */
 
 
-  ASSERT_TRUE(isconsistentSL(l));
+  assert(isconsistentSL(l));
 
 }
 
 
 void disposeSL(LinkedList *l) {
   struct LinkedListHandle *ch,*lh;
-  ASSERT_NOTNULL(l);
+  assert(l);
   lh=l->head;
   while(lh) { ch=lh; lh=lh->next; free(ch); }
   free(lh);
@@ -257,7 +258,7 @@ void disposeSL(LinkedList *l) {
 
 Boolean isconsistentDL(DLinkedList *list) {
 
-  ASSERT_NOTNULL(list);
+  assert(list);
 
   /* If anyone is NULL, both must be */
   if (list->head==NULL || list->tail==NULL) {
@@ -268,8 +269,8 @@ Boolean isconsistentDL(DLinkedList *list) {
   /* From now on the list is not empty
      i.e. head and tail are not NULL
    */
-  ASSERT_NOTNULL(list->head);
-  ASSERT_NOTNULL(list->tail);
+  assert(list->head);
+  assert(list->tail);
   /* Are tail and head at the extremes? */
   if (list->tail->next!=NULL) return FALSE;
   if (list->head->prev!=NULL) return FALSE;
@@ -299,7 +300,7 @@ Boolean isconsistentDL(DLinkedList *list) {
 
 
 Boolean isemptyDL(DLinkedList *list) {
-  ASSERT_NOTNULL(isconsistentDL(list));
+  assert(isconsistentDL(list));
   return (list->head==NULL);
 }
 
@@ -313,7 +314,7 @@ DLinkedList *newDL(void) {
   DLinkedList *dlist;
   dlist=(DLinkedList*)malloc(sizeof(DLinkedList));
 
-  ASSERT_NOTNULL(dlist);
+  assert(dlist);
 
   dlist->head=NULL;
   dlist->tail=NULL;
@@ -333,15 +334,15 @@ DLinkedList *newDL(void) {
 */
 void insertDL(DLinkedList *l,void *data,Boolean before) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(isconsistentDL(l));
-  ASSERT_TRUE(iscursorvalidDL(l));
-  ASSERT_FALSE(isemptyDL(l));
+  assert(l);
+  assert(isconsistentDL(l));
+  assert(iscursorvalidDL(l));
+  assert(!isemptyDL(l));
 
   /* Allocation */
   struct DLinkedListHandle *lelem;
   lelem=(struct DLinkedListHandle*)malloc(sizeof(struct DLinkedListHandle));
-  ASSERT_NOTNULL(lelem);
+  assert(lelem);
 
   /* Insertion */
   lelem->data=data;
@@ -361,7 +362,7 @@ void insertDL(DLinkedList *l,void *data,Boolean before) {
     l->cursor = lelem;
   }
 
-  ASSERT_NOTNULL(isconsistentDL(l));
+  assert(isconsistentDL(l));
 
 }
 
@@ -376,10 +377,10 @@ void insertDL(DLinkedList *l,void *data,Boolean before) {
  */
 void delete_and_nextDL(DLinkedList *l) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentDL(l));
-  ASSERT_TRUE(iscursorvalidDL(l));
-  ASSERT_FALSE(isemptyDL(l));
+  assert(l);
+  assert(isconsistentDL(l));
+  assert(iscursorvalidDL(l));
+  assert(!isemptyDL(l));
 
   /* Identification */
   struct DLinkedListHandle *lelem;
@@ -398,7 +399,7 @@ void delete_and_nextDL(DLinkedList *l) {
     l->tail=lelem->prev;
   }
   free(lelem);
-  ASSERT_TRUE(isconsistentDL(l));
+  assert(isconsistentDL(l));
 }
 
 
@@ -414,10 +415,10 @@ void delete_and_nextDL(DLinkedList *l) {
  */
 void delete_and_prevDL(DLinkedList *l) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_TRUE(isconsistentDL(l));
-  ASSERT_TRUE(iscursorvalidDL(l));
-  ASSERT_FALSE(isemptyDL(l));
+  assert(l);
+  assert(isconsistentDL(l));
+  assert(iscursorvalidDL(l));
+  assert(!isemptyDL(l));
 
   /* Identification */
   struct DLinkedListHandle *lelem;
@@ -436,7 +437,7 @@ void delete_and_prevDL(DLinkedList *l) {
     l->tail=lelem->prev;
   }
   free(lelem);
-  ASSERT_TRUE(isconsistentDL(l));
+  assert(isconsistentDL(l));
 }
 
 
@@ -450,13 +451,13 @@ void delete_and_prevDL(DLinkedList *l) {
  */
 void extendDL(DLinkedList *l,void *data,Boolean to_tail) {
 
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(isconsistentDL(l));
+  assert(l);
+  assert(isconsistentDL(l));
 
   /* Allocation */
   struct DLinkedListHandle *lelem;
   lelem=(struct DLinkedListHandle*)malloc(sizeof(struct DLinkedListHandle));
-  ASSERT_NOTNULL(lelem);
+  assert(lelem);
   lelem->data=data;
   lelem->next=NULL;
   lelem->prev=NULL;
@@ -476,15 +477,15 @@ void extendDL(DLinkedList *l,void *data,Boolean to_tail) {
     l->head = lelem;                  /* New head */
 
   }
-  ASSERT_NOTNULL(isconsistentDL(l));
+  assert(isconsistentDL(l));
 }
 
 
 void disposeDL(DLinkedList *dl) {
   struct DLinkedListHandle *ch,*lh;
 
-  ASSERT_NOTNULL(dl);
-  ASSERT_NOTNULL(isconsistentDL(dl));
+  assert(dl);
+  assert(isconsistentDL(dl));
 
   lh=dl->head;
   while(lh) { ch=lh; lh=lh->next; free(ch); }
@@ -493,26 +494,26 @@ void disposeDL(DLinkedList *dl) {
 
 
 void resetDL(DLinkedList *l) {
-  ASSERT_NOTNULL(l);
+  assert(l);
   l->cursor=l->head;
 }
 
 void nextDL(DLinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
+  assert(l);
+  assert(l->cursor);
   l->cursor=l->cursor->next;
 }
 
 void prevDL(DLinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
+  assert(l);
+  assert(l->cursor);
   l->cursor=l->cursor->prev;
 }
 
 
 void *getDL(DLinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
+  assert(l);
+  assert(l->cursor);
   return l->cursor->data;
 }
 

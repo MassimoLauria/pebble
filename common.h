@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 01:55 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:10 (CEST) Massimo Lauria"
 
    Description::
 
@@ -35,77 +35,6 @@ typedef unsigned char          Boolean;
 #define   GETBIT(tuple,i) (((tuple) & (BITTUPLE_UNIT << (i))) ? TRUE : FALSE )
 #define   SETBIT(tuple,i) ((tuple)|=(BITTUPLE_UNIT << (i)))
 #define RESETBIT(tuple,i) ((tuple)&= ~(BITTUPLE_UNIT << (i)))
-
-
-
-
-
-
-#ifdef DEBUG
-
-/* Assertion for DEBUG purposes:  If DEBUG constant is not defined,
- * then such assertions result in an empty statement. Otherwise they
- * will test the correspondent condition and stop the program with an
- * appropriate error message.
- */
-
-extern void debug_trap_bait();
-
-/* Error and warning messages, useful for debugging */
-#define ERRMSG(str)                                                 \
-  { fprintf(stderr,"ERROR at [%s,%d]: %s",__FILE__,__LINE__,str); }
-
-#define WARNMSG(str)                                                    \
-  { fprintf(stderr,"WARNING at [%s,%d]: %s",__FILE__,__LINE__,str); }
-
-
-#define ASSERT_NOTNULL(p) {                       \
-    if (!(p)) {                                   \
-      ERRMSG("NOT NULL assertion failed.\n");     \
-      debug_trap_bait();                          \
-      exit(-1);                                   \
-    }                                             \
-  }
-
-#define ASSERT_NULL(p) {                        \
-    if (p) {                                    \
-      ERRMSG("NULL assertion failed.\n");       \
-      debug_trap_bait();                        \
-      exit(-1);                                 \
-    }                                           \
-  }
-
-#define ASSERT_TRUE(p) {                        \
-    if (!(p)) {                                 \
-      ERRMSG("TRUE assertion failed.\n");       \
-      debug_trap_bait();                        \
-      exit(-1);                                 \
-    }                                           \
-  }
-
-
-#define ASSERT_FALSE(p) {                       \
-    if (p) {                                    \
-      ERRMSG("FALSE assertion failed.\n");      \
-      debug_trap_bait();                        \
-      exit(-1);                                 \
-    }                                           \
-  }
-
-
-#else
-
-#define ERRMSG(str) {}
-#define WARNMSG(str) {}
-
-#define ASSERT_NOTNULL(p) {}
-#define ASSERT_NULL(p)    {}
-
-#define ASSERT_TRUE(p)    {}
-#define ASSERT_FALSE(p)   {}
-
-
-#endif
 
 
 #endif /* COMMON_H  */

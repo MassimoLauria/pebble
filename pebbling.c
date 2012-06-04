@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 02:36 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:30 (CEST) Massimo Lauria"
 
    Description::
 
@@ -16,6 +16,7 @@
 /* Preamble */
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
@@ -30,12 +31,12 @@
  */
 Pebbling *new_Pebbling(size_t length) {
 
-  ASSERT_TRUE(length>0);
+  assert(length>0);
   Pebbling *ptr=(Pebbling*)malloc(sizeof(Pebbling));
 
-  ASSERT_NOTNULL(ptr);
+  assert(ptr);
   ptr->steps =(Vertex*)malloc(sizeof(Vertex)*length);
-  ASSERT_NOTNULL(ptr->steps);
+  assert(ptr->steps);
 
   ptr->cost =0;
   return ptr;
@@ -51,17 +52,17 @@ Pebbling *new_Pebbling(size_t length) {
  */
 Pebbling *copy_Pebbling(const Pebbling *src) {
 
-  ASSERT_NOTNULL(src);
-  ASSERT_TRUE(src->length>0);
+  assert(src);
+  assert(src->length>0);
 
   Pebbling *ptr=(Pebbling*)malloc(sizeof(Pebbling));
-  ASSERT_NOTNULL(ptr);
+  assert(ptr);
 
   ptr->length = src->length;
   ptr->cost = src->cost;
 
   ptr->steps =(Vertex*)malloc(sizeof(Vertex)*ptr->length);
-  ASSERT_NOTNULL(ptr->steps);
+  assert(ptr->steps);
 
   memcpy(ptr->steps,src->steps,ptr->length*sizeof(Vertex));
 
@@ -76,12 +77,12 @@ Pebbling *copy_Pebbling(const Pebbling *src) {
  *
  */
 void dispose_Pebbling(Pebbling *ptr) {
-  ASSERT_NOTNULL(ptr);
+  assert(ptr);
   if (ptr->length>0) {
-    ASSERT_NOTNULL(ptr->steps);
+    assert(ptr->steps);
     free(ptr->steps);
   } else
-    ASSERT_NULL(ptr->steps);
+    assert(ptr->steps==NULL);
   free(ptr);
 }
 
@@ -101,7 +102,7 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   PebbleConfiguration *ptr=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));
 
-  ASSERT_NOTNULL(ptr);
+  assert(ptr);
 
   ptr->white_pebbled=0;
   ptr->black_pebbled=0;
@@ -130,8 +131,8 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   PebbleConfiguration *dst=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));
 
-  ASSERT_TRUE(src);
-  ASSERT_NOTNULL(dst);
+  assert(src);
+  assert(dst);
 
   dst->white_pebbled=src->white_pebbled;
   dst->black_pebbled=src->black_pebbled;
@@ -149,7 +150,7 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 }
 
 void dispose_PebbleConfiguration(PebbleConfiguration *ptr) {
-  ASSERT_NOTNULL(ptr);
+  assert(ptr);
   free(ptr);
 }
 
@@ -158,8 +159,8 @@ void dispose_PebbleConfiguration(PebbleConfiguration *ptr) {
    graph, which in turns must be consistent. */
 Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfiguration *ptr) {
 
-  ASSERT_NOTNULL(ptr);
-  ASSERT_NOTNULL(graph);
+  assert(ptr);
+  assert(graph);
 
   /* The size of the graph and the number of sinks must fit with the
      pebbling representation. */
@@ -221,10 +222,10 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 /* Black */
 inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
-  ASSERT_TRUE(isblack(v,g,c));
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+  assert(isblack(v,g,c));
 
   RESETBIT(c->black_pebbled,v);
   RESETBIT(c->useful_pebbles,v);
@@ -236,20 +237,20 @@ inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c
    configuration */
 inline Boolean isblack(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
 
   return GETBIT(c->black_pebbled,v);
 }
 
 inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
-  ASSERT_FALSE(ispebbled(v,g,c));
-  ASSERT_TRUE(isactive(v,g,c));
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+  assert(!ispebbled(v,g,c));
+  assert(isactive(v,g,c));
 
   SETBIT(c->black_pebbled,v);
   c->pebbles       += 1;
@@ -267,11 +268,11 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
 /* White */
 inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
-  ASSERT_TRUE(iswhite(v,g,c));
-  ASSERT_TRUE(isactive(v,g,c));
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+  assert(iswhite(v,g,c));
+  assert(isactive(v,g,c));
 
   RESETBIT(c->white_pebbled,v);
   RESETBIT(c->useful_pebbles,v);
@@ -285,19 +286,19 @@ inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c
    configuration */
 inline Boolean iswhite(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
 
   return GETBIT(c->white_pebbled,v);
 }
 
 inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
-  ASSERT_FALSE(ispebbled(v,g,c));
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+  assert(!ispebbled(v,g,c));
 
   SETBIT(c->white_pebbled,v);
   c->pebbles       += 1;
@@ -317,9 +318,9 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
    configuration */
 inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
 
   return GETBIT(c->white_pebbled | c->black_pebbled,v);
 }
@@ -327,9 +328,9 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
 
 inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
 
   return GETBIT(c->useful_pebbles,v);
 }
@@ -338,9 +339,9 @@ inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c
    vertex */
 inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
-  ASSERT_TRUE(v<g->size);
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
 
   if (isblack(v,g,c)) return FALSE;
 
@@ -355,8 +356,8 @@ inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c
 /* Determines if the configuration is a final one */
 inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,c));
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
 
   if (c->white_pebbled==0 && c->sink_touched==TRUE) return TRUE;
   else return FALSE;
@@ -369,8 +370,8 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
    */
 void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
                         char *name,char* options) {
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
+  assert(isconsistent_DAG(g));
+  assert(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
 
   char *vertexopts[g->size];
 
@@ -507,7 +508,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
 
   PebbleConfiguration *nconf=NULL;
 
-  ASSERT_TRUE(isconsistent_PebbleConfiguration(g,old));
+  assert(isconsistent_PebbleConfiguration(g,old));
 
   if (isactive(v,g,old) &&  iswhite(v,g,old) ) { /* Delete WHITE */
 
@@ -516,7 +517,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     nconf=copy_PebbleConfiguration(old);
     deletewhite(v,g,nconf);
 
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
   }
 
@@ -529,7 +530,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     nconf=copy_PebbleConfiguration(old);
     placeblack(v,g,nconf);
 
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
   }
 #endif
@@ -541,7 +542,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     nconf=copy_PebbleConfiguration(old);
     deleteblack(v,g,nconf);
 
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
   }
 
@@ -560,7 +561,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     nconf=copy_PebbleConfiguration(old);
     placewhite(v,g,nconf);
 
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,nconf));
+    assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
   }
 #endif

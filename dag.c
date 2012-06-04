@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 00:57 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:29 (CEST) Massimo Lauria"
 
    Description::
 
@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
+
 #include "common.h"
 #include "dag.h"
 
@@ -29,8 +31,8 @@
    of some information.  */
 void dag_precompute_data(DAG *digraph) {
 
-  ASSERT_NULL(digraph->sinks);
-  ASSERT_NULL(digraph->sources);
+  assert(digraph->sinks  ==NULL);
+  assert(digraph->sources==NULL);
 
   /* Count the number of sources */
   digraph->sink_number=0;
@@ -41,8 +43,8 @@ void dag_precompute_data(DAG *digraph) {
     if (digraph->outdegree[i] == 0) digraph->sink_number++;
   }
 
-  ASSERT_TRUE(digraph->source_number>0);
-  ASSERT_TRUE(digraph->sink_number  >0);
+  assert(digraph->source_number >0);
+  assert(digraph->sink_number   >0);
 
   /* Allocate the space for source and sink arrays */
   digraph->sinks=(Vertex*)malloc(sizeof(Vertex)*(digraph->sink_number));
@@ -67,11 +69,11 @@ void dag_precompute_data(DAG *digraph) {
       digraph->pred_bitmasks[v]=BITTUPLE_ZERO;
       digraph->succ_bitmasks[v]=BITTUPLE_ZERO;
       for(size_t j=0;j<digraph->indegree[v];j++) {
-        ASSERT_TRUE(digraph->in[v][j] < v );
+        assert(digraph->in[v][j] < v );
         digraph->pred_bitmasks[v] |= (BITTUPLE_UNIT << digraph->in[v][j]);
       }
       for(size_t j=0;j<digraph->outdegree[v];j++) {
-        ASSERT_TRUE(digraph->out[v][j] > v);
+        assert(digraph->out[v][j] > v);
         digraph->succ_bitmasks[v] |= (BITTUPLE_UNIT << digraph->out[v][j]);
       }
     }
@@ -88,10 +90,11 @@ void dag_precompute_data(DAG *digraph) {
 
   DAG *d;
 
-  ASSERT_NOTNULL(src);
+  assert(src);
 
   d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
+
+  assert(d);
 
   /* Allocation for arcs specification */
   d->size = src->size;
@@ -99,15 +102,15 @@ void dag_precompute_data(DAG *digraph) {
   d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
   d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
 
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
+  assert(d->in );
+  assert(d->out);
 
   /* Copy the degree specifications */
   d->indegree  = (size_t*)malloc( d->size*sizeof(size_t) );
   d->outdegree = (size_t*)malloc( d->size*sizeof(size_t) );
 
-  ASSERT_NOTNULL(d->indegree);
-  ASSERT_NOTNULL(d->outdegree);
+  assert(d->indegree );
+  assert(d->outdegree);
 
   memcpy(d->indegree,src->indegree,d->size);
   memcpy(d->outdegree,src->outdegree,d->size);
@@ -124,8 +127,8 @@ void dag_precompute_data(DAG *digraph) {
     if (d->indegree[v]==0) { d->in[v]=NULL; continue; }
 
     d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(src->in [v]);
+    assert(d->in [v]  );
+    assert(src->in [v]);
     memcpy(d->in[v],src->in[v],d->size);
   }
 
@@ -135,14 +138,14 @@ void dag_precompute_data(DAG *digraph) {
     if (d->outdegree[v]==0) { d->out[v]=NULL; continue; }
 
     d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->out[v]);
-    ASSERT_NOTNULL(src->out[v]);
+    assert(d->out   [v]);
+    assert(src->out [v]);
     memcpy(d->out[v],src->out[v],d->size);
   }
 
   dag_precompute_data(d);
 
-  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
 /* }}} */
@@ -190,25 +193,25 @@ void dag_precompute_data(DAG *digraph) {
    application of pebbling. */
 Boolean isconsistent_DAG(const DAG *ptr) {
 
-  ASSERT_NOTNULL(ptr);
-  ASSERT_FALSE(ptr->size==0);
+  assert(ptr);
+  assert(ptr->size > 0 );
 
-  ASSERT_NOTNULL(ptr->indegree);
-  ASSERT_NOTNULL(ptr->outdegree);
+  assert(ptr->indegree );
+  assert(ptr->outdegree);
 
-  ASSERT_NOTNULL(ptr->in);
-  ASSERT_NOTNULL(ptr->out);
+  assert(ptr->in);
+  assert(ptr->out);
 
-  ASSERT_NOTNULL(ptr->sinks);
-  ASSERT_NOTNULL(ptr->sources);
+  assert(ptr->sinks);
+  assert(ptr->sources);
 
   /* Bitmasks are present iff they are big enough */
   if (ptr->size <= BITTUPLE_SIZE) {
-    ASSERT_NOTNULL(ptr->pred_bitmasks);
-    ASSERT_NOTNULL(ptr->succ_bitmasks);
+    assert(ptr->pred_bitmasks);
+    assert(ptr->succ_bitmasks);
   } else {
-    ASSERT_NULL(ptr->pred_bitmasks);
-    ASSERT_NULL(ptr->succ_bitmasks);
+    assert(ptr->pred_bitmasks==NULL);
+    assert(ptr->succ_bitmasks==NULL);
   }
   return TRUE;
 }
@@ -248,10 +251,10 @@ static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
   /* Ignore null graphs */
   if (!p) return;
 
-  ASSERT_NOTNULL(p->indegree);
-  ASSERT_NOTNULL(p->in);
-  ASSERT_NOTNULL(p->outdegree);
-  ASSERT_NOTNULL(p->out);
+  assert(p->indegree);
+  assert(p->in);
+  assert(p->outdegree);
+  assert(p->out);
 
   /* If no fucntion for computing labels is specified, then we use the
      default one, which turn a number in its string respresentation */
@@ -296,10 +299,10 @@ void print_dot_DAG(const DAG *p,
   /* Ignore null graphs */
   if (!p) return;
 
-  ASSERT_NOTNULL(p->indegree);
-  ASSERT_NOTNULL(p->in);
-  ASSERT_NOTNULL(p->outdegree);
-  ASSERT_NOTNULL(p->out);
+  assert(p->indegree);
+  assert(p->in);
+  assert(p->outdegree);
+  assert(p->out);
 
   /* If no function for computing labels is specified, then we use the
    * default one, which turn a number in its string
@@ -358,8 +361,8 @@ void print_dot_DAG(const DAG *p,
 
   Vertex u,v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
-  ASSERT_FALSE(height<0);
+  assert(d);
+  assert(height>=0);
 
   /* Set to null sinks and source vector */
   d->pred_bitmasks=NULL;
@@ -375,14 +378,14 @@ void print_dot_DAG(const DAG *p,
   d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
   d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
 
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
+  assert(d->in );
+  assert(d->out);
 
   d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
   d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
 
-  ASSERT_NOTNULL(d->indegree );
-  ASSERT_NOTNULL(d->outdegree);
+  assert(d->indegree );
+  assert(d->outdegree);
 
   /* Computing of degree information */
   for(v=0; v < (2<<height); v++)       d->indegree[v]=0;  /* Source elements */
@@ -394,8 +397,8 @@ void print_dot_DAG(const DAG *p,
   for(v=0;v<d->size;v++) {
     d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
     d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(d->out[v]);
+    assert(d->in [v]);
+    assert(d->out[v]);
   }
 
   /* Incoming vertices */
@@ -416,7 +419,7 @@ void print_dot_DAG(const DAG *p,
   }
 
   dag_precompute_data(d);
-  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
 /* }}} */
@@ -440,8 +443,8 @@ void print_dot_DAG(const DAG *p,
 
   int i,j,v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
-  ASSERT_FALSE(h<0);
+  assert(d);
+  assert(h>=0);
 
   /* Set to null sinks and source vector */
   d->pred_bitmasks=NULL;
@@ -456,14 +459,14 @@ void print_dot_DAG(const DAG *p,
   d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
   d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
 
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
+  assert(d->in );
+  assert(d->out);
 
   d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
   d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
 
-  ASSERT_NOTNULL(d->indegree );
-  ASSERT_NOTNULL(d->outdegree);
+  assert(d->indegree );
+  assert(d->outdegree);
 
   /* Computing of degree information */
   v=0;
@@ -484,8 +487,8 @@ void print_dot_DAG(const DAG *p,
   for(v=0;v<d->size;v++) {
     d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
     d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(d->out[v]);
+    assert(d->in [v]);
+    assert(d->out[v]);
   }
 
   /* Fix the incoming vertices */
@@ -511,7 +514,7 @@ void print_dot_DAG(const DAG *p,
   }
 
   dag_precompute_data(d);
-  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
 /* }}} */
@@ -526,7 +529,7 @@ void print_dot_DAG(const DAG *p,
 
   int v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
+  assert(d);
 
   /* Allocation of degree information */
   d->size = n+1;
@@ -534,14 +537,14 @@ void print_dot_DAG(const DAG *p,
   d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
   d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
 
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
+  assert(d->in );
+  assert(d->out);
 
   d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
   d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
 
-  ASSERT_NOTNULL(d->indegree );
-  ASSERT_NOTNULL(d->outdegree);
+  assert(d->indegree );
+  assert(d->outdegree);
 
   /* Computing of degree information */
   for(v=0; v < n; ++v)
@@ -554,8 +557,8 @@ void print_dot_DAG(const DAG *p,
   for(v=0;v<d->size;v++) {
     d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
     d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(d->out[v]);
+    assert(d->in [v]);
+    assert(d->out[v]);
   }
 
   /* Fix the incoming vertices */
@@ -566,7 +569,7 @@ void print_dot_DAG(const DAG *p,
   }
 
   dag_precompute_data(d);
-  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
 /* }}} */
@@ -586,7 +589,7 @@ void print_dot_DAG(const DAG *p,
 
   int v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(d);
+  assert(d);
 
   /* Allocation of degree information */
   d->size = n+1;
@@ -594,14 +597,14 @@ void print_dot_DAG(const DAG *p,
   d->in  = (Vertex**)malloc( d->size*sizeof(Vertex*) );
   d->out = (Vertex**)malloc( d->size*sizeof(Vertex*) );
 
-  ASSERT_NOTNULL(d->in );
-  ASSERT_NOTNULL(d->out);
+  assert(d->in );
+  assert(d->out);
 
   d->indegree  = (size_t*)calloc( d->size,sizeof(size_t) );
   d->outdegree = (size_t*)calloc( d->size,sizeof(size_t) );
 
-  ASSERT_NOTNULL(d->indegree );
-  ASSERT_NOTNULL(d->outdegree);
+  assert(d->indegree );
+  assert(d->outdegree);
 
   /* Computing of degree information */
   for(v=0; v < n; ++v)
@@ -616,8 +619,8 @@ void print_dot_DAG(const DAG *p,
   for(v=0;v<d->size;v++) {
     d->in[v]  = (Vertex*)malloc( (d->indegree[v]) *sizeof(Vertex) );
     d->out[v] = (Vertex*)malloc( (d->outdegree[v])*sizeof(Vertex) );
-    ASSERT_NOTNULL(d->in [v]);
-    ASSERT_NOTNULL(d->out[v]);
+    assert(d->in [v]);
+    assert(d->out[v]);
   }
 
   /* Fix the incoming vertices */
@@ -627,7 +630,7 @@ void print_dot_DAG(const DAG *p,
     d-> in[n][v] = v;
   }
   dag_precompute_data(d);
-  ASSERT_TRUE(isconsistent_DAG(d)); /* Construction should be sound */
+  assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
 /* }}} */
@@ -651,8 +654,8 @@ void print_dot_DAG(const DAG *p,
   Vertex xo,xi,x;
   size_t So,Si,S;
 
-  ASSERT_NOTNULL(inner);
-  ASSERT_NOTNULL(outer);
+  assert(inner);
+  assert(outer);
 
   /* Size of the new graph */
   Si=inner->size;
@@ -661,18 +664,18 @@ void print_dot_DAG(const DAG *p,
 
   /* Initial structure */
   p=(DAG*)malloc(sizeof(DAG));
-  ASSERT_NOTNULL(p);
+  assert(p);
   p->size=S;
 
   /* Basic arrays */
   p->in  = (Vertex**)malloc( S*sizeof(Vertex*) );
   p->out = (Vertex**)malloc( S*sizeof(Vertex*) );
-  ASSERT_NOTNULL(p->in );
-  ASSERT_NOTNULL(p->out);
+  assert(p->in );
+  assert(p->out);
   p->indegree  = (size_t*)malloc( S*sizeof(size_t) );
   p->outdegree = (size_t*)malloc( S*sizeof(size_t) );
-  ASSERT_NOTNULL(p->indegree );
-  ASSERT_NOTNULL(p->outdegree);
+  assert(p->indegree );
+  assert(p->outdegree);
 
   /* Computes the degrees */
 
@@ -745,7 +748,7 @@ void print_dot_DAG(const DAG *p,
 
 
   dag_precompute_data(p);
-  ASSERT_TRUE(isconsistent_DAG(p)); /* Construction should be sound */
+  assert(isconsistent_DAG(p)); /* Construction should be sound */
   return p;
 }
 /* }}} */

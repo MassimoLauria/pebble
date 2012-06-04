@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 03:06 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:35 (CEST) Massimo Lauria"
 
    Description::
 
@@ -13,6 +13,7 @@
 
 /* Preamble */
 #include <stdlib.h>
+#include <assert.h>
 
 #include "common.h"
 #include "dsbasic.h"
@@ -21,12 +22,12 @@
 extern long int random(void);
 
 Boolean isconsistentDict(Dict *d) {
-  ASSERT_NOTNULL(d);
-  ASSERT_TRUE(d->size <= d->allocation);
-  ASSERT_NOTNULL(d->buckets);
+  assert(d);
+  assert(d->size <= d->allocation);
+  assert(d->buckets);
 
-  ASSERT_NOTNULL(d->key_function);
-  ASSERT_NOTNULL(d->eq_function);
+  assert(d->key_function);
+  assert(d->eq_function);
 
 #if defined(HASHTABLE_DEBUG)
   LinkedList *l;
@@ -35,7 +36,7 @@ Boolean isconsistentDict(Dict *d) {
 
     l=d->buckets[i];
 
-    ASSERT_TRUE(isconsistentSL(l));
+    assert(isconsistentSL(l));
 
     /* Chech if all elements have the same hash and if they are in the
        appropriate bucket. It uses linked list internals. */
@@ -55,7 +56,7 @@ void disposeDict(Dict *d) {
   LinkedList *ll;
   void       *ptr;
 
-  ASSERT_NOTNULL(d);
+  assert(d);
 
   /* Remove from memory all objects in the dictionary */
   if (d->dispose_function!=NULL) {
@@ -80,7 +81,7 @@ void disposeDict(Dict *d) {
 Dict *newDict(size_t allocation) {
 
   Dict *d=(Dict *)malloc(sizeof(Dict));
-  ASSERT_NOTNULL(d)
+  assert(d);
 
   size_t r=random() % (allocation >> 4);
   d->allocation = allocation;
@@ -94,7 +95,7 @@ Dict *newDict(size_t allocation) {
   for(size_t i=0;i<d->size;i++) {
     d->buckets[i]=newSL();
   }
-  ASSERT_NOTNULL(d->buckets);
+  assert(d->buckets);
   return d;
 
 }
@@ -109,9 +110,9 @@ Dict *newDict(size_t allocation) {
  */
 void queryDict(Dict* d,DictQueryResult *const result,void *data) {
 
-  ASSERT_NOTNULL(d);
-  ASSERT_NOTNULL(result);
-  ASSERT_NOTNULL(d->eq_function);
+  assert(d);
+  assert(result);
+  assert(d->eq_function);
   LinkedList *ll=NULL;
 
   /* Compute the hash and then find the position in the array */
@@ -136,7 +137,7 @@ void queryDict(Dict* d,DictQueryResult *const result,void *data) {
     result->hops++;
     nextSL(ll);
   }
-  ASSERT_NULL(result->value);
+  assert(result->value==NULL);
   return;
 }
 
@@ -148,13 +149,13 @@ void queryDict(Dict* d,DictQueryResult *const result,void *data) {
  */
 void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data) {
 
-  ASSERT_NOTNULL(d);
-  ASSERT_NOTNULL(result);
-  ASSERT_TRUE(result->key    == d->key_function(data));
-  ASSERT_TRUE(result->bucket == result->key % d->size);
+  assert(d);
+  assert(result);
+  assert(result->key    == d->key_function(data));
+  assert(result->bucket == result->key % d->size);
 
   LinkedList      *ll  = d->buckets[result->bucket];
-  ASSERT_NOTNULL(ll);
+  assert(ll);
 
   if (result->value==NULL) {
     /* The configuration does not occur in the dictionary */
@@ -162,7 +163,7 @@ void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data) 
   } else {
     /* The configuration occur, so we update the old record if there's the need. */
     /* We use an internal of LinkedList!! */
-    ASSERT_TRUE(d->eq_function(data,result->value));
+    assert(d->eq_function(data,result->value));
     ll->cursor->data=data;
   }
   return;
@@ -177,8 +178,8 @@ void unsafe_noquery_writeDict(Dict *d,DictQueryResult *const result,void *data) 
  */
 void writeDict(Dict *d,DictQueryResult *const result,void *data) {
 
-  ASSERT_NOTNULL(d);
-  ASSERT_NOTNULL(result);
+  assert(d);
+  assert(result);
 
   queryDict(d,result,data);
   unsafe_noquery_writeDict(d,result,data);

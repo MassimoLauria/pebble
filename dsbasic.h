@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:13 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 02:12 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-04, 19:31 (CEST) Massimo Lauria"
 
    Description::
 
@@ -17,7 +17,7 @@
 #define  DSBASIC_H
 
 #include <stdlib.h>
-
+#include <assert.h>
 /********************************************************************************
                      LINKED LISTS
  ********************************************************************************/
@@ -54,22 +54,22 @@ void forkcursorSL(LinkedList *list,LinkedList *sndcursor);
 
 /* void nextSL(LinkedList *l); */
 static inline void nextSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
+  assert(l);
+  assert(l->cursor);
   l->before_cursor=l->cursor;
   l->cursor=l->cursor->next;
 }
 
 /* void *getSL(LinkedList *l); */
 static inline void *getSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
-  ASSERT_NOTNULL(l->cursor);
+  assert(l);
+  assert(l->cursor);
   return l->cursor->data;
 }
 
 /* Boolean isemptySL(LinkedList *list); */
 static inline Boolean isemptySL(LinkedList *list) {
-  ASSERT_NOTNULL(isconsistentSL(list));
+  assert(isconsistentSL(list));
   return (list->head==NULL);
 }
 
@@ -81,7 +81,7 @@ static inline Boolean iscursorvalidSL(LinkedList *list) {
 
 /* void resetSL(LinkedList *l); */
 static inline void resetSL(LinkedList *l) {
-  ASSERT_NOTNULL(l);
+  assert(l);
   l->cursor=l->head;
   l->before_cursor=NULL;
 }

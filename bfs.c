@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <assert.h>
 
 #include "common.h"
 #include "dag.h"
@@ -29,15 +29,15 @@
  */
 size_t   hashPebbleConfiguration(void *data) {
 
-  ASSERT_NOTNULL(data);
+  assert(data);
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
   return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
  }
 
 Boolean  samePebbleConfiguration(void *A,void *B) {
 
-  ASSERT_NOTNULL(A);
-  ASSERT_NOTNULL(B);
+  assert(A);
+  assert(B);
 
   PebbleConfiguration *pA,*pB;
   pA=(PebbleConfiguration*)A;
@@ -54,7 +54,7 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
 }
 
 void  freePebbleConfiguration(void *data) {
-  ASSERT_NOTNULL(data);
+  assert(data);
   dispose_PebbleConfiguration((PebbleConfiguration *)data);
 }
 
@@ -72,13 +72,13 @@ void  freePebbleConfiguration(void *data) {
    appropriate dictionary */
 Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
 
-  ASSERT_NOTNULL(g);
-  ASSERT_NOTNULL(dict);
+  assert(g);
+  assert(dict);
 
-  ASSERT_TRUE(isconsistent_DAG(g));
-  ASSERT_TRUE(isconsistentDict(dict));
+  assert(isconsistent_DAG(g));
+  assert(isconsistentDict(dict));
 
-  ASSERT_TRUE(g->size < BITTUPLE_SIZE);
+  assert(g->size < BITTUPLE_SIZE);
 
 #ifdef HASHTABLE_DEBUG
 
@@ -242,8 +242,8 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   PebbleConfiguration *final=NULL;    /* Final configuration */
 
   /* Consistency test of data structures */
-  ASSERT_TRUE(isconsistentDict(D));
-  ASSERT_TRUE(isconsistentSL(Q));
+  assert(isconsistentDict(D));
+  assert(isconsistentSL(Q));
 
   STATS_SET(Stat,first_queuing,1);
   STATS_SET(Stat,queued,1);
@@ -311,9 +311,9 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
     /* Get an element from the queue */
     ptr=(PebbleConfiguration*)getSL(Q);
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
-    ASSERT_TRUE(ptr->pebble_cost <= upper_bound);
-    ASSERT_FALSE(isfinal(g,ptr));
+    assert(isconsistent_PebbleConfiguration(g,ptr));
+    assert(ptr->pebble_cost <= upper_bound);
+    assert(!isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
     /* Explore all configurations reachable in one step.  */
@@ -333,7 +333,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
         nptr->previous_configuration = ptr;  /* It's origin */
         nptr->last_changed_vertex = v;
-        ASSERT_TRUE(nptr->pebble_cost <= upper_bound);
+        assert(nptr->pebble_cost <= upper_bound);
 
         unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
 
@@ -436,14 +436,11 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
  epilogue:
 
 #if PRINT_RUNNING_STATS==1
-
   fprintf(stderr,"FINAL REPORT:\n\n");
   STATS_REPORT(Stat);
 
 #ifdef HASHTABLE_DEBUG
-  if (!CheckRuntimeConsistency(g,D)) {
-    fprintf(stderr,"\nWARNING!!! HASHTABLE INCONSISTENT!!!\n");
-  }
+  assert(!CheckRuntimeConsistency(g,D));
 #endif
 
 #endif
