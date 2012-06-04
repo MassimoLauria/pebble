@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-02, 16:40 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 02:37 (CEST) Massimo Lauria"
 
    Description::
 
@@ -63,13 +63,13 @@ typedef struct {
   size_t  length;
   int     cost;
 
-  const DAG *dag;
-
 } Pebbling;
 
 
-/* extern Pebbling*  new_Pebbling(size_t length); */
-/* extern void       dispose_Pebbling(); */
+extern Pebbling*  new_Pebbling(size_t length);
+extern Pebbling*  copy_Pebbling(const Pebbling *src);
+extern void       dispose_Pebbling(Pebbling*);
+/* extern Boolean    isconsistent_Pebbling(Pebbling*); */
 
 extern PebbleConfiguration*  new_PebbleConfiguration();
 extern PebbleConfiguration* copy_PebbleConfiguration(const PebbleConfiguration *src);
@@ -103,9 +103,7 @@ extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
 
 
 /* Pretty Print functions */
-extern void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
-                        char *name,char* options);
-extern int print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *peb);
+extern void print_dot_Pebbling(const DAG *g, const Pebbling *ptr);
 
 
 #endif /* PEBBLING_H */

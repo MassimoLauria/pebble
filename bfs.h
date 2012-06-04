@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-13, giovedì 15:29 (CET) Massimo Lauria"
-   Time-stamp: "2012-02-22, 14:54 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-04, 01:38 (CEST) Massimo Lauria"
 
    Description::
 
@@ -22,7 +22,7 @@
 
 
 /* Code */
-extern PebbleConfiguration* bfs_pebbling_strategy(DAG *digraph,
+extern Pebbling* bfs_pebbling_strategy(DAG *digraph,
                                                   unsigned int bottom,
                                                   unsigned int top,
                                                   Boolean persistent_pebbling);

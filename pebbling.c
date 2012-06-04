@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-02, 16:29 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 02:36 (CEST) Massimo Lauria"
 
    Description::
 
@@ -15,13 +15,81 @@
 
 /* Preamble */
 #include <stdlib.h>
+#include <string.h>
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
 
-/**
 
+/**
+ * Create a new empty pebbling of a given length.
+ *
+ * @param length the length of the pebbling to be allocated.
+ *
+ * @return a pointer to a the configuration.
  */
+Pebbling *new_Pebbling(size_t length) {
+
+  ASSERT_TRUE(length>0);
+  Pebbling *ptr=(Pebbling*)malloc(sizeof(Pebbling));
+
+  ASSERT_NOTNULL(ptr);
+  ptr->steps =(Vertex*)malloc(sizeof(Vertex)*length);
+  ASSERT_NOTNULL(ptr->steps);
+
+  ptr->cost =0;
+  return ptr;
+}
+
+
+/**
+ * Create a copy of a Pebbliong data structure.
+ *
+ * @param src the pebbling to be copied.
+ *
+ * @return a pointer to a the new pebbling.
+ */
+Pebbling *copy_Pebbling(const Pebbling *src) {
+
+  ASSERT_NOTNULL(src);
+  ASSERT_TRUE(src->length>0);
+
+  Pebbling *ptr=(Pebbling*)malloc(sizeof(Pebbling));
+  ASSERT_NOTNULL(ptr);
+
+  ptr->length = src->length;
+  ptr->cost = src->cost;
+
+  ptr->steps =(Vertex*)malloc(sizeof(Vertex)*ptr->length);
+  ASSERT_NOTNULL(ptr->steps);
+
+  memcpy(ptr->steps,src->steps,ptr->length*sizeof(Vertex));
+
+  return ptr;
+}
+
+
+/**
+ * Destroy the Pebbling data structure.
+ *
+ * @param ptr pointer to the pebbling to be disposed.
+ *
+ */
+void dispose_Pebbling(Pebbling *ptr) {
+  ASSERT_NOTNULL(ptr);
+  if (ptr->length>0) {
+    ASSERT_NOTNULL(ptr->steps);
+    free(ptr->steps);
+  } else
+    ASSERT_NULL(ptr->steps);
+  free(ptr);
+}
+
+
+/**
+   Pebbling Configurations
+ */
+
 
 /**
  * Create a new empty pebble configuration allocated on the heap
@@ -51,6 +119,13 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 }
 
 
+/**
+ * Allocate a copy of a pebble configuration.
+ *
+ * @param src a pointer to the configuration to be copied.
+ *
+ * @return a pointer to a new configuration.
+ */
 PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   PebbleConfiguration *dst=(PebbleConfiguration*)malloc(sizeof(PebbleConfiguration));
@@ -109,7 +184,7 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
     if (!ptr->sink_touched) return FALSE;
   }
 
-  /* If sink is touche in the previous conf, then it must be later */
+  /* If sink is touched in the previous conf, then it must be later */
   if (ptr->previous_configuration!=NULL &&
       ptr->previous_configuration->sink_touched==TRUE &&
       ptr->sink_touched==FALSE
@@ -126,6 +201,8 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   if (counter!=ptr->pebbles) return FALSE;
 
+  /* The cost of the configuration is at least the number of pebbles */
+  if (ptr->pebble_cost < ptr->pebbles) return FALSE;
 
   /* Check that the mask is clean in the residual bits */
   if (BITTUPLE_SIZE != graph->size) {
@@ -290,7 +367,7 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 /* Print a graph with a pebble configuration, with dot.  If the `peb'
    is NULL it does assume that the pebbling to be printed is empty.
    */
-void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
+void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
                         char *name,char* options) {
   ASSERT_TRUE(isconsistent_DAG(g));
   ASSERT_TRUE(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
@@ -309,17 +386,28 @@ void print_dot_Pebbling(const DAG *g, const PebbleConfiguration *peb,
   print_dot_DAG(g,name,options,vertexopts,NULL);
 }
 
-/* Print a pebbling, with dot.  Return the number of steps.
-   */
-int print_dot_Pebbling_Path(const DAG *g, const PebbleConfiguration *ptr) {
-  int step=0;
-  while(ptr) {
-    step++;
-    ASSERT_TRUE(isconsistent_PebbleConfiguration(g,ptr));
-    print_dot_Pebbling(g,ptr,"X",NULL);
-    ptr=ptr->previous_configuration;
+
+/* Print a pebbling, using dot tool */
+void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
+
+  PebbleConfiguration conf = {0,0,0,FALSE,0,0,NULL,0};
+  print_dot_PebbleConfiguration(g,NULL,"X",NULL);
+  Vertex v;
+  for (size_t i=0; i < ptr->length; ++i) {
+    v=ptr->steps[i];
+    /* The logical sequence of tests ensure correctness of the moves,
+       assuming the pebbling is legal */
+    if (isblack(v,g,&conf))
+      deleteblack(v,g,&conf);
+    else if (iswhite(v,g,&conf))
+      deletewhite(v,g,&conf);
+    else if (isactive(v,g,&conf))
+      placeblack(v,g,&conf);
+    else
+      placewhite(v,g,&conf);
+
+    print_dot_PebbleConfiguration(g,&conf,"X",NULL);
   }
-  return step;
 }
 
 

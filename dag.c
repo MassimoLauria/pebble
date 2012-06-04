@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2012-01-09, 17:38 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-04, 00:57 (CEST) Massimo Lauria"
 
    Description::
 
@@ -572,7 +572,7 @@ void print_dot_DAG(const DAG *p,
 /* }}} */
 
 
-/* Build a path. */
+/* Build a star. */
 /* {{{ */ DAG* leader(int n) {
 /*
 

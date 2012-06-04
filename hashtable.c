@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2012-05-20, 02:48 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 03:06 (CEST) Massimo Lauria"
 
    Description::
 
@@ -52,15 +52,28 @@ Boolean isconsistentDict(Dict *d) {
 
 void disposeDict(Dict *d) {
 
-  if (d==NULL) return;
+  LinkedList *ll;
+  void       *ptr;
 
-  for(size_t i=0;i<d->size;i++) {
-    disposeSL(d->buckets[i]);
+  ASSERT_NOTNULL(d);
+
+  /* Remove from memory all objects in the dictionary */
+  if (d->dispose_function!=NULL) {
+    for(size_t i=0;i<d->size;i++) {
+      ll=d->buckets[i];
+      resetSL(ll);
+      while(iscursorvalidSL(ll)) {
+        ptr=getSL(ll);
+        d->dispose_function(ptr);
+        nextSL(ll);
+      }
+    }
   }
 
+  /* Remove data structure from memory */
+  for(size_t i=0;i<d->size;i++) disposeSL(d->buckets[i]);
   free(d->buckets);
   free(d);
-
 }
 
 
@@ -75,6 +88,7 @@ Dict *newDict(size_t allocation) {
 
   d->key_function = NULL;
   d->eq_function  = NULL;
+  d->dispose_function = NULL;
 
   d-> buckets = (LinkedList**)calloc(d->size,sizeof(LinkedList*));
   for(size_t i=0;i<d->size;i++) {

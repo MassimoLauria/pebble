@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
 {
 
   int pebbling_bound=0;
-  int pebbling_length=0;
   int pyramid_height=0;
   int optimize_time=0;
   int persistent_pebbling=0;
@@ -50,7 +49,8 @@ int main(int argc, char *argv[])
   unsigned int top=0;
 
 
-  PebbleConfiguration *solution=NULL;
+  /* PebbleConfiguration *solution=NULL; */
+  Pebbling *solution=NULL;
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
@@ -98,7 +98,6 @@ int main(int argc, char *argv[])
     top=pebbling_bound;
   }
 
-
   install_timed_flags(REPORT_INTERVAL);
 
   DAG *C=pyramid(pyramid_height);
@@ -106,22 +105,13 @@ int main(int argc, char *argv[])
   solution=bfs_pebbling_strategy(C,bottom,top,persistent_pebbling);
 
   if (solution) {
-
-    pebbling_length=print_dot_Pebbling_Path(C,solution);
-
-    /* Since the last configuration contains black pebbles, in order
-       to count the number of steps we need to add steps for removing
-       them.
-
-       We subtract one to count pebbling steps, not just the number of
-       configurations.
-    */
-    pebbling_length+=solution->pebbles-1;
-
-    fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->pebble_cost,pebbling_length);
-    exit(0);
+    print_dot_Pebbling(C,solution);
+    fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->cost,solution->length);
   } else {
     fprintf(stderr,"Graph does not have a pebbling of cost %u.\n",pebbling_bound);
-    exit(1);
   }
+
+  /* Clean up */
+  dispose_DAG(C);
+  if (solution) dispose_Pebbling(solution);
 }

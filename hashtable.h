@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:24 (CET) Massimo Lauria"
-   Time-stamp: "2012-05-19, 19:08 (CEST) Massimo Lauria"
+   Time-stamp: "2012-06-04, 02:55 (CEST) Massimo Lauria"
 
    Description::
 
@@ -39,6 +39,7 @@ typedef struct {
 
   size_t   (*key_function)(void *data);
   Boolean  ( *eq_function)(void *A,void *B);
+  void     (*dispose_function)(void *data);
 
 } Dict;
 
@@ -56,7 +57,6 @@ typedef struct {
   size_t hops;
 
 } DictQueryResult;
-
 
 extern Dict *newDict(size_t allocation);
 extern void disposeDict(Dict *d);

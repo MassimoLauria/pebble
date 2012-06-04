@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 17:11 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-15, sabato 02:13 (CET) Massimo Lauria"
+   Time-stamp: "2012-06-04, 02:40 (CEST) Massimo Lauria"
 
    Description::
 
@@ -244,6 +244,7 @@ void disposeSL(LinkedList *l) {
   lh=l->head;
   while(lh) { ch=lh; lh=lh->next; free(ch); }
   free(lh);
+  free(l);
 }
 
 

@@ -23,8 +23,9 @@
 
 
 /*
- * To  use the dictionary  with PebbleConfiguration  we must  tell the
- * dictionary how to compare two configurations and how to hash them.
+ * To use the dictionary with PebbleConfiguration we must tell the
+ * dictionary how to compare two configurations and how to hash
+ * them. Optionslly also how to deallocate them from memory.
  */
 size_t   hashPebbleConfiguration(void *data) {
 
@@ -50,6 +51,11 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   if (pB->white_pebbled != pB->white_pebbled) return FALSE;
   if (pA->sink_touched  != pB->sink_touched ) return FALSE;
   return TRUE;
+}
+
+void  freePebbleConfiguration(void *data) {
+  ASSERT_NOTNULL(data);
+  dispose_PebbleConfiguration((PebbleConfiguration *)data);
 }
 
 
@@ -145,7 +151,7 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
                                 pebbling number for a pebbling which
                                 leaves a black pebble in the sink.
   */
-PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
+Pebbling *bfs_pebbling_strategy(DAG *g,
                                            unsigned int bottom,
                                            unsigned int top,
                                            Boolean persistent_pebbling) {
@@ -190,12 +196,14 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
      visited configurations.
   */
 
+  Pebbling* solution=NULL;
 
   /* Dictionary data structure */
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
   DictQueryResult res;               /* Query results */
   D->key_function = hashPebbleConfiguration;
   D->eq_function  = samePebbleConfiguration;
+  D->dispose_function = freePebbleConfiguration;
 
   /* Data structures for BFS */
   Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
@@ -229,9 +237,9 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
 
   /* Additional variables */
-  PebbleConfiguration *ptr =NULL;    /* Configuration to be processed */
-  PebbleConfiguration *nptr=NULL;    /* Configuration to be queued for later processing (maybe) */
-  PebbleConfiguration *output=NULL;  /* Configuration to be returned */
+  PebbleConfiguration *ptr  =NULL;    /* Configuration to be processed */
+  PebbleConfiguration *nptr =NULL;    /* Configuration to be queued for later processing (maybe) */
+  PebbleConfiguration *final=NULL;    /* Final configuration */
 
   /* Consistency test of data structures */
   ASSERT_TRUE(isconsistentDict(D));
@@ -327,12 +335,12 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
         nptr->last_changed_vertex = v;
         ASSERT_TRUE(nptr->pebble_cost <= upper_bound);
 
-        if (isfinal(g,nptr)) {               /* Is it the end of the search? */
-          output=nptr;
-          goto epilogue;
-        }
-
         unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
+
+        if (isfinal(g,nptr)) {               /* Is it the end of the search? */
+          final=nptr;
+          goto savesolution;
+        }
 
         if (nptr->pebbles == upper_bound && upper_bound<top) {
           /* Boundary configuration will be
@@ -358,6 +366,73 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
   }/* Queue of configurations empty */
 
 
+  if (final==NULL) {
+    solution=NULL;
+    goto epilogue;
+  }
+
+ savesolution:
+  /* Build up a solution to be returned.
+
+     Since the last configuration contains black pebbles, in order
+     to count the number of steps we need to add steps for removing
+     them.
+
+     We subtract one to count pebbling steps, not just the number of
+     configurations.
+  */
+  ptr=final;
+  size_t length=0;
+  while(ptr!=NULL) {
+    length++;
+    ptr=ptr->previous_configuration;
+  }
+  length += final->pebbles-1;
+
+  solution = new_Pebbling(length);
+  solution->cost   = final->pebble_cost;
+  solution->length = length;
+
+  /* Load the steps in the solution vector
+
+     In the case of persistent pebbling, we computed the pebbling
+     looking for a transition from a configuration with a single while
+     pebble on the sink, to a configuration containing only black
+     pebbles.  It's dual configuration is indeed the persistent
+     pebbling we are looking for, so we are going to reverse it.
+  */
+  if (persistent_pebbling) {
+    size_t i;
+    ptr=final;
+    i = final->pebbles;
+    /* Load the steps */
+    while(ptr->previous_configuration!=NULL) {
+      solution->steps[i] = ptr->last_changed_vertex;
+      ptr=ptr->previous_configuration;
+      i++;
+    }
+    /* Add the omitted pebbling placements at the beginning */
+    i=0;
+    for(Vertex v=0;v<g->size;v++) {
+      if (isblack(v,g,final)) { solution->steps[i]=v; ++i; }
+    }
+  } else {
+    size_t i;
+    ptr=final;
+    i = length-final->pebbles-1;
+    /* Load the steps */
+    while(ptr->previous_configuration!=NULL) {
+      solution->steps[i] = ptr->last_changed_vertex;
+      ptr=ptr->previous_configuration;
+      i--;
+    }
+    /* Load the omitted pebbling removals at the end */
+    i = length-1;
+    for(Vertex v=0;v<g->size;v++) {
+      if (isblack(v,g,final)) { solution->steps[i]=v; --i; }
+    }
+  }
+
  epilogue:
 
 #if PRINT_RUNNING_STATS==1
@@ -373,6 +448,21 @@ PebbleConfiguration *bfs_pebbling_strategy(DAG *g,
 
 #endif
 
-  return output;
+  /* Free the memory of the data structures */
+  if (Q) disposeSL(Q);
+  if (BoundaryQ) disposeSL(BoundaryQ);
+  disposeDict(D);
+
+  return solution;
 }
+
+
+
+
+
+
+
+
+
+
 
