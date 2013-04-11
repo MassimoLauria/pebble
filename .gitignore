@@ -1,3 +1,4 @@
+*.dSYM
 *.aux
 *.log
 *.bbl
@@ -9,6 +10,7 @@
 *.o
 *.pyc
 pebble
+bwpebble
 exposetypes
 *.dot
 GTAGS
