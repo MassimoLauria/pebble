@@ -2,7 +2,7 @@
    Copyright (C) 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2013-04-11, 23:02 (CEST) Massimo Lauria"
+   Time-stamp: "2013-04-12, 01:26 (CEST) Massimo Lauria"
 
    Description::
 
@@ -23,6 +23,7 @@
 
 extern void dag_precompute_data(DAG *digraph);
 
+typedef struct _vl { struct _vl* next; Vertex v; } vl;
 
 /* Parse a graph in kth format
    
@@ -35,7 +36,6 @@ DAG *kthparser(FILE *input) {
   DAG *dag=NULL;
   
   char buffer[101];
-  char *residual_buffer=NULL;
   int  temp=0;
 
   size_t vertices=0;
@@ -43,6 +43,12 @@ DAG *kthparser(FILE *input) {
   Vertex position = 0;
   Vertex last_predecessor = 0;
 
+  size_t *indegree=NULL;
+  size_t *outdegree=NULL;
+  
+  vl **predecessors=NULL;
+  vl *insertpoint=NULL;
+  
   while (feof(input)==0) {
     
     temp=fscanf(input,"%100s",&buffer);
@@ -54,21 +60,24 @@ DAG *kthparser(FILE *input) {
       continue;
     }
 
-    /* Read a vertex number */
+    /* Read the vertex number */
     temp=sscanf(buffer,"%u",&read);
     if (temp==-1 || read==0) break;
-
-    residual_buffer=buffer+temp;
-    if (strlen(residual_buffer)==0) { /* string have been completely consumed */
-      residual_buffer=NULL;
-    } 
 
     if (vertices==0) { /* This is the vertex number */
       
       vertices = read;
       position = 0;
       fprintf(stderr,"GOOD: vertex number %u\n",read);
-     
+
+      indegree = (size_t*)calloc(vertices,sizeof(size_t));
+      outdegree = (size_t*)calloc(vertices,sizeof(size_t));
+      predecessors = (vl**)malloc(vertices*sizeof(vl*));
+      for (Vertex v=0; v < vertices; v++) {
+        predecessors[v] = (vl*)malloc(sizeof(vl));
+        predecessors[v]->v = 0;
+        predecessors[v]->next = NULL;
+      }
     } else if ( read < position ) { /* Still reading vertex specification */
       
       if (last_predecessor >= read) {
@@ -79,6 +88,15 @@ DAG *kthparser(FILE *input) {
 
       fprintf(stderr,"GOOD: %u preceeds %u\n",read,position);
       last_predecessor = read;
+      
+      indegree[position-1]++;
+      outdegree[read-1]++;
+
+      insertpoint->next=(vl*)malloc(sizeof(vl));
+      insertpoint = insertpoint->next;
+      assert(insertpoint);
+      insertpoint->v = read-1; /* Internally vertices are counted from 0 */
+      insertpoint->next = NULL;
 
     } else if (read == position ){
       fprintf(stderr,"ERROR: self loop on vertex %u (b:%s)\n",position,buffer);
@@ -94,6 +112,7 @@ DAG *kthparser(FILE *input) {
       
       last_predecessor = 0;
       position = position +1;
+      insertpoint = predecessors[position-1];
 
       temp=fscanf(input,"%100s",&buffer);
       if (temp==-1 || strcmp(buffer,":")!=0) {
@@ -115,9 +134,79 @@ DAG *kthparser(FILE *input) {
     fprintf(stderr,"ERROR: unexpected end of file.",vertices); 
   }
 
-  /* Finalize the object */
-  exit(0);
+
+  /* Build dag data structure */
+  dag=(DAG*)malloc(sizeof(DAG));
+  assert(dag);
+  assert(vertices>0);
+
+  /* Set to null sinks and source vector */
+  dag->pred_bitmasks=NULL;
+  dag->succ_bitmasks=NULL;
+  dag->sources=NULL;
+  dag->sinks=NULL;
+
+  /* Size of the vertex set */
+  dag->size=vertices;
+
+  /* Allocation of degree information */
+  dag->in  = (Vertex**)malloc( dag->size*sizeof(Vertex*) );
+  dag->out = (Vertex**)malloc( dag->size*sizeof(Vertex*) );
+
+  assert(dag->in );
+  assert(dag->out);
+
+  dag->indegree  = (size_t*)calloc( dag->size,sizeof(size_t) );
+  dag->outdegree = (size_t*)calloc( dag->size,sizeof(size_t) );
+
+  assert(dag->indegree );
+  assert(dag->outdegree);
+
+  /* Allocation of neighbour informations */
+  for(Vertex v=0;v<dag->size;v++) {
+    dag->in[v]  = (Vertex*)malloc( (indegree[v]) *sizeof(Vertex) );
+    dag->out[v] = (Vertex*)malloc( (outdegree[v])*sizeof(Vertex) );
+    assert(dag->in [v]);
+    assert(dag->out[v]);
+  }
+
+  /* Load vertices */
+  Vertex u=0;
+  for (Vertex v=0;v<vertices;v++) {
+    insertpoint = predecessors[v];
+    while(insertpoint->next){
+      u=insertpoint->next->v;
+      insertpoint = insertpoint->next;
+      dag->in[v][ dag->indegree[v]++ ] = u;
+      dag->out[u][ dag->outdegree[u]++ ] = v;
+    }
+  }
+
+  /* Print the object */
+  /* for (Vertex v=0;v<vertices;v++) { */
+  /*   fprintf(stderr,"Vertex %u: in=%u, out=%u\n",v+1,indegree[v],outdegree[v]); */
+  /*   insertpoint = predecessors[v]; */
+  /*   while(insertpoint->next){ */
+  /*     fprintf(stderr,"%u ",insertpoint->next->v+1); */
+  /*     insertpoint = insertpoint->next; */
+  /*   } */
+  /*   fprintf(stderr," -> %u\n",v+1); */
+  /* } */
+
+  /* Free temporary structures */
+  if (indegree)  free(indegree);
+  if (outdegree) free(outdegree);
+  for (Vertex v=0;v<vertices;v++) {
+    while(predecessors[v]){
+      insertpoint = predecessors[v];
+      predecessors[v] = predecessors[v]->next;
+      free(insertpoint);
+    }
+  }
+  free(predecessors);
+
   dag_precompute_data(dag);
+  /* print_DAG(dag,NULL); */
   assert(isconsistent_DAG(dag));
   return dag;
 }
