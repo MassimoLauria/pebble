@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-04-12, 09:25 (CEST) Massimo Lauria"
+# Time-stamp: "2013-04-12, 09:33 (CEST) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 PRINT_RUNNING_STATS=0
@@ -38,7 +38,9 @@ LDFLAGS=${DEBUG} ${PROFILE}
 
 
 # --------- Project dependent rules ---------------
+NAME=pebble
 TARGET=bwpebble pebble exposetypes
+TIME=$(shell date +%Y.%m.%d-%H.%M)
 all: ${TARGET}
 
 
@@ -90,6 +92,14 @@ tags:
 check-syntax:
 	$(CC) ${CFLAGS} -o - -S ${CHK_SOURCES} >/dev/null
 
+pkg:
+	@make clean
+	@echo "Packaging $(NAME).$(TIME).tar.gz"
+	@cd .. && \
+	tar cfz $(NAME).$(TIME).tar.gz $(NAME) 2> /dev/null
+
+
+# ------- Build rules
 bfsbw.o: bfs.c
 	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=1 ${CFLAGS} -c $< -o $@
 
