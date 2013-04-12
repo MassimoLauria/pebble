@@ -1,0 +1,9 @@
+c
+c This is a DAG of 5 vertices
+c
+5
+1  :
+2  : 
+3  : 1  
+4  : 3  
+5  : 2  4

@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-04-12, 01:47 (CEST) Massimo Lauria"
+# Time-stamp: "2013-04-12, 09:25 (CEST) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 PRINT_RUNNING_STATS=0
@@ -10,12 +10,12 @@ BUILDFLAGS=	-DPRINT_RUNNING_STATS=${PRINT_RUNNING_STATS}
 # ---------- Environment variables ------------
 #
 DEBUG=-g
-PROFILE=-pg
+# PROFILE=-pg
 OPTIMIZATION=
 
 # DEBUG=-DNDEBUG
 # #PROFILE=-pg
-# OPTIMIZATION=-O
+# OPTIMIZATION=-O3
 
 # DEBUG+=-DHASHTABLE_DEBUG
 

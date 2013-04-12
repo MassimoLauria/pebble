@@ -2,7 +2,7 @@
    Copyright (C) 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2013-04-12, 01:33 (CEST) Massimo Lauria"
+   Time-stamp: "2013-04-12, 09:25 (CEST) Massimo Lauria"
 
    Description::
 
@@ -22,8 +22,16 @@
 #include "dag.h"
 
 extern void dag_precompute_data(DAG *digraph);
-
 typedef struct _vl { struct _vl* next; Vertex v; } vl;
+
+#ifndef NDEBUG
+#define PARSERDEBUG(fmt,...) fprintf(stderr, "PARSER DEBUG:" fmt "\n", __VA_ARGS__) 
+#else
+#define PARSERDEBUG(fmt,...) 
+#endif
+
+#define PARSERERROR(fmt,...) fprintf(stderr, "PARSER ERROR:" fmt "\n", __VA_ARGS__) 
+
 
 /* Parse a graph in kth format
    
@@ -55,7 +63,7 @@ DAG *kthparser(FILE *input) {
     if (temp==-1) break;
     
     if (buffer[0]=='c') { /* Comment line */
-      fprintf(stderr,"PARSER: comment line\n");
+      PARSERDEBUG("%s","comment line");
       do { temp=getc(input); } while(temp!=-1 && temp!='\n');
       continue;
     }
@@ -68,7 +76,7 @@ DAG *kthparser(FILE *input) {
       
       vertices = read;
       position = 0;
-      fprintf(stderr,"PARSER: there are %u vertices.\n",read);
+      PARSERDEBUG("there are %u vertices",read);
 
       indegree = (size_t*)calloc(vertices,sizeof(size_t));
       outdegree = (size_t*)calloc(vertices,sizeof(size_t));
@@ -81,12 +89,12 @@ DAG *kthparser(FILE *input) {
     } else if ( read < position ) { /* Still reading vertex specification */
       
       if (last_predecessor >= read) {
-        fprintf(stderr,"PARSER ERROR: predecessors must be in ascending order.\n",
+        PARSERERROR("predecessors must be in ascending order.",
                 last_predecessor,read);
         exit(-1);
       }
 
-      fprintf(stderr,"PARSER: Edge %u -> %u\n",read,position);
+      PARSERDEBUG("Edge %u -> %u",read,position);
       last_predecessor = read;
       
       indegree[position-1]++;
@@ -99,16 +107,16 @@ DAG *kthparser(FILE *input) {
       insertpoint->next = NULL;
 
     } else if (read == position ){
-      fprintf(stderr,"PARSER ERROR: self loop on vertex %u.\n",position);
+      PARSERERROR("self loop on vertex %u.",position);
       exit(-1);
  
     } else if (read > vertices ){
-      fprintf(stderr,"PARSER ERROR: out of range vertex %u.\n",read);
+      PARSERERROR("out of range vertex %u.",read);
       exit(-1);
 
     } else if (read == position+1) { /* This is a vertex specification. Pass the : */
     
-      fprintf(stderr,"PARSER: start reading predecessors of %u.\n",read);
+      PARSERDEBUG("Start reading predecessors of %u.",read);
       
       last_predecessor = 0;
       position = position +1;
@@ -116,21 +124,21 @@ DAG *kthparser(FILE *input) {
 
       temp=fscanf(input,"%100s",&buffer);
       if (temp==-1 || strcmp(buffer,":")!=0) {
-        fprintf(stderr,"PARSER ERROR: expecting : before predecessors for vertex %u.\n",position,buffer);
+        PARSERERROR("expecting \":\" before predecessors for vertex %u.",position,buffer);
         exit(-1);
       }
 
     } else {
-      fprintf(stderr,"PARSER ERROR: Vertex %u missing.\n",position+1);
+      PARSERERROR("Vertex %u missing.",position+1);
       exit(-1);
     }
   }
 
   if (vertices==0)
-    fprintf(stderr,"PARSER ERROR: positive number of vertices expected.\n");
+    PARSERERROR("%s","positive number of vertices expected.");
  
   if (position != vertices) {
-    fprintf(stderr,"PARSER ERROR: unexpected end of file at vertex %u.\n",position); 
+    PARSERERROR("unexpected end of file at vertex %u.",position); 
   }
 
 
@@ -181,17 +189,6 @@ DAG *kthparser(FILE *input) {
     }
   }
 
-  /* Print the object */
-  /* for (Vertex v=0;v<vertices;v++) { */
-  /*   fprintf(stderr,"Vertex %u: in=%u, out=%u\n",v+1,indegree[v],outdegree[v]); */
-  /*   insertpoint = predecessors[v]; */
-  /*   while(insertpoint->next){ */
-  /*     fprintf(stderr,"%u ",insertpoint->next->v+1); */
-  /*     insertpoint = insertpoint->next; */
-  /*   } */
-  /*   fprintf(stderr," -> %u\n",v+1); */
-  /* } */
-
   /* Free temporary structures */
   if (indegree)  free(indegree);
   if (outdegree) free(outdegree);
@@ -205,7 +202,6 @@ DAG *kthparser(FILE *input) {
   free(predecessors);
 
   dag_precompute_data(dag);
-  /* print_DAG(dag,NULL); */
   assert(isconsistent_DAG(dag));
   return dag;
 }

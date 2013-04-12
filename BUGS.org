@@ -12,7 +12,7 @@
   CLOSED: [2012-04-23 lun 14:26]
 
   `pebble -b 3 -p 1 -t'
-* TODO <2013-04-12 Fri> Parser for KTH do not like if ":" has no space
+* TODO <2013-04-12 Fri> Parser for KTH does not like if ":" has no space
 
   If we try to Parse the following files 
 
