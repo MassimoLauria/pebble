@@ -21,7 +21,7 @@
 #define REPORT_INTERVAL          5
 
 #define USAGEMESSAGE "\n\
-Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> | -i <input1> -O <input2> ] \n\
+Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
 \n\
        -h     help message;\n\
        -Z     search for a 'persistent pebbling' (optional).\n\
