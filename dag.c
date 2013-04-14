@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 19:29 (CEST) Massimo Lauria"
+   Time-stamp: "2013-04-14, 04:34 (CEST) Massimo Lauria"
 
    Description::
 
@@ -531,6 +531,12 @@ void print_dot_DAG(const DAG *p,
   DAG *d=(DAG*)malloc(sizeof(DAG));
   assert(d);
 
+  /* Set to null sinks and source vector */
+  d->pred_bitmasks=NULL;
+  d->succ_bitmasks=NULL;
+  d->sources=NULL;
+  d->sinks=NULL;
+
   /* Allocation of degree information */
   d->size = n+1;
 
@@ -590,6 +596,12 @@ void print_dot_DAG(const DAG *p,
   int v;
   DAG *d=(DAG*)malloc(sizeof(DAG));
   assert(d);
+
+  /* Set to null sinks and source vector */
+  d->pred_bitmasks=NULL;
+  d->succ_bitmasks=NULL;
+  d->sources=NULL;
+  d->sinks=NULL;
 
   /* Allocation of degree information */
   d->size = n+1;
@@ -666,6 +678,12 @@ void print_dot_DAG(const DAG *p,
   p=(DAG*)malloc(sizeof(DAG));
   assert(p);
   p->size=S;
+
+  /* Set to null sinks and source vector */
+  p->pred_bitmasks=NULL;
+  p->succ_bitmasks=NULL;
+  p->sources=NULL;
+  p->sinks=NULL;
 
   /* Basic arrays */
   p->in  = (Vertex**)malloc( S*sizeof(Vertex*) );

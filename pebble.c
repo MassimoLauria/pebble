@@ -21,7 +21,7 @@
 #define REPORT_INTERVAL          5
 
 #define USAGEMESSAGE "\n\
-Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> -i <input>] \n\
+Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> | -i <input1> -O <input2> ] \n\
 \n\
        -h     help message;\n\
        -Z     search for a 'persistent pebbling' (optional).\n\
@@ -34,6 +34,7 @@ Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> -i <input>] \n\
        -p N         pyramid graph of height N;\n\
        -2 N         binary tree height N;\n\
        -i <input>   load input file in KTH format.\n\
+       -O <input2>  OR product between input graph and <input2>.\n\
 \n\
 KTH input format is a top to bottom topologically sorted\n\
 representation of a DAG. N is a *positive* integer, and N indexed\n\
@@ -88,6 +89,7 @@ int main(int argc, char *argv[])
   int pyramid_height=0;
   int tree_height=0;
   FILE *input_file=NULL;
+  FILE *input_file_aux=NULL;
 
   int input_directives = 0;
 
@@ -106,7 +108,7 @@ int main(int argc, char *argv[])
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code = getopt(argc,argv,"hZtb:p:2:f:i:"))!=-1) {
+  while((option_code = getopt(argc,argv,"hZtb:p:2:f:i:O:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
@@ -139,9 +141,15 @@ int main(int argc, char *argv[])
       break;
     case 'i':
       input_file=openfile(optarg);
-      if (input_file!=stdin) {input_directives++; break;}
+      input_directives++;
       break;
-    /* Output format */
+    case 'O':
+      input_file_aux=openfile(optarg);
+      if (input_file!=stdin || input_file_aux!=stdin) break;
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
+      break;
+      /* Output format */
     case 'f':
       if (strcmp(optarg,"text")==0) output_graphviz = 0;
       else if (strcmp(optarg,"graphviz")==0) output_graphviz = 1;
@@ -205,6 +213,16 @@ int main(int argc, char *argv[])
     fclose(input_file);
   }
 
+  /* Read second input graph if needed */
+  if (input_file_aux) {
+    DAG *OUTER=C;
+    DAG *INNER=kthparser(input_file_aux);
+    C = orproduct(OUTER,INNER);
+    dispose_DAG(OUTER);
+    dispose_DAG(INNER);
+    fclose(input_file_aux);
+  }
+  
   solution=bfs_pebbling_strategy(C,bottom,top,persistent_pebbling);
 
   if (solution) {
