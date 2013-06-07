@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 19:30 (CEST) Massimo Lauria"
+   Time-stamp: "2013-06-07, 16:33 (PDT) Massimo Lauria"
 
    Description::
 
@@ -172,11 +172,11 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
 
   /* Check that only the appropriate pebbles are used */
-#if !BLACK_PEBBLES
+#if (!BLACK_PEBBLES)
   if (ptr->black_pebbled!=0) return FALSE;
 #endif
 
-#if !WHITE_PEBBLES
+#if (!WHITE_PEBBLES)
   if (ptr->white_pebbled!=0) return FALSE;
 #endif
 
@@ -343,8 +343,6 @@ inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c
   assert(isconsistent_PebbleConfiguration(g,c));
   assert(v<g->size);
 
-  if (isblack(v,g,c)) return FALSE;
-
   return (((c->white_pebbled | c->black_pebbled) & g->pred_bitmasks[v])
           == g->pred_bitmasks[v])?TRUE:FALSE;
 }
@@ -398,11 +396,15 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
     v=ptr->steps[i];
     /* The logical sequence of tests ensure correctness of the moves,
        assuming the pebbling is legal */
+
+    /* Deletions */
     if (isblack(v,g,&conf))
       deleteblack(v,g,&conf);
     else if (iswhite(v,g,&conf))
       deletewhite(v,g,&conf);
-    else if (isactive(v,g,&conf))
+    
+    /* Placements */
+    else if (isactive(v,g,&conf)) 
       placeblack(v,g,&conf);
     else
       placewhite(v,g,&conf);
@@ -476,7 +478,7 @@ static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,co
   if (!isuseful(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
-  if (v==w) return (g->sinks[0]!=w);    /* A black pebble may pe
+  if (v==w) return (g->sinks[0]!=w);    /* A black pebble may be
                                            placed and then removed iff
                                            it's on the sink. */
 
@@ -510,7 +512,23 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
 
   assert(isconsistent_PebbleConfiguration(g,old));
 
-  if (isactive(v,g,old) &&  iswhite(v,g,old) ) { /* Delete WHITE */
+#if REVERSIBLE
+  if ( isblack(v,g,old) && isactive(v,g,old))
+#else
+  if ( isblack(v,g,old) )
+#endif
+    { /* Delete BLACK */
+
+    if (delete_black_heuristics_cut(v,g,old)) return NULL;
+
+    nconf=copy_PebbleConfiguration(old);
+    deleteblack(v,g,nconf);
+
+    assert(isconsistent_PebbleConfiguration(g,nconf));
+    return nconf;
+    }
+
+  if ( iswhite(v,g,old) && isactive(v,g,old) ) { /* Delete WHITE */
 
     if (delete_white_heuristics_cut(v,g,old)) return NULL;
 
@@ -522,12 +540,13 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
   }
 
 #if BLACK_PEBBLES
-  if (isactive(v,g,old) && !iswhite(v,g,old) ) { /* Place BLACK */
+  if ( !ispebbled(v,g,old) && isactive(v,g,old) ) { /* Place BLACK */
 
     if (old->pebbles >= max_pebbles) return NULL;
     if (place_black_heuristics_cut(v,g,old)) return NULL;
 
     nconf=copy_PebbleConfiguration(old);
+
     placeblack(v,g,nconf);
 
     assert(isconsistent_PebbleConfiguration(g,nconf));
@@ -535,24 +554,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
   }
 #endif
 
-  if (!isactive(v,g,old) && isblack(v,g,old) ) { /* Delete BLACK */
-
-    if (delete_black_heuristics_cut(v,g,old)) return NULL;
-
-    nconf=copy_PebbleConfiguration(old);
-    deleteblack(v,g,nconf);
-
-    assert(isconsistent_PebbleConfiguration(g,nconf));
-    return nconf;
-  }
-
 #if WHITE_PEBBLES
-
-#if BLACK_PEBBLES
-  if (!isactive(v,g,old) && !iswhite(v,g,old)) { /* Place WHITE */
-#else
-  if (!iswhite(v,g,old)) { /* Place WHITE */
-#endif
+  if ( !ispebbled(v,g,old) && !isactive(v,g,old)) { /* Place WHITE */
 
     if (old->pebbles >= max_pebbles) return NULL;
     if (place_white_heuristics_cut(v,g,old)) return NULL;
@@ -565,6 +568,7 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     return nconf;
   }
 #endif
+
   /* No allowed operation on the chosen vertex. */
   return NULL;
 }

@@ -1,5 +1,5 @@
 /*
-  Massimo Lauria, 2010
+  Massimo Lauria, 2010, 2011, 2012, 2013
 
   Implementation of a Breadth-First-Search for the Black-White
   Pebbling of a directed acyclic graph.
@@ -265,7 +265,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 #else
     for(int k=1;k<=p;k++) { tmp *= ( g->size - k + 1); }
     for(int k=2;k<=p;k++) { tmp /= k; }
-    if (p!=final_upper_bound)
+    if (p!=top)
       { STATS_ADD(Stat,search_space,2*tmp);} /* Sink maybe pebbled or not */
     else
       { STATS_ADD(Stat,search_space,tmp); }
@@ -316,6 +316,10 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     assert(!isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
+    /* Print the configuration */
+    /* printf("BLACK: %4x\n", ptr->black_pebbled); */
+    /* printf("WHITE: %4x\n", ptr->white_pebbled); */
+      
     /* Explore all configurations reachable in one step.  */
     for(Vertex v=0;v<g->size;v++) {
 
