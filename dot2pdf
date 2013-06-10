@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]]; then
+    echo "Usage $0 <dotfile>"
+    echo ""
+    echo "Render graphviz dotfile into a pdf figure"
+    exit -1
+fi
+
+INPUT=$1
+OUTPUT=${INPUT/.dot/.pdf}
+TEMPEPS=`mktemp -t dot2pdf` 
+
+dot -Teps $1 2>/dev/null > $TEMPEPS
+echo "Output file is \"$OUTPUT\""
+epspdf "$TEMPEPS" $OUTPUT
+rm $TEMPEPS
