@@ -24,7 +24,7 @@
 Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
 \n\
        -h     help message;\n\
-       -Z     search for a 'persistent pebbling' (optional).\n\
+       -Z     search for a 'persistent pebbling' (optional, only useful for black/white pebbling).\n\
        -t     find shortest pebbling within space limits, instead of minimizing space (optional).\n\
        -f     output format {graphviz,text} (default: graphviz).\n\
 \n\

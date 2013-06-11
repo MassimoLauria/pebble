@@ -118,7 +118,8 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
   return TRUE;
 }
 
-/* Explore the space of pebbling strategies.  The output is given as a
+/**
+   Explore the space of pebbling strategies.  The output is given as a
    sequence of vertices, because at  any point in a pebbling, there is
    a unique minimal move that can  be performed on a vertex, given its
    status.
@@ -137,20 +138,31 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
 
    INPUT:
 
-         -- DAG: the graph  to pebble (with few vertices  and a single
-            sink).
+   @param DAG the graph  to pebble (with few vertices  and a single
+   sink).
 
-         -- bottom: the initial cap to the pebble number. It is raised
-                    one by one up to the value of `top'.
+   @param bottom the initial cap to the pebble number. It is raised
+   one by one up to the value of `top'.
 
-         -- top: the maximum number of pebbles in the configuration,
-                 if such number is not sufficient, the the computation
-                 will fail gracefully without finding the pebbling.
+   @param top the maximum number of pebbles in the configuration,
+   if such number is not sufficient, the the computation
+   will fail gracefully without finding the pebbling.
 
-         -- persisten_pebbling: whether we count the black white
-                                pebbling number for a pebbling which
-                                leaves a black pebble in the sink.
-  */
+   @param persisten_pebbling: whether we count the black white
+   pebbling number for a pebbling which
+   leaves a black pebble in the sink.
+
+   @return a pebbling
+
+ */
+Pebbling *finalize_persistent_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final);
+
+Pebbling *finalize_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final);
+Pebbling *finalize_reversible_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final);
+
 Pebbling *bfs_pebbling_strategy(DAG *g,
                                            unsigned int bottom,
                                            unsigned int top,
@@ -216,6 +228,9 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   /* Data structure for statistics collection */
   STATS_CREATE(Stat);
 
+#if (!WHITE_PEBBLES)
+  persistent_pebbling = 0;
+#endif
 
   /* To compute persistent pebbling put a white pebble on top and
      try to finish the pebbling. This is dual of a pebbling which
@@ -316,10 +331,6 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     assert(!isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
-    /* Print the configuration */
-    /* printf("BLACK: %4x\n", ptr->black_pebbled); */
-    /* printf("WHITE: %4x\n", ptr->white_pebbled); */
-      
     /* Explore all configurations reachable in one step.  */
     for(Vertex v=0;v<g->size;v++) {
 
@@ -376,67 +387,28 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   }
 
  savesolution:
-  /* Build up a solution to be returned.
 
-     Since the last configuration contains black pebbles, in order
-     to count the number of steps we need to add steps for removing
-     them.
-
-     We subtract one to count pebbling steps, not just the number of
-     configurations.
-  */
-  ptr=final;
-  size_t length=0;
-  while(ptr!=NULL) {
-    length++;
-    ptr=ptr->previous_configuration;
-  }
-  length += final->pebbles-1;
-
-  solution = new_Pebbling(length);
-  solution->cost   = final->pebble_cost;
-  solution->length = length;
-
-  /* Load the steps in the solution vector
-
-     In the case of persistent pebbling, we computed the pebbling
+  
+  /* In the case of persistent pebbling, we computed the pebbling
      looking for a transition from a configuration with a single while
      pebble on the sink, to a configuration containing only black
      pebbles.  It's dual configuration is indeed the persistent
      pebbling we are looking for, so we are going to reverse it.
   */
+#if !REVERSIBLE
   if (persistent_pebbling) {
-    size_t i;
-    ptr=final;
-    i = final->pebbles;
-    /* Load the steps */
-    while(ptr->previous_configuration!=NULL) {
-      solution->steps[i] = ptr->last_changed_vertex;
-      ptr=ptr->previous_configuration;
-      i++;
-    }
-    /* Add the omitted pebbling placements at the beginning */
-    i=0;
-    for(Vertex v=0;v<g->size;v++) {
-      if (isblack(v,g,final)) { solution->steps[i]=v; ++i; }
-    }
-  } else {
-    size_t i;
-    ptr=final;
-    i = length-final->pebbles-1;
-    /* Load the steps */
-    while(ptr->previous_configuration!=NULL) {
-      solution->steps[i] = ptr->last_changed_vertex;
-      ptr=ptr->previous_configuration;
-      i--;
-    }
-    /* Load the omitted pebbling removals at the end */
-    i = length-1;
-    for(Vertex v=0;v<g->size;v++) {
-      if (isblack(v,g,final)) { solution->steps[i]=v; --i; }
-    }
-  }
 
+    solution = finalize_persistent_pebbling(g,final);
+    
+  } else {
+
+    solution = finalize_pebbling(g,final);
+    
+  }
+#else
+  solution = finalize_reversible_pebbling(g,final);
+#endif
+  
  epilogue:
 
 #if PRINT_RUNNING_STATS==1
@@ -458,11 +430,189 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 }
 
 
+/**
+   Finalize the a black-white persistent pebbling
+
+   In the case of persistent pebbling, we computed the pebbling
+   looking for a transition from a configuration with a single while
+   pebble on the sink, to a configuration containing only black
+   pebbles.  It's dual configuration is indeed the persistent
+   pebbling we are looking for, so we are going to reverse it.
+
+   @param dag the graph we are pebbling
+
+   @param final a pointer to the final configuration found by the BFS.
+   
+   @return Pebbling the finalized pebbling.
+*/
+Pebbling *finalize_persistent_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final) {
+  fprintf(stderr,"Finalization\n");
+  assert(graph);
+  assert(final);
+  assert(isfinal(graph,final));
+#if REVERSIBLE
+  assert(0);
+#endif
+
+  PebbleConfiguration *ptr=NULL;
+  Pebbling *solution=NULL;
+  size_t length=0;
+  Vertex i=0;
+  
+  /* compute the length of the pebbling, without clean up */
+  ptr = final;
+  while(ptr!=NULL) {
+    length++;
+    ptr=ptr->previous_configuration;
+  }
+  length -= 1; /* initial conf is not a step */
+  length += final->pebbles; /* clean up black pebbles */
+
+  /* solution to be filled */
+  solution = new_Pebbling(length);
+  solution->cost   = final->pebble_cost;
+  solution->length = length;
+
+  /* Reversing the pebbling: final clean up corresponds to
+     pebbling placements at the beginning. */
+  i=0;
+  for(Vertex v=0;v<graph->size;v++) {
+    if (isblack(v,graph,final)) { solution->steps[i]=v; ++i; }
+  }
+
+  /* Reversing the actual pebbling */
+  assert(i == final->pebbles);
+  ptr = final;
+  while(ptr->previous_configuration!=NULL) {
+    solution->steps[i] = ptr->last_changed_vertex;
+    ptr=ptr->previous_configuration;
+    i++;
+  }
+
+  return solution;
+}
 
 
 
 
 
+
+/**
+   Finalize the a black-white pebbling, by removing residual black
+   pebbles.
+
+   @param dag the graph we are pebbling
+
+   @param final a pointer to the final configuration found by the BFS.
+   
+   @return Pebbling the finalized pebbling.
+*/
+Pebbling *finalize_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final) {
+  assert(graph);
+  assert(final);
+  assert(isfinal(graph,final));
+#if REVERSIBLE
+  assert(0);
+#endif
+
+  PebbleConfiguration *ptr=NULL;
+  Pebbling *solution=NULL;
+  size_t length=0;
+  Vertex i=0;
+
+  /* compute the length of the pebbling, without clean up */
+  ptr = final;
+  while(ptr!=NULL) {
+    length++;
+    ptr=ptr->previous_configuration;
+  }
+  length -= 1; /* initial conf is not a step */
+  length += final->pebbles; /* clean up black pebbles */
+
+  /* solution to be filled */
+  solution = new_Pebbling(length);
+  solution->cost   = final->pebble_cost;
+  solution->length = length;
+
+  /* Load the steps in the solution vector
+     (steps are in reverse order) */
+  i = length - final->pebbles;
+  ptr = final;
+  while(ptr->previous_configuration!=NULL) {
+    solution->steps[--i] = ptr->last_changed_vertex;
+    ptr=ptr->previous_configuration;
+  }
+  assert(i==0);
+
+  /* Reversing the pebbling: final clean up corresponds to
+     pebbling placements at the beginning. */
+  i=length;
+  for(Vertex v=0;v<graph->size;v++) {
+    if (isblack(v,graph,final)) { solution->steps[--i]=v; }
+  }
+
+
+  return solution;
+}
+
+
+
+/**
+   Finalize the a reversible pebbling, by repeating the discovered pebbling backward.
+
+   @param dag the graph we are pebbling
+
+   @param final a pointer to the final configuration found by the BFS.
+   
+   @return Pebbling the finalized pebbling.
+*/
+Pebbling *finalize_reversible_pebbling(const DAG *graph,
+                                       PebbleConfiguration *final) {
+  assert(graph);
+  assert(final);
+  assert(isfinal(graph,final));
+#if !REVERSIBLE
+  assert(0);
+#endif
+
+  PebbleConfiguration *ptr=NULL;
+  Pebbling *solution=NULL;
+  size_t length=0;
+  Vertex i=0;
+  Vertex j=0;
+
+  /* compute the length of the pebbling */
+  ptr = final;
+  while(ptr!=NULL) {
+    length++;
+    ptr=ptr->previous_configuration;
+  }
+  length -= 1;
+  length *= 2;
+
+  /* solution to be filled */
+  solution = new_Pebbling(length);
+  solution->cost   = final->pebble_cost;
+  solution->length = length;
+
+  /* Load the steps in the solution vector
+     (steps are in reverse order) */
+  i = length/2;
+  j = length/2;
+  ptr = final;
+  while(ptr->previous_configuration!=NULL) {
+    solution->steps[--i] = ptr->last_changed_vertex;
+    solution->steps[j++] = ptr->last_changed_vertex;
+    ptr=ptr->previous_configuration;
+  }
+  fprintf(stderr,"%u",i);
+  assert(i==0);
+  assert(j==length);
+  
+  return solution;
+}
 
 
 
