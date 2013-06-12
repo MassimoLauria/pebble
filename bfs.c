@@ -16,7 +16,6 @@
 #include "dsbasic.h"
 #include "pebbling.h"
 #include "hashtable.h"
-#include "timedflags.h"
 #include "statistics.h"
 
 #define HASH_TABLE_SPACE_SIZE    0x07FFFFF
@@ -489,14 +488,14 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
       }
     }
 
-    if (print_running_stats_flag) {
-      STATS_ADD(Stat,clock,timedflags_clock_freq);
+    if (STATS_TIMER_OFF) {
+      STATS_CLOCK_UPDATE(Stat);
       STATS_REPORT(Stat,
-                   "\nClock %llu: Report for graph on %u vertices, upper bound=%u:",
+                   "\nClock %llu: Report for graph on %u vertices, upper bound=%u:\n",
                    STATS_GET(Stat,clock),
                    g->size,
                    upper_bound);
-      print_running_stats_flag=0;
+      STATS_TIMER_RESET();
     }
 
     /* Get an element from the queue */

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-07, 16:33 (PDT) Massimo Lauria"
+   Time-stamp: "2013-06-12, 22:54 (CEST) Massimo Lauria"
 
    Description::
 
@@ -230,7 +230,9 @@ inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c
   RESETBIT(c->black_pebbled,v);
   RESETBIT(c->useful_pebbles,v);
   c->pebbles       -= 1;
-
+#if REVERSIBLE
+  c->useful_pebbles |= g->pred_bitmasks[v];
+#endif
 }
 
 /* Determines if a vertex is black pebbled according to a specific
@@ -484,10 +486,13 @@ static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,co
 
   /* Never remove pebbles on vertices with increasing
      rank. Notice that predecessors always have smaller rank.  */
-  if (ispebbled(w,g,c) && (v > w)) return TRUE;
+  if (!ispebbled(w,g,c) && (v > w)) return TRUE;
 
   /* If a black pebble removal is after a placement, then the placed
-     vertex must be a black pebbled successor */
+     vertex must be a black pebbled successor
+
+     Careful! this is not true for reversible pebbling.
+  */
   if (ispebbled(w,g,c)) {
     if (!isblack(w,g,c)) return TRUE;
     if (!GETBIT(g->succ_bitmasks[v],w)) return TRUE;
@@ -513,14 +518,14 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
   assert(isconsistent_PebbleConfiguration(g,old));
 
 #if REVERSIBLE
-  if ( isblack(v,g,old) && isactive(v,g,old))
+  if ( isblack(v,g,old) && isactive(v,g,old)) {
 #else
-  if ( isblack(v,g,old) )
-#endif
-    { /* Delete BLACK */
+  if ( isblack(v,g,old) ) {
 
     if (delete_black_heuristics_cut(v,g,old)) return NULL;
 
+#endif
+    /* Delete BLACK */
     nconf=copy_PebbleConfiguration(old);
     deleteblack(v,g,nconf);
 

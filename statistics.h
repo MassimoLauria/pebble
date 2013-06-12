@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:38 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-12, 17:15 (CEST) Massimo Lauria"
+   Time-stamp: "2013-06-12, 17:54 (CEST) Massimo Lauria"
 
    Description::
 
@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "common.h"
+#include "timedflags.h"
 /* Code */
 
 
@@ -79,6 +80,10 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 #define STATS_ADD(s,n,v) { (s).n+=(v); }
 #define STATS_GET(s,n)   ((s).n)
 
+#define STATS_TIMER_OFF  print_running_stats_flag
+#define STATS_TIMER_RESET()  { print_running_stats_flag=0; }
+#define STATS_CLOCK_UPDATE(s) { (s).clock+=timedflags_clock_freq; }
+  
 #else
 
 #define STATS_REPORT(S,fmt,...) {}
@@ -88,6 +93,14 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 #define STATS_ADD(s,n,v) { }
 #define STATS_GET(s,n) { }
 
+#define STATS_TIMER_OFF  0
+#define STATS_TIMER_RESET()  { }
+#define STATS_CLOCK_UPDATE(s) { }
+  
 #endif
 
 #endif /* STATISTICS_H */
+
+
+
+
