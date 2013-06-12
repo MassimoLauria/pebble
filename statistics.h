@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:38 (CET) Massimo Lauria"
-   Time-stamp: "2012-04-23, 11:54 (CEST) Massimo Lauria"
+   Time-stamp: "2013-06-12, 17:15 (CEST) Massimo Lauria"
 
    Description::
 
@@ -72,7 +72,7 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 
 #if PRINT_RUNNING_STATS==1
 
-#define STATS_REPORT(S) {statistics_make_report(stderr,&(S));}
+#define STATS_REPORT(S,fmt,...) {fprintf(stderr,fmt,__VA_ARGS__); statistics_make_report(stderr,&(S));}
 #define STATS_CREATE(s) Statistic s={0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0, 0,0,0,0, 0}
 #define STATS_INC(s,n) { (s).n++; }
 #define STATS_SET(s,n,v) { (s).n=(v); }
@@ -81,7 +81,7 @@ extern void statistics_make_report(FILE *stream,Statistic *const s);
 
 #else
 
-#define STATS_REPORT(s) {}
+#define STATS_REPORT(S,fmt,...) {}
 #define STATS_CREATE(s) { }
 #define STATS_INC(s,n) { }
 #define STATS_SET(s,n,v) { }

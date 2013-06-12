@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-04-14, 04:34 (CEST) Massimo Lauria"
+   Time-stamp: "2013-06-12, 15:45 (CEST) Massimo Lauria"
 
    Description::
 
@@ -86,7 +86,7 @@ void dag_precompute_data(DAG *digraph) {
    N.B. The clone of an inconsistent graph maybe inconsistent, but the
    inconsistency may be different. */
 
-/* {{{ */ DAG* copy_DAG(const DAG *src) {
+DAG* copy_DAG(const DAG *src) {
 
   DAG *d;
 
@@ -120,7 +120,8 @@ void dag_precompute_data(DAG *digraph) {
      edges but not the respective incoming edges) we copy the same
      defects.
   */
-  /* Allocation of neighbour informations; INDEGREE */
+  
+  /* Copy of incoming neighbour information */
   Vertex v;
   for(v=0;v<d->size;v++) {
 
@@ -132,7 +133,7 @@ void dag_precompute_data(DAG *digraph) {
     memcpy(d->in[v],src->in[v],d->size);
   }
 
-  /* Allocation of neighbour informations; OUTDEGREE */
+  /* Copy of outgoing neighbour information */
   for(v=0;v<d->size;v++) {
 
     if (d->outdegree[v]==0) { d->out[v]=NULL; continue; }
@@ -148,12 +149,10 @@ void dag_precompute_data(DAG *digraph) {
   assert(isconsistent_DAG(d)); /* Construction should be sound */
   return d;
 }
-/* }}} */
 
 
 /* Destroys a DAG structure, freeing memory */
-/* {{{ */ void dispose_DAG(DAG* p) {
-
+void dispose_DAG(DAG* p) {
 
   /* Ignore null graphs */
   if (p==NULL) return;
@@ -184,7 +183,6 @@ void dag_precompute_data(DAG *digraph) {
   /* Dispose the main data structure */
   free(p);
 }
-/* }}} */
 
 /* TODO: Check that the data structure representing the graph is sound,
    meaning that any outgoing edge is related with a corresponding
@@ -223,7 +221,7 @@ Boolean isconsistent_DAG(const DAG *ptr) {
 
 /* This is the default way a label is assigned to a vertex idx Given a
    buffer and a size limit, it writes on the buffer the label for the
-   vertex v.  The default impletemtation is to map numbers in their
+   vertex v.  The default implementation is to map numbers in their
    string representation.
  */
 #ifndef __APPLE__
@@ -244,7 +242,7 @@ static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
 
 
 /* Prints a string representation of the DAG */
-/* {{{ */ void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
+void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
   Vertex v,w;
   char label_buffer[20];
 
@@ -256,8 +254,8 @@ static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
   assert(p->outdegree);
   assert(p->out);
 
-  /* If no fucntion for computing labels is specified, then we use the
-     default one, which turn a number in its string respresentation */
+  /* If no function for computing labels is specified, then we use the
+     default one, which turn a number in its string representation*/
   if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
 
   for (v = 0; v < p->size; ++v) {
@@ -281,7 +279,6 @@ static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
     printf("\n");
   }
 }
-/* }}} */
 
 
 

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-11, martedì 22:41 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 23:32 (CET) Massimo Lauria"
+   Time-stamp: "2013-06-12, 17:25 (CEST) Massimo Lauria"
 
    Description::
 
@@ -23,13 +23,11 @@
 
 /* Flags */
 volatile sig_atomic_t print_running_stats_flag=0;
-volatile sig_atomic_t clean_memory_flag=0;
 unsigned int timedflags_clock_freq;
 
 
 void timed_flags_handler(int sig) {
   print_running_stats_flag=1;
-  clean_memory_flag       =1;
 }
 
 
