@@ -296,7 +296,6 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
     solution->steps[j++] = ptr->last_changed_vertex;
     ptr=ptr->previous_configuration;
   }
-  fprintf(stderr,"%u",i);
   assert(i==0);
   assert(j==length);
   
