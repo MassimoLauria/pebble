@@ -9,7 +9,7 @@ fi
 
 INPUT=$1
 OUTPUT=${INPUT/.dot/.pdf}
-TEMPEPS=`mktemp -t dot2pdf` 
+TEMPEPS=`mktemp -t dot2pdf.XXXXXX` 
 
 dot -Teps $1 2>/dev/null > $TEMPEPS
 echo "Output file is \"$OUTPUT\""
