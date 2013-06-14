@@ -492,8 +492,8 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
         disposeSL(Q);
         Q=BoundaryQ;
         BoundaryQ=newSL();
+        resetSL(Q);
       } else {
-        final = NULL;
         goto epilogue;           /* The whole search space has been explored */
       }
     }
@@ -567,7 +567,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
   Pebbling *solution=NULL;
   
- epilogue:
+epilogue:
   
   /* To get a formally correct pebbling we need to give final touch. */
 #if !REVERSIBLE
