@@ -1,8 +1,8 @@
 /*
   Massimo Lauria, 2010, 2011, 2012, 2013
 
-  Implementation of a Breadth-First-Search for the Black-White
-  Pebbling of a directed acyclic graph.
+  Implementation of  a Breadth-First-Search  for the Black-White  or a
+  Reversible Pebbling of a directed acyclic graph.
 
 */
 
@@ -18,21 +18,36 @@
 #include "hashtable.h"
 #include "statistics.h"
 
-#define HASH_TABLE_SPACE_SIZE    0x07FFFFF
-
+/**************************************
+ * Utilities for pebbling dictionary
+ **************************************/
 
 /*
- * To use the dictionary with PebbleConfiguration we must tell the
- * dictionary how to compare two configurations and how to hash
- * them. Optionslly also how to deallocate them from memory.
+ * The size of the hash is just a bold assumption. I definitely need a
+ * serious hash map implementation.
+ *
  */
-size_t   hashPebbleConfiguration(void *data) {
+#define HASH_TABLE_SPACE_SIZE    0x07FFFFF
 
+/*
+ * To use  the dictionary  with PebbleConfiguration  we must  tell the
+ * dictionary how to hash them.
+ *
+ */
+size_t hashPebbleConfiguration(void *data) {
   assert(data);
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
   return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
  }
 
+/*
+ * An "equality"  function for  pebbling configurations. We  just want
+ * configuration to match if the pebble  set is the same (and the sink
+ * has  been touched).   We  DON'T want  to  differentiate because  of
+ * pebbling cost,  since the collistion is  what we use to  update the
+ * cost function.
+ *
+ */
 Boolean  samePebbleConfiguration(void *A,void *B) {
 
   assert(A);
@@ -42,10 +57,6 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   pA=(PebbleConfiguration*)A;
   pB=(PebbleConfiguration*)B;
 
-  /* Compare the  important data; we just want  configuration to match
-     if the  pebble set is the  same.  We DON'T  want to differentiate
-     because of pebbling cost, since  the collistion is what we use to
-     update the cost function. */
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
   if (pB->white_pebbled != pB->white_pebbled) return FALSE;
   if (pA->sink_touched  != pB->sink_touched ) return FALSE;
@@ -59,24 +70,24 @@ void  freePebbleConfiguration(void *data) {
 
 
 /*
- *  The graph of configuration is  a directed graph in which each node
- *  is  indexed by  an hash  of the  configuration it  represents, and
- *  contains the  array of the HASHED configuration  that follows.  We
- *  cache the number of pebbles  required to reach a configuration and
- *  the  previous  configuration  in   the  chain.   Notice  that  the
- *  plausible configurations are  not that many.  So we  need to use a
- *  sparse representation.
+ * Runtime consistency checks. 
+ *
+ * We  verify  that the  elements  in  the dictionary  corresponds  to
+ * consistent  pebbling configurations.  Also the  full dictionary  is
+ * read  in order  to  produce an  histogram with  the  length of  the
+ * buckets. Knowing the length of the buckets is a decent indicator of
+ * the  quality of  the hash  function  (at least  for the  particular
+ * problem in hand).
+ *
+ * Since the cost of this test is very expensive, the histogram is not
+ * produced even when assertion are enabled.
  */
-/* A configuration is sane only if linked to configurations in the
-   appropriate dictionary */
 Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
 
   assert(g);
   assert(dict);
-
   assert(isconsistent_DAG(g));
   assert(isconsistentDict(dict));
-
   assert(g->size < BITTUPLE_SIZE);
 
 #ifdef HASHTABLE_DEBUG
@@ -84,27 +95,32 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
   if (!isconsistentDict(dict)) return FALSE;
 
   LinkedList cur,*l;
-
-  unsigned long long int histogram[40];
-  for(int i=0;i<40;i++) { histogram[i]=0; }
   int cnt;
   unsigned long long int tot_cnt=0;
 
+  /* Hash map hops histogram */
+  unsigned long long int histogram[40];
+  for(int i=0;i<40;i++) { histogram[i]=0; }
 
+  /* Count the elements in each bucket */
   for(size_t i=0;i<dict->size;i++) {
 
     l=dict->buckets[i];
     cnt=0;
-    /* Chech if all elements are appropriates pebblings. */
+
+    /* Chech if all elements are appropriate pebblings */
     for(resetSL(l);iscursorvalidSL(l);nextSL(l)) {
       cnt++;
       isconsistent_PebbleConfiguration(g,getSL(l));
+
+      /* No two equal configurations in the bucket */
       forkcursorSL(l,&cur);
       nextSL(&cur);
       while(iscursorvalidSL(&cur)) {
         if (dict->eq_function(getSL(l),getSL(&cur))) return FALSE;
         nextSL(&cur);
       }
+      
     }
     if (cnt<39) histogram[cnt]++;
     else histogram[39]++;
@@ -113,35 +129,49 @@ Boolean CheckRuntimeConsistency(DAG *g,Dict *dict) {
   fprintf(stderr,"Hashed elemenents: %15llu\n",tot_cnt);
   for(int i=0;i<39;i++) { fprintf(stderr," %2d  = % 15llu\n",i,histogram[i]); }
   fprintf(stderr," ... = % 15llu\n",histogram[39]);
-#endif
+
+#endif  /* HASHTABLE_DEBUG */
+  
   return TRUE;
 }
 
 
 /**
-   Finalize the a black-white persistent pebbling
+   Finalize a black-white persistent pebbling.
 
-   In the case of persistent pebbling, we computed the pebbling
-   looking for a transition from a configuration with a single while
-   pebble on the sink, to a configuration containing only black
-   pebbles.  It's dual configuration is indeed the persistent
-   pebbling we are looking for, so we are going to reverse it.
+   The breath-first-search  process we use  to find the  pebbling does
+   not produce a  complete one, in particular a clean  up phase can be
+   appended afterward.
 
+   In  the  case of  persistent  pebbling,  we computed  the  pebbling
+   looking for a  transition from a configuration with  a single while
+   pebble  on  the sink,  to  a  configuration containing  only  black
+   pebbles.  It's dual configuration is indeed the persistent pebbling
+   we are looking for, so we are going to reverse it.
+
+   The  black pebbles  in the  final  configuration of  the input  are
+   translated to white  pebbles in the output. A  preamble sequence of
+   white  pebble placements  is added  to make  the pebbling  formally
+   correct.
+   
+   INPUT:
+   
    @param dag the graph we are pebbling
 
    @param final a pointer to the final configuration found by the BFS.
-   
+
+   OUTPUT:
+
    @return Pebbling the finalized pebbling.
 */
 Pebbling *finalize_persistent_pebbling(const DAG *graph,
                                        PebbleConfiguration *final) {
-  fprintf(stderr,"Finalization\n");
-  assert(graph);
-  assert(final);
-  assert(isfinal(graph,final));
 #if REVERSIBLE
   assert(0);
 #endif
+  assert(graph);
+  assert(final);
+  assert(isfinal(graph,final));
 
   PebbleConfiguration *ptr=NULL;
   Pebbling *solution=NULL;
@@ -162,14 +192,13 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
   solution->cost   = final->pebble_cost;
   solution->length = length;
 
-  /* Reversing the pebbling: final clean up corresponds to
-     pebbling placements at the beginning. */
+  /* Preamble phase: place some white pebbles */
   i=0;
   for(Vertex v=0;v<graph->size;v++) {
     if (isblack(v,graph,final)) { solution->steps[i]=v; ++i; }
   }
 
-  /* Reversing the actual pebbling */
+  /* Reverse the actual pebbling */
   assert(i == final->pebbles);
   ptr = final;
   while(ptr->previous_configuration!=NULL) {
@@ -305,23 +334,31 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
 
 
 /**
-   Explore the space of pebbling strategies.  The output is given as a
-   sequence of vertices, because at  any point in a pebbling, there is
-   a unique minimal move that can  be performed on a vertex, given its
-   status.
+   Explore the space of pebbling strategies.
 
-   If there is  a pebble on the vertex, such  pebble shoud be removed.
-   If there  is not, then either a  white or a black  pebble should be
-   added.  In case both are possible, it is always convenient to add a
-   black one.
+   We employ a simple breadth-first-search exploration in the graph of
+   pebbling   configurations,  checking   if  a   final  configuration
+   (e.g. sink  has been  touched and  there are  no white  pebbles) is
+   reachable.
 
-   Notice that  any pebbling  induce a dual  pebbling with  a reversed
-   sequence  of vertices.   Thus the  output of  this function  can be
-   interpreted in both directions.
+   The  space is  explored  by looking  for pebbling  with  at most  N
+   pebbles with N that goes from  bottom to top. Every time the search
+   space has been  explored, the upper bound is raised  (at most up to
+   top), and the search continue.
+   
+   Persistent black-white pebbling is actually measured by placing a
+   white pebble on the sink and by trying to complete the
+   pebbling. Then the resulting pebbling is reversed.
+   
+   Since  we are  going  to  explore many  configurations,  we try  to
+   represent  a  configuration  with the  smallest  memory  footprint.
+   Furthermore  there  will   be  a  lot  of  useless   or  non  valid
+   configurations, thus we produce configurations on demand.  We use a
+   dictionary to keep track of previously visited configurations.
 
-   Persistent pebbling is actually measured by placing a white pebble
-   on the sink and by trying to complete the pebbling.
-
+   N.B. As a future option: we could use a ZDD  for keeping track of
+   visited configurations.
+   
    INPUT:
 
    @param DAG the graph  to pebble (with few vertices  and a single
@@ -338,6 +375,22 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
    pebbling number for a pebbling which
    leaves a black pebble in the sink.
 
+   OUTPUT:
+
+   The output is given as a sequence of vertices, because at any point
+   in a pebbling, there is a unique minimal move that can be performed
+   on a vertex, given its status.
+
+   If there is  a pebble on the vertex, such  pebble shoud be removed.
+   If there is  not, then either a  white or a black  pebble should be
+   added.  In  case both  are allowed,  it is always  better to  add a
+   black one.
+
+   Notice  that in  case of  black-white or  reversible pebbling,  any
+   pebbling  induces  a dual  pebbling  with  a reversed  sequence  of
+   vertices.  Thus the  output of this function can  be interpreted in
+   both directions.
+   
    @return a pebbling
 
  */
@@ -370,24 +423,15 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     exit(-1);
   }
 
+#if (!WHITE_PEBBLES)
+  persistent_pebbling = 0;
+#endif
+  
+  /* Collect statistic on the running */
+  STATS_CREATE(Stat);
 
-
-  /* SEARCH ALGORITHM */
-  /* The first attempt  to implement this program will  use a standard
-     graph reachability algorithm for directed graphs */
-
-  /* Since  graphs of  configuration will  be  very large,  we try  to
-     represent  a configuration  with the  smallest  memory footprint.
-     Furthermore  there  will  be  a  lot  of  useless  or  non  valid
-     configurations, thus we produce configurations on demand.  We use
-     an hash to access configurations.
-
-     N.B. As a future option: we could use a ZDD  for keeping track of
-     visited configurations.
-  */
-
-  Pebbling* solution=NULL;
-
+  /* END OF PROLOGUE ----------------------------------- */
+  
   /* Dictionary data structure */
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
   DictQueryResult res;               /* Query results */
@@ -399,40 +443,31 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
   Queue       *BoundaryQ=newSL(); /* Configuration to be processed the next round */
 
-  /* Initial empty configuration */
+  /* Initial configuration */
   PebbleConfiguration *initial=new_PebbleConfiguration();
   unsigned int upper_bound=bottom;
 
-  /* Data structure for statistics collection */
-  STATS_CREATE(Stat);
-
-#if (!WHITE_PEBBLES)
-  persistent_pebbling = 0;
-#endif
-
+  
   /* To compute persistent pebbling put a white pebble on top and
-     try to finish the pebbling. This is dual of a pebbling which
-     starts with an empty configuration and finishes with a black
-     pebble on the sink. We already verified that the graph has a
-     single sink.
+     try to finish the pebbling.
   */
   if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
 
-  /* Initial configuration may contains a pebble and so be right on the boundary */
+  /* Initial configuration may contain a pebble and so be close to the
+     upper bound */
   if (initial->pebbles == upper_bound && upper_bound<top) {
     enqueue(BoundaryQ,initial);
     STATS_INC(Stat,delayed);
   }
 
-  /* Put the initial configuration in line to be processed. */
+  /* Initial configuration in line to be processed. */
   enqueue  (Q,initial);
   writeDict(D,&res,initial);
 
 
-  /* Additional variables */
   PebbleConfiguration *ptr  =NULL;    /* Configuration to be processed */
   PebbleConfiguration *nptr =NULL;    /* Configuration to be queued for later processing (maybe) */
-  PebbleConfiguration *final=NULL;    /* Final configuration */
+  PebbleConfiguration *final=NULL;    /* final configuration */
 
   /* Consistency test of data structures */
   assert(isconsistentDict(D));
@@ -441,31 +476,6 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   STATS_SET(Stat,first_queuing,1);
   STATS_SET(Stat,queued,1);
   STATS_SET(Stat,dict_size,D->size);
-
-#if PRINT_RUNNING_STATS==1
-  Counter tmp;
-  for(int p=0;p<=top;p++) {
-    tmp=1; /* How many configurations with p pebbles? */
-    /* We compute binom(n,p)*2^p, with n=the size of the graph and p
-       the number of pebbles.  We first computing 2^p*n!/(n-p)! which
-       is integer, then we divide for p!. In this way all intermediate
-       values are integers. Since p << n there is no much danger of
-       overflow if the total count does not overflow. */
-#if WHITE_PEBBLES==1 && BLACK_PEBBLES==1
-    for(int k=1;k<=p;k++) { tmp *= 2*( g->size - k + 1); }
-    for(int k=2;k<=p;k++) { tmp /= k; }
-    STATS_ADD(Stat,search_space,2*tmp); /* Sink maybe touched or not */
-#else
-    for(int k=1;k<=p;k++) { tmp *= ( g->size - k + 1); }
-    for(int k=2;k<=p;k++) { tmp /= k; }
-    if (p!=top)
-      { STATS_ADD(Stat,search_space,2*tmp);} /* Sink maybe pebbled or not */
-    else
-      { STATS_ADD(Stat,search_space,tmp); }
-#endif
-  }
-#endif
-
 
   /* Pick a pebbling status from the queue, produce the followers, and
      put in the queue the ones that haven't been analized yet or the
@@ -550,27 +560,21 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
         dispose_PebbleConfiguration(nptr);
       }
 
-    }/* End of loop on one-step reachable configurations */
+    } /* End of neighborhood exploration */
 
-  }/* Queue of configurations empty */
+  }/* queue of configurations is empty, end of BFS */
 
+
+  Pebbling *solution=NULL;
+  
  epilogue:
-
-  /* In the case of persistent pebbling, we computed the pebbling
-     looking for a transition from a configuration with a single while
-     pebble on the sink, to a configuration containing only black
-     pebbles.  It's dual configuration is indeed the persistent
-     pebbling we are looking for, so we are going to reverse it.
-  */
+  
+  /* To get a formally correct pebbling we need to give final touch. */
 #if !REVERSIBLE
   if (persistent_pebbling) {
-
     solution = final ? finalize_persistent_pebbling(g,final) : NULL ;
-    
   } else {
-
     solution = final ? finalize_pebbling(g,final) : NULL ;
-    
   }
 #else
   solution = final ? finalize_reversible_pebbling(g,final) : NULL ;

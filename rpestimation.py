@@ -1,7 +1,10 @@
 #!/usr/bin/env python
+"""Estimate the reversible pebbling number for Pyramids
 
+Uses the recurrence relation:
 
-__doc__="""Estimate the reversible pebbling number for Pyramids"""
+p(a+b) = a + 1 + max(p(a-1),p(b))`
+"""
 
 MaxHeight= 640
 

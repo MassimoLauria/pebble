@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2011-01-14, venerdì 20:56 (CET) Massimo Lauria"
+   Time-stamp: "2013-06-14, 15:40 (CEST) Massimo Lauria"
 
    Description::
 
@@ -48,8 +48,8 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
 
   fprintf(stream,"[   Queued]  = % 15llu  |  % 15llu\n",
           s->queued_T/tmp_clock,s->queued_T);
-  fprintf(stream,"[   Unique]  = % 15llu  |  % 15llu of %llu\n",
-          s->first_queuing_T/tmp_clock,s->first_queuing_T,s->search_space);
+  fprintf(stream,"[   Unique]  = % 15llu  |  % 15llu\n",
+          s->first_queuing_T/tmp_clock,s->first_queuing_T);
   fprintf(stream,"[ Requeued]  = % 15llu  |  % 15llu\n",
           s->requeuing_T/tmp_clock,s->requeuing_T);
   fprintf(stream,"[  Delayed]  = % 15llu  |  % 15llu\n",
