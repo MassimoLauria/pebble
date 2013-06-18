@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-06-14, 16:27 (CEST) Massimo Lauria"
+# Time-stamp: "2013-06-18, 16:12 (CEST) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 PRINT_RUNNING_STATS=1
@@ -28,9 +28,7 @@ C_STANDARD=-std=c99
 #C_STANDARD=-std=c89
 
 
-TAGS=gtags
-#TAGS=etags
-#TAGS=ctags
+TAGS=gtags # etags ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
 CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
@@ -41,6 +39,10 @@ LDFLAGS=${DEBUG} ${PROFILE}
 NAME=pebble
 TARGET=bwpebble pebble revpebble exposetypes
 TIME=$(shell date +%Y.%m.%d-%H.%M)
+
+.PHONY: all clean clean check-syntax tags
+
+
 all: ${TARGET}
 
 
