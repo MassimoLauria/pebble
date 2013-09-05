@@ -1,9 +1,11 @@
-/*
+/**
   Massimo Lauria, 2010, 2011, 2012, 2013
 
   Implementation of  a Breadth-First-Search  for the Black-White  or a
   Reversible Pebbling of a directed acyclic graph.
 
+  @file 
+  
 */
 
 #include <stdlib.h>
