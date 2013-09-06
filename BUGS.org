@@ -33,3 +33,12 @@
   : 2:1
 
   it fails.
+* TODO <2013-09-06 Fri> Check why pebbling on binary trees does not work
+  
+  When I computed the reversible  pebbling number for the binary trees
+  of height 2 it gave me 5. Should not be 4?
+  
+* TODO <2013-09-06 Fri> Am I hashing the pebbling configuration correctly?
+
+  Configuration  with  the  same  black and  white  pebbles  but  with
+  different “useful_pebbles” vector are considered equivalent.
