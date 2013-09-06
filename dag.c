@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-12, 15:45 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-06, 16:47 (CEST) Massimo Lauria"
 
    Description::
 
@@ -368,7 +368,7 @@ void print_dot_DAG(const DAG *p,
   d->sinks=NULL;
 
   /* Size of the vertex set */
-  d->size=(2<<height) + ((2 << height) - 1);
+  d->size=(1<<height) + ((1 << height) - 1);
 
   /* Allocation of degree information */
 
@@ -385,8 +385,8 @@ void print_dot_DAG(const DAG *p,
   assert(d->outdegree);
 
   /* Computing of degree information */
-  for(v=0; v < (2<<height); v++)       d->indegree[v]=0;  /* Source elements */
-  for(v=(2<<height); v < d->size; v++) d->indegree[v]=2;  /* Non source elements */
+  for(v=0; v < (1<<height); v++)       d->indegree[v]=0;  /* Source elements */
+  for(v=(1<<height); v < d->size; v++) d->indegree[v]=2;  /* Non source elements */
   for(v=0; v < d->size-1; v++)         d->outdegree[v]=1; /* Non sink elements */
   d->outdegree[v]=0;
 
@@ -404,11 +404,11 @@ void print_dot_DAG(const DAG *p,
      Thus in our enumeration: pred(x)={N-1-2*(N-x),N-2*(N-x)}
   */
   u=0;
-  for(v=(2<<height); v < d->size; v++) { /* Non source elements */
+  for(v=(1<<height); v < d->size; v++) { /* Non source elements */
     d->in[v][0]=u++;
     d->in[v][1]=u++;
   }
-  u=(2<<height);
+  u=(1<<height);
   for(v=0; v < d->size-2; v+=2) { /* Non sink elements */
     d->out[v  ][0]=u;
     d->out[v+1][0]=u;

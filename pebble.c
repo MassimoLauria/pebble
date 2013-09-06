@@ -179,10 +179,10 @@ int main(int argc, char *argv[])
   if (input_directives == 0) input_file = stdin;
 
   /* Text output for pebbling has not being implemented yet */
-    if (!output_graphviz) {
-      fprintf(stderr,"Output format \'text\' not implemented.\n",pebbling_bound);
-      exit(-1);
-    }
+  if (!output_graphviz) {
+    fprintf(stderr,"Output format \'text\' not implemented.\n");
+    exit(-1);
+  }
 
   /* Search space interval*/
   if (optimize_time) {
