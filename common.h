@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 19:10 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 18:20 (CEST) Massimo Lauria"
 
    Description::
 
@@ -36,5 +36,6 @@ typedef unsigned char          Boolean;
 #define   SETBIT(tuple,i) ((tuple)|=(BITTUPLE_UNIT << (i)))
 #define RESETBIT(tuple,i) ((tuple)&= ~(BITTUPLE_UNIT << (i)))
 
+#define MAX(a,b) (a > b ? a : b )
 
 #endif /* COMMON_H  */

@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-14, 16:07 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 18:24 (CEST) Massimo Lauria"
 
    Description::
 
@@ -110,7 +110,6 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   ptr->sink_touched =FALSE;
 
-  ptr->pebble_cost=0;
   ptr->pebbles=0;
 
   ptr->previous_configuration=NULL;
@@ -142,7 +141,6 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 
   dst->pebbles=src->pebbles;
 
-  dst->pebble_cost=src->pebble_cost;
   dst->previous_configuration=src->previous_configuration;
   dst->last_changed_vertex=src->last_changed_vertex;
 
@@ -202,9 +200,6 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   if (counter!=ptr->pebbles) return FALSE;
 
-  /* The cost of the configuration is at least the number of pebbles */
-  if (ptr->pebble_cost < ptr->pebbles) return FALSE;
-
   /* Check that the mask is clean in the residual bits */
   if (BITTUPLE_SIZE != graph->size) {
     if ( (ptr->useful_pebbles | ptr->white_pebbled | ptr->black_pebbled) &  /* The OR of the bitmaks */
@@ -214,6 +209,22 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   /* Everything's fine */
   return TRUE;
+}
+
+
+
+inline int configurationcost(const DAG *g,const PebbleConfiguration *c) {
+
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+
+  int cost = 0;
+  BitTuple pebbled = c->white_pebbled | c->black_pebbled;
+  for(Vertex v=0; v<g->size; v++) {
+    if (GETBIT(pebbled,v)==1) cost++;
+  }
+  return cost;
 }
 
 
@@ -258,8 +269,6 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   c->pebbles       += 1;
   c->useful_pebbles |= g->pred_bitmasks[v];
 
-  if (c->pebbles > c->pebble_cost)
-    c->pebble_cost = c->pebbles;
   if (v==g->sinks[0] && !c->sink_touched) {
     c->sink_touched = TRUE;
     SETBIT(c->useful_pebbles,v);
@@ -305,8 +314,6 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   SETBIT(c->white_pebbled,v);
   c->pebbles       += 1;
 
-  if (c->pebbles > c->pebble_cost)
-    c->pebble_cost = c->pebbles;
   if (v==g->sinks[0] && !c->sink_touched) {
     c->sink_touched=TRUE;
     SETBIT(c->useful_pebbles,v);
@@ -391,7 +398,7 @@ void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
 /* Print a pebbling, using dot tool */
 void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 
-  PebbleConfiguration conf = {0,0,0,FALSE,0,0,NULL,0};
+  PebbleConfiguration conf = {0,0,0,FALSE,0,NULL,0};
   print_dot_PebbleConfiguration(g,NULL,"X",NULL);
   Vertex v;
   for (size_t i=0; i < ptr->length; ++i) {

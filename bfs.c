@@ -178,12 +178,14 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
   PebbleConfiguration *ptr=NULL;
   Pebbling *solution=NULL;
   size_t length=0;
+  int    cost =0;
   Vertex i=0;
   
   /* compute the length of the pebbling, without clean up */
   ptr = final;
   while(ptr!=NULL) {
     length++;
+    cost = MAX(cost,configurationcost(graph, ptr));
     ptr=ptr->previous_configuration;
   }
   length -= 1; /* initial conf is not a step */
@@ -191,8 +193,8 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
 
   /* solution to be filled */
   solution = new_Pebbling(length);
-  solution->cost   = final->pebble_cost;
   solution->length = length;
+  solution->cost   = cost;
 
   /* Preamble phase: place some white pebbles */
   i=0;
@@ -239,12 +241,14 @@ Pebbling *finalize_pebbling(const DAG *graph,
   PebbleConfiguration *ptr=NULL;
   Pebbling *solution=NULL;
   size_t length=0;
+  int cost = 0;
   Vertex i=0;
 
   /* compute the length of the pebbling, without clean up */
   ptr = final;
   while(ptr!=NULL) {
     length++;
+    cost = MAX(cost,configurationcost(graph, ptr));
     ptr=ptr->previous_configuration;
   }
   length -= 1; /* initial conf is not a step */
@@ -252,8 +256,8 @@ Pebbling *finalize_pebbling(const DAG *graph,
 
   /* solution to be filled */
   solution = new_Pebbling(length);
-  solution->cost   = final->pebble_cost;
   solution->length = length;
+  solution->cost   = cost;
 
   /* Load the steps in the solution vector
      (steps are in reverse order) */
@@ -299,6 +303,7 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
   PebbleConfiguration *ptr=NULL;
   Pebbling *solution=NULL;
   size_t length=0;
+  int cost = 0;
   Vertex i=0;
   Vertex j=0;
 
@@ -306,6 +311,7 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
   ptr = final;
   while(ptr!=NULL) {
     length++;
+    cost = MAX(cost,configurationcost(graph, ptr));
     ptr=ptr->previous_configuration;
   }
   length -= 1;
@@ -313,8 +319,8 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
 
   /* solution to be filled */
   solution = new_Pebbling(length);
-  solution->cost   = final->pebble_cost;
   solution->length = length;
+  solution->cost   = cost;
 
   /* Load the steps in the solution vector
      (steps are in reverse order) */

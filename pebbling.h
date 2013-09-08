@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-14, 16:03 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 19:08 (CEST) Massimo Lauria"
 
    Description::
 
@@ -38,15 +38,11 @@ typedef struct _PebbleConfiguration {
 
   Boolean sink_touched;
 
-  unsigned int pebbles;  /* Number of pebbles in the pebbling */
+  /* unsigned int pebbles;  /\* Number of pebbles in the pebbling *\/ */
 
-  /* Information regarding the  configuration transition:  what is the
-     pebble cost  needed to reach  the present configuration?  What is
-     the actual  previous configuration? What was the  vertex we acted
-     on to reach the present configuration? */
-  unsigned int pebble_cost;             
-
-  /* information about the transition */
+  /* Information regarding the configuration transition: what is the
+     actual previous configuration? What was the vertex we acted on to
+     reach the present configuration? */
   struct _PebbleConfiguration *previous_configuration;
   Vertex last_changed_vertex;
 
@@ -62,8 +58,8 @@ typedef struct {
 
   Vertex *steps;
   size_t  length;
-  int     cost;
-
+  int cost;
+  
 } Pebbling;
 
 
@@ -78,6 +74,7 @@ extern Boolean      isconsistent_PebbleConfiguration(const DAG *graph,const Pebb
 
 extern Boolean isfinal(const DAG *g,const PebbleConfiguration *c);
 
+extern int     configurationcost(const DAG *g,const PebbleConfiguration *c);
 
 /* Vertices operations */
 extern Boolean iswhite    (const Vertex v, const DAG *g, const PebbleConfiguration *c);
