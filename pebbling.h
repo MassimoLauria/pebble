@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-08, 19:08 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 22:11 (CEST) Massimo Lauria"
 
    Description::
 
@@ -38,7 +38,7 @@ typedef struct _PebbleConfiguration {
 
   Boolean sink_touched;
 
-  /* unsigned int pebbles;  /\* Number of pebbles in the pebbling *\/ */
+  unsigned int pebbles;  /* Number of pebbles in the pebbling */
 
   /* Information regarding the configuration transition: what is the
      actual previous configuration? What was the vertex we acted on to

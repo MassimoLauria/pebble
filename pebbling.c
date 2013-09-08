@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-08, 18:24 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 22:12 (CEST) Massimo Lauria"
 
    Description::
 
@@ -212,12 +212,10 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 }
 
 
-
 inline int configurationcost(const DAG *g,const PebbleConfiguration *c) {
 
   assert(isconsistent_DAG(g));
   assert(isconsistent_PebbleConfiguration(g,c));
-  assert(v<g->size);
 
   int cost = 0;
   BitTuple pebbled = c->white_pebbled | c->black_pebbled;
