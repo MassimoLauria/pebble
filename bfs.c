@@ -20,6 +20,10 @@
 #include "hashtable.h"
 #include "statistics.h"
 
+extern void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
+                                          char *name,char* options);
+
+
 /**************************************
  * Utilities for pebbling dictionary
  **************************************/
@@ -60,7 +64,7 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   pB=(PebbleConfiguration*)B;
 
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
-  if (pB->white_pebbled != pB->white_pebbled) return FALSE;
+  if (pA->white_pebbled != pB->white_pebbled) return FALSE;
   if (pA->sink_touched  != pB->sink_touched ) return FALSE;
   return TRUE;
 }
@@ -513,7 +517,6 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     /* Get an element from the queue */
     ptr=(PebbleConfiguration*)getSL(Q);
     assert(isconsistent_PebbleConfiguration(g,ptr));
-    assert(ptr->pebble_cost <= upper_bound);
     assert(!isfinal(g,ptr));
     STATS_INC(Stat,processed);
 
@@ -534,7 +537,6 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
         nptr->previous_configuration = ptr;  /* It's origin */
         nptr->last_changed_vertex = v;
-        assert(nptr->pebble_cost <= upper_bound);
 
         unsafe_noquery_writeDict(D,&res,nptr); /* Mark as encountered (put in the dictionary) */
 
@@ -559,6 +561,25 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
       } else {                                 /* Already encountered. No new information. */
         STATS_INC(Stat,suboptimal);
+        nptr->previous_configuration = ptr;  /* It's origin */
+        nptr->last_changed_vertex = v;
+        if (0 && (nptr->useful_pebbles | ((PebbleConfiguration*)res.value)->useful_pebbles)
+            != ((PebbleConfiguration*)res.value)->useful_pebbles 
+            ) {
+          fprintf(stderr,"Clashed in the dictionary over useful_pebbles\n");
+          fprintf(stderr,"New useful pebbles: %x\n", nptr->useful_pebbles);
+          fprintf(stderr,"Old useful pebbles: %x\n", ((PebbleConfiguration*)res.value)->useful_pebbles);
+          while(nptr!=NULL) {
+            print_dot_PebbleConfiguration(g,nptr,"X",NULL);
+            nptr=nptr->previous_configuration;
+          }
+          nptr=(PebbleConfiguration*)res.value;
+          while(nptr!=NULL) {
+            print_dot_PebbleConfiguration(g,nptr,"X",NULL);
+            nptr=nptr->previous_configuration;
+          }
+          exit(-1);
+        }
         dispose_PebbleConfiguration(nptr);
       }
 
