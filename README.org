@@ -1,7 +1,8 @@
-#+TITLE: Pebbling Software
-#+author: Massimo Lauria
+* Pebbling software
 
-* Pebbling software: =pebble=, =bwpebble=, =revpebble= 
+  - =pebble=
+  - =bwpebble=
+  - =revpebble= 
 
   We deal we directed acyclic graphs, which are directed graph with no
   directed  cycles.   In  particular   our  program  computes  various
