@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-08, 22:12 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-09, 00:22 (CEST) Massimo Lauria"
 
    Description::
 
@@ -104,8 +104,13 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 
   assert(ptr);
 
+#if WHITE_PEBBLES
   ptr->white_pebbled=0;
+#endif
+
+#if BLACK_PEBBLES  
   ptr->black_pebbled=0;
+#endif
   ptr->useful_pebbles=0;
 
   ptr->sink_touched =FALSE;
@@ -133,8 +138,13 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
   assert(src);
   assert(dst);
 
+#if WHITE_PEBBLES
   dst->white_pebbled=src->white_pebbled;
+#endif
+
+#if BLACK_PEBBLES  
   dst->black_pebbled=src->black_pebbled;
+#endif
   dst->useful_pebbles=src->useful_pebbles;
 
   dst->sink_touched=src->sink_touched;
@@ -167,22 +177,23 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
 
   /* The configuration must not have both a white and a black pebble
      on the same vertex */
+#if WHITE_PEBBLES && BLACK_PEBBLES
   if (ptr->white_pebbled & ptr->black_pebbled) return FALSE;
-
-  /* Check that only the appropriate pebbles are used */
-#if (!BLACK_PEBBLES)
-  if (ptr->black_pebbled!=0) return FALSE;
-#endif
-
-#if (!WHITE_PEBBLES)
-  if (ptr->white_pebbled!=0) return FALSE;
 #endif
 
   /* If there's a pebble on the sink, sink is touched */
-  if ((ptr->white_pebbled | ptr->black_pebbled) & (BITTUPLE_UNIT << graph->sinks[0])) {
+#if BLACK_PEBBLES
+  if (ptr->black_pebbled & (BITTUPLE_UNIT << graph->sinks[0])) {
     if (!ptr->sink_touched) return FALSE;
   }
+#endif
 
+#if WHITE_PEBBLES
+if (ptr->white_pebbled & (BITTUPLE_UNIT << graph->sinks[0])) {
+    if (!ptr->sink_touched) return FALSE;
+  }
+#endif
+  
   /* If sink is touched in the previous conf, then it must be later */
   if (ptr->previous_configuration!=NULL &&
       ptr->previous_configuration->sink_touched==TRUE &&
@@ -194,20 +205,35 @@ Boolean isconsistent_PebbleConfiguration(const DAG *graph,const PebbleConfigurat
   unsigned int counter=0;
 
   for(size_t i=0; i<graph->size; i++) {
+#if WHITE_PEBBLES    
     if GETBIT(ptr->white_pebbled,i) counter++;
+#endif
+
+#if BLACK_PEBBLES
     if GETBIT(ptr->black_pebbled,i) counter++;
+#endif
+
   }
 
   if (counter!=ptr->pebbles) return FALSE;
 
   /* Check that the mask is clean in the residual bits */
-  if (BITTUPLE_SIZE != graph->size) {
-    if ( (ptr->useful_pebbles | ptr->white_pebbled | ptr->black_pebbled) &  /* The OR of the bitmaks */
+  BitTuple mask = ptr->useful_pebbles;
+
+#if WHITE_PEBBLES
+  mask |= ptr->white_pebbled;
+#endif
+  
+#if BLACK_PEBBLES
+  mask |= ptr->black_pebbled;
+#endif
+  
+  if (BITTUPLE_SIZE > graph->size) {
+    if ( mask & /* bit mentioned in the configuration */
          ~((BITTUPLE_UNIT << graph->size) -1) )      /* A bitmask which is set only on the high bits */
       return FALSE;
   }
 
-  /* Everything's fine */
   return TRUE;
 }
 
@@ -218,7 +244,16 @@ inline int configurationcost(const DAG *g,const PebbleConfiguration *c) {
   assert(isconsistent_PebbleConfiguration(g,c));
 
   int cost = 0;
-  BitTuple pebbled = c->white_pebbled | c->black_pebbled;
+  BitTuple pebbled = 0;
+
+#if WHITE_PEBBLES
+  pebbled |= c->white_pebbled;
+#endif
+
+#if BLACK_PEBBLES
+  pebbled |= c->black_pebbled;
+#endif
+  
   for(Vertex v=0; v<g->size; v++) {
     if (GETBIT(pebbled,v)==1) cost++;
   }
@@ -226,7 +261,9 @@ inline int configurationcost(const DAG *g,const PebbleConfiguration *c) {
 }
 
 
-/* ------------------------------ Manipulation of pebble stauts -----------------------------*/
+/* ------------------------------ Manipulation of pebble status -----------------------------*/
+
+#if BLACK_PEBBLES
 
 /* Black */
 inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
@@ -273,6 +310,9 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   }
 }
 
+#endif /* BLACK_PEBBLES */
+
+#if WHITE_PEBBLES
 
 /* White */
 inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
@@ -318,6 +358,7 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   }
 }
 
+#endif /* WHITE_PEBBLES */
 
 /* Vertex Statuses */
 
@@ -329,7 +370,14 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   assert(isconsistent_PebbleConfiguration(g,c));
   assert(v<g->size);
 
+#if BLACK_PEBBLES && WHITE_PEBBLES
   return GETBIT(c->white_pebbled | c->black_pebbled,v);
+#elif BLACK_PEBBLES
+  return GETBIT(c->black_pebbled,v);
+#elif WHITE_PEBBLES
+  return GETBIT(c->white_pebbled,v);
+#endif
+  
 }
 
 
@@ -350,8 +398,16 @@ inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c
   assert(isconsistent_PebbleConfiguration(g,c));
   assert(v<g->size);
 
+#if BLACK_PEBBLES && WHITE_PEBBLES
   return (((c->white_pebbled | c->black_pebbled) & g->pred_bitmasks[v])
           == g->pred_bitmasks[v])?TRUE:FALSE;
+#elif BLACK_PEBBLES
+  return ((c->black_pebbled & g->pred_bitmasks[v])
+          == g->pred_bitmasks[v])?TRUE:FALSE;
+#elif WHITE_PEBBLES
+  return ((c->white_pebbled & g->pred_bitmasks[v])
+          == g->pred_bitmasks[v])?TRUE:FALSE;
+#endif
 }
 
 
@@ -364,7 +420,11 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
   assert(isconsistent_DAG(g));
   assert(isconsistent_PebbleConfiguration(g,c));
 
-  if (c->white_pebbled==0 && c->sink_touched==TRUE) return TRUE;
+#if WHITE_PEBBLES
+  if (c->white_pebbled!=0) return FALSE;
+#endif
+  
+  if (c->sink_touched==TRUE) return TRUE;
   else return FALSE;
 }
 
@@ -381,13 +441,23 @@ void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
   char *vertexopts[g->size];
 
   for(Vertex v=0;v<g->size;v++) {
+
+#if WHITE_PEBBLES
     if (peb && iswhite(v,g,peb)) {
       vertexopts[v]="color=gray,fontcolor=black,fillcolor=white";
-    } else if (peb && isblack(v,g,peb)) {
-      vertexopts[v]="color=gray,fontcolor=white,fillcolor=black";
-    } else {
-      vertexopts[v]="color=gray,fontcolor=black,fillcolor=lightgray";
+      continue;
     }
+#endif
+
+#if BLACK_PEBBLES
+    if (peb && isblack(v,g,peb)) {
+      vertexopts[v]="color=gray,fontcolor=white,fillcolor=black";
+      continue;
+    }
+#endif
+    
+    vertexopts[v]="color=gray,fontcolor=black,fillcolor=lightgray";
+
   }
   print_dot_DAG(g,name,options,vertexopts,NULL);
 }
@@ -396,7 +466,20 @@ void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
 /* Print a pebbling, using dot tool */
 void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 
-  PebbleConfiguration conf = {0,0,0,FALSE,0,NULL,0};
+  PebbleConfiguration conf;
+  
+  conf.sink_touched=FALSE;
+#if WHITE_PEBBLES
+  conf.white_pebbled = 0;
+#endif
+#if BLACK_PEBBLES
+  conf.black_pebbled = 0;
+#endif
+  conf.pebbles = 0;
+  conf.useful_pebbles = 0;
+  conf.previous_configuration = NULL;
+  conf.last_changed_vertex = 0;
+
   print_dot_PebbleConfiguration(g,NULL,"X",NULL);
   Vertex v;
   for (size_t i=0; i < ptr->length; ++i) {
@@ -405,18 +488,35 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
        assuming the pebbling is legal */
 
     /* Deletions */
-    if (isblack(v,g,&conf))
+#if BLACK_PEBBLES
+    if (isblack(v,g,&conf)) {
       deleteblack(v,g,&conf);
-    else if (iswhite(v,g,&conf))
-      deletewhite(v,g,&conf);
-    
-    /* Placements */
-    else if (isactive(v,g,&conf)) 
-      placeblack(v,g,&conf);
-    else
-      placewhite(v,g,&conf);
+      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      continue;
+    }
+#endif
 
+#if WHITE_PEBBLES
+    if (iswhite(v,g,&conf)) {
+      deletewhite(v,g,&conf);
+      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      continue;
+    }
+#endif
+
+    /* Placements */
+#if BLACK_PEBBLES
+    if (isactive(v,g,&conf)) {
+      placeblack(v,g,&conf);
+      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      continue;
+    }
+#endif
+    
+#if WHITE_PEBBLES        
+    placewhite(v,g,&conf);
     print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+#endif
   }
 }
 
@@ -522,6 +622,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
 
   assert(isconsistent_PebbleConfiguration(g,old));
 
+#if BLACK_PEBBLES 
+  
 #if REVERSIBLE
   if ( isblack(v,g,old) && isactive(v,g,old)) {
 #else
@@ -537,7 +639,10 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
     }
+#endif /* BLACK_PEBBLES */
 
+#if WHITE_PEBBLES
+  
   if ( iswhite(v,g,old) && isactive(v,g,old) ) { /* Delete WHITE */
 
     if (delete_white_heuristics_cut(v,g,old)) return NULL;
@@ -548,7 +653,8 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
     assert(isconsistent_PebbleConfiguration(g,nconf));
     return nconf;
   }
-
+#endif
+  
 #if BLACK_PEBBLES
   if ( !ispebbled(v,g,old) && isactive(v,g,old) ) { /* Place BLACK */
 

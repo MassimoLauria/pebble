@@ -43,8 +43,16 @@ extern void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguratio
 size_t hashPebbleConfiguration(void *data) {
   assert(data);
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
+#if WHITE_PEBBLES && BLACK_PEBBLES  
   return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
- }
+#elif WHITE_PEBBLES
+  return  (size_t)(ptr->white_pebbled * 0x9e3779b9);
+#elif BLACK_PEBBLES
+  return  (size_t)(ptr->black_pebbled * 0x9e3779b9);
+#else
+  return 0;
+#endif
+}
 
 /*
  * An "equality"  function for  pebbling configurations. We  just want
@@ -63,8 +71,14 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   pA=(PebbleConfiguration*)A;
   pB=(PebbleConfiguration*)B;
 
+#if BLACK_PEBBLES
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
+#endif
+
+#if WHITE_PEBBLES
   if (pA->white_pebbled != pB->white_pebbled) return FALSE;
+#endif
+
   if (pA->sink_touched  != pB->sink_touched ) return FALSE;
   return TRUE;
 }
@@ -459,12 +473,14 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   PebbleConfiguration *initial=new_PebbleConfiguration();
   unsigned int upper_bound=bottom;
 
-  
+
+#if WHITE_PEBBLES
   /* To compute persistent pebbling put a white pebble on top and
      try to finish the pebbling.
   */
   if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
-
+#endif
+  
   /* Initial configuration may contain a pebble and so be close to the
      upper bound */
   if (initial->pebbles == upper_bound && upper_bound<top) {
