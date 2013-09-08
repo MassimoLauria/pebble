@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-08, 22:19 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 22:28 (CEST) Massimo Lauria"
 
    Description::
 
@@ -283,7 +283,8 @@ void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
 
 
 /* Prints a representation of the DAG, which can be used by DOT and
- * graphviz.
+ * graphviz. Vertices are indexed starting from 1, despite being
+ * indexed from zero in the internal representation.
  */
 void print_dot_DAG(const DAG *p,
                      char *name,
@@ -317,7 +318,7 @@ void print_dot_DAG(const DAG *p,
   for (i = 0; i < p->size; ++i) {
 
     /* Vertex identifier */
-    printf("\t %d [",i);
+    printf("\t %d [",i+1);
 
     /* Start with vertex info */
     vertex_label_hash(label_buffer,20,i);
@@ -335,10 +336,10 @@ void print_dot_DAG(const DAG *p,
 
     /* Outgoing edges */
     vertex_label_hash(label_buffer,20,i);
-    printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i);
+    printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i+1);
 
     for(j=0;j<p->outdegree[i];j++)
-      printf("\t %d -> %d;\n",i,p->out[i][j]);
+      printf("\t %d -> %d;\n",i+1,p->out[i][j]+1);
 
     printf("\n");
   }
