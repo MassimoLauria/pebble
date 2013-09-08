@@ -158,6 +158,9 @@
 
    [[example.png]]
 
+*** Canonical graphs
+
+    For some  graph there is  not need to  provide an input  file.
 
 
 [1] For more information about pebbling of graph you can read the
