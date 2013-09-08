@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-06, 16:47 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-08, 22:19 (CEST) Massimo Lauria"
 
    Description::
 
@@ -237,7 +237,7 @@ extern int snprintf(char* buf,size_t size, const char *format, ... );
 #endif
 
 static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
-   snprintf(buf,l,SIZE_T_SPECIFIER,v);
+   snprintf(buf,l,SIZE_T_SPECIFIER,v+1);
 }
 
 
