@@ -20,9 +20,9 @@
   (i.e. memory) used in that particular moment of the computation.
 
   The *(black, black/white, reversible) pebbling number* of a directed
-  acyclic single sink graph $G$ is the smallest number $N$ of pebbles such
-  that there  is a  (black, black/white,  reversible) pebbling  of $G$
-  which uses at most $N$ pebbles at any moment of the game.
+  acyclic single sink graph G is the smallest number n of pebbles such
+  that there  is a  (black, black/white,  reversible) pebbling  of G
+  which uses at most n pebbles at any moment of the game.
 
 ** Black pebbling (or just “pebbling”)
 
@@ -33,7 +33,7 @@
    - you  can put a  pebble on a vertex  only if all  predecessors are
      pebbled.
 
-   A vertex $u$  is *predecessor* of another vertex $v$  if $(u,v)$ is
+   A vertex u is a *predecessor* of another vertex v if (u,v) is
    an  arc in  the directed  graph.  Therefore  you can  always put  a
    pebble on a source vertex (i.e. a vertex with no incoming edges).
 
@@ -98,22 +98,50 @@
    written in dot [2] format, showing the pebbling.
 
    It is *required* to choose an  upper bound on the number of pebbles
-   allowed, in order to limit the search space.
+   allowed, in order to limit  the search space. The canonical command
+   lines 
 
-   
+   : pebble -b 5 -i <inputfile>
+
+   : bwpebble -b 5 -i <inputfile>
+
+   : revpebble -b 5 -i <inputfile>
+
+   which compute pebbling (if they  exist) using the *smallest amount*
+   of pebbles needed, provided it is at most 5.
+
+*** How to compute the shortest pebbling
+
+    If you  just care  about the shortest  pebbling *within  the bound*
+    (but using maybe more pebbles than needed) you can use the variants
+
+    : pebble -b 5 -t -i <inputfile>
+
+    : bwpebble -b 5 -t -i <inputfile>
+
+    : revpebble -b 5 -t -i <inputfile>
+
+    
+*** How to compute a persistent pebbling
+
+    If you want  to compute *persistent pebbling* add  the =-Z= option
+    to the  command line. This  option is available on  =bwpebble= and
+    =revpebble=.
+
+    
 
 ** Input format
    
    Input graph  must be given  in the  following format: the  file can
    start with some comments line, each of them starting with character
-   =c=.  The next  non  black  line must  contain  the  number $n$  of
+   =c=.  The next  non  black  line must  contain  the  number n  of
    vertices in the graph. Then there  must be $n$ non black lines, one
-   for each vertex 1 ≤ $i$ ≤ $n$. The lines have the format:
+   for each vertex 1 ≤ i ≤ n. The lines have the format:
 
    : i : <pred 1> <pred 2> <pred 3> ... <pred k>
   
    where =<pred 1> <pred 2> <pred 3> ... <pred k>= is the ordered list
-   of all vertices  which have an outgoing edge to  vertex $i$. Here’s
+   of all vertices  which have an outgoing edge to  vertex i. Here’s
    an example
 
    : c
