@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-09, 00:22 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-09, 00:57 (CEST) Massimo Lauria"
 
    Description::
 
@@ -594,15 +594,16 @@ static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,co
   if (!ispebbled(w,g,c) && (v > w)) return TRUE;
 
   /* If a black pebble removal is after a placement, then the placed
-     vertex must be a black pebbled successor
-
-     Careful! this is not true for reversible pebbling.
+     vertex must be a black pebbled successor, unless we are doing a
+     reversible pebbling.
   */
+#if !REVERSIBLE
   if (ispebbled(w,g,c)) {
     if (!isblack(w,g,c)) return TRUE;
     if (!GETBIT(g->succ_bitmasks[v],w)) return TRUE;
   }
-
+#endif
+  
   return FALSE;
 }
 
@@ -628,10 +629,10 @@ PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
   if ( isblack(v,g,old) && isactive(v,g,old)) {
 #else
   if ( isblack(v,g,old) ) {
+#endif
 
     if (delete_black_heuristics_cut(v,g,old)) return NULL;
 
-#endif
     /* Delete BLACK */
     nconf=copy_PebbleConfiguration(old);
     deleteblack(v,g,nconf);
