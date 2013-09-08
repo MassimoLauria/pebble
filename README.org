@@ -1,0 +1,138 @@
+#+TITLE: Pebbling Software
+#+author: Massimo Lauria
+
+* Pebbling software: =pebble=, =bwpebble=, =revpebble= 
+
+  We deal we directed acyclic graphs, which are directed graph with no
+  directed  cycles.   In  particular   our  program  computes  various
+  complexity  measures called  /pebbling/  numbers for  graphs with  a
+  *single sink* (i.e.  there is only  one vertex which has no outgoing
+  arcs).
+
+  Literature studies several types of pebbling games [1]:  the directed
+  acyclic graph starts empty; at each step the player may put a pebble
+  on an  empty vertex or  remove it from  a pebbled one,  according to
+  some rules which depend on the specific game.
+
+  Each game  models a different  kind of computations.  The  number of
+  pebbles simultaneously  on the graph  at each step models  the space
+  (i.e. memory) used in that particular moment of the computation.
+
+  The *(black, black/white, reversible) pebbling number* of a directed
+  acyclic single sink graph $G$ is the smallest number $N$ of pebbles such
+  that there  is a  (black, black/white,  reversible) pebbling  of $G$
+  which uses at most $N$ pebbles at any moment of the game.
+
+** Black pebbling (or just “pebbling”)
+
+   The goal is to put a black pebble on the sink of the graph, and the
+   rules are the following:
+
+   - you can always remove a pebble from a vertex;
+   - you  can put a  pebble on a vertex  only if all  predecessors are
+     pebbled.
+
+   A vertex $u$  is *predecessor* of another vertex $v$  if $(u,v)$ is
+   an  arc in  the directed  graph.  Therefore  you can  always put  a
+   pebble on a source vertex (i.e. a vertex with no incoming edges).
+
+** Black/White pebbling 
+
+   This is a  generalization of black pebbling. Now we  have two types
+   of pebbles, black and white, with opposite and dual behavior.
+   
+   The goal is to  place a pebble (either black or  white) on the sink
+   and then to remove all pebbles from the graph. Here’s the rules:
+
+   - you can always remove a black pebble;
+   - you can always place a white pebble;
+   - a  black pebble can  be placed only  if the predecessors  of the
+     vertex are pebbled;
+   - a  white pebble can  be removed only  if the predecessors  of the
+     vertex are pebbled.
+
+** Reversible pebbling
+
+   This is  a variant of black  pebbling in which the  condition for a
+   placement and  a removal are the  same. Indeed if a  move is legal,
+   the backward move is legal too. 
+
+   The goal is to place a pebble on the sink. Here’s the rules:
+
+   - a black pebble can be placed only if the predecessors of the
+     vertex are pebbled;
+   - a black pebble can be removed only  if the predecessors  of the
+     vertex are pebbled.
+
+** Persistent pebbling
+
+   All three  pebbling games  (black, black/white, reversible)  have a
+   variant in which in the *final  position* of the game the graph has
+   a black pebble on the sink and no other pebbles on the graph. 
+
+   Such  a   pebble  is  called  a   persistent  (black,  black/white,
+   reversible)  pebbling.  It  is  easy to  see  that the  *persistent
+   pebbling  number*  is  at  most one  more  than  the  corresponding
+   pebbling number.   It is also easy  to see that for  black pebbling
+   this condition does not make any  difference (it does for the other
+   games).
+
+** Compilation
+
+   The code is in C99 standard. So  you need a C99 compiler to compile
+   the code. If you have it just type
+
+   : make 
+
+** Usage 
+
+   We  provide  three  command   line  tools:   =pebble=,  =bwpebble=,
+   =revpebble=.   They  output   respectively  a  black,  black/white,
+   reversible pebbling  of a  directed acyclic  graph given  in input,
+   within the  upper bound to the  number of pebbles given  at command
+   line.
+
+   If there is  no such a pebbling, then the  program fails and report
+   it,  otherwise it  outputs the  pebbling  as a  sequence of  graphs
+   written in dot [2] format, showing the pebbling.
+
+   It is *required* to choose an  upper bound on the number of pebbles
+   allowed, in order to limit the search space.
+
+   
+
+** Input format
+   
+   Input graph  must be given  in the  following format: the  file can
+   start with some comments line, each of them starting with character
+   =c=.  The next  non  black  line must  contain  the  number $n$  of
+   vertices in the graph. Then there  must be $n$ non black lines, one
+   for each vertex 1 ≤ $i$ ≤ $n$. The lines have the format:
+
+   : i : <pred 1> <pred 2> <pred 3> ... <pred k>
+  
+   where =<pred 1> <pred 2> <pred 3> ... <pred k>= is the ordered list
+   of all vertices  which have an outgoing edge to  vertex $i$. Here’s
+   an example
+
+   : c
+   : c This is a DAG of 5 vertices
+   : c
+   : 5
+   : 1  :
+   : 2  : 
+   : 3  : 1  
+   : 4  : 3  
+   : 5  : 2  4
+   
+   which represents the graph 
+
+   [[example.png]]
+
+
+
+[1] For more information about pebbling of graph you can read the
+   comprehensive survey by Jakob Nordstrӧm ([[http://www.csc.kth.se/~jakobn/research/PebblingSurveyTMP.pdf][link]]) soon to be published
+   in /Foundations and Trends in Theoretical Computer Science/.
+
+[2] =dot= tool is part of Graphviz (http://www.graphviz.org)
