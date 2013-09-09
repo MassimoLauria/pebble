@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-09, 00:57 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-09, 16:59 (CEST) Massimo Lauria"
 
    Description::
 
@@ -111,7 +111,6 @@ PebbleConfiguration *new_PebbleConfiguration(void) {
 #if BLACK_PEBBLES  
   ptr->black_pebbled=0;
 #endif
-  ptr->useful_pebbles=0;
 
   ptr->sink_touched =FALSE;
 
@@ -145,7 +144,6 @@ PebbleConfiguration *copy_PebbleConfiguration(const PebbleConfiguration *src) {
 #if BLACK_PEBBLES  
   dst->black_pebbled=src->black_pebbled;
 #endif
-  dst->useful_pebbles=src->useful_pebbles;
 
   dst->sink_touched=src->sink_touched;
 
@@ -218,7 +216,7 @@ if (ptr->white_pebbled & (BITTUPLE_UNIT << graph->sinks[0])) {
   if (counter!=ptr->pebbles) return FALSE;
 
   /* Check that the mask is clean in the residual bits */
-  BitTuple mask = ptr->useful_pebbles;
+  BitTuple mask = 0;
 
 #if WHITE_PEBBLES
   mask |= ptr->white_pebbled;
@@ -274,11 +272,7 @@ inline void deleteblack(const Vertex v,const DAG *g,PebbleConfiguration *const c
   assert(isblack(v,g,c));
 
   RESETBIT(c->black_pebbled,v);
-  RESETBIT(c->useful_pebbles,v);
   c->pebbles       -= 1;
-#if REVERSIBLE
-  c->useful_pebbles |= g->pred_bitmasks[v];
-#endif
 }
 
 /* Determines if a vertex is black pebbled according to a specific
@@ -302,11 +296,9 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
 
   SETBIT(c->black_pebbled,v);
   c->pebbles       += 1;
-  c->useful_pebbles |= g->pred_bitmasks[v];
 
   if (v==g->sinks[0] && !c->sink_touched) {
     c->sink_touched = TRUE;
-    SETBIT(c->useful_pebbles,v);
   }
 }
 
@@ -324,9 +316,7 @@ inline void deletewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c
   assert(isactive(v,g,c));
 
   RESETBIT(c->white_pebbled,v);
-  RESETBIT(c->useful_pebbles,v);
   c->pebbles       -= 1;
-  c->useful_pebbles |= g->pred_bitmasks[v];
 
 }
 
@@ -354,7 +344,6 @@ inline void placewhite(const Vertex v,const DAG *g,PebbleConfiguration *const c)
 
   if (v==g->sinks[0] && !c->sink_touched) {
     c->sink_touched=TRUE;
-    SETBIT(c->useful_pebbles,v);
   }
 }
 
@@ -380,15 +369,6 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   
 }
 
-
-inline Boolean isuseful(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
-
-  assert(isconsistent_DAG(g));
-  assert(isconsistent_PebbleConfiguration(g,c));
-  assert(v<g->size);
-
-  return GETBIT(c->useful_pebbles,v);
-}
 
 /* Determines if there is a pebble on all predecessors of a given
    vertex */
@@ -476,7 +456,6 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
   conf.black_pebbled = 0;
 #endif
   conf.pebbles = 0;
-  conf.useful_pebbles = 0;
   conf.previous_configuration = NULL;
   conf.last_changed_vertex = 0;
 
@@ -551,10 +530,7 @@ static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,co
 
   Vertex w=c->last_changed_vertex;
 
-  /* Never remove a pebble if it is hasn't been essential*/
-  if (!isuseful(v,g,c)) return TRUE;
-
-
+  
   if (c->previous_configuration==NULL) return FALSE;
   if (v==w) return TRUE;  /* White pebble can't be placed and removed,
                              not even of the sink */
@@ -580,9 +556,6 @@ static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,co
 
   Vertex w=c->last_changed_vertex;
 
-
-  /* Never remove a pebble if it is hasn't been essential*/
-  if (!isuseful(v,g,c)) return TRUE;
 
   if (c->previous_configuration==NULL) return FALSE;
   if (v==w) return (g->sinks[0]!=w);    /* A black pebble may be
