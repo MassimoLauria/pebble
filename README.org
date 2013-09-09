@@ -4,6 +4,106 @@
   - =bwpebble=
   - =revpebble= 
 
+** Compilation
+
+   The code is in C99 standard. So  you need a C99 compiler to compile
+   the code. If you have it just type
+
+   : make 
+
+** Usage 
+
+   We  provide  three  command   line  tools:   =pebble=,  =bwpebble=,
+   =revpebble=.   They  output   respectively  a  black,  black/white,
+   reversible pebbling  of a  directed acyclic  graph given  in input,
+   within the  upper bound to the  number of pebbles given  at command
+   line. 
+
+   If there is  no such a pebbling, then the  program fails and report
+   it,  otherwise it  outputs the  pebbling  as a  sequence of  graphs
+   written in dot [2] format, showing the pebbling.
+
+   It is *required* to choose an  upper bound on the number of pebbles
+   allowed, in order to limit  the search space. The canonical command
+   lines 
+
+   : pebble/bwpebble/revpebble -b 5 -i <inputfile>
+
+   which compute pebbling (if they  exist) using the *smallest amount*
+   of pebbles needed, provided it is at most 5.
+
+   For further info on the usage launch
+
+   : pebble/bwpebble/revpebble -h
+
+*** How to compute the shortest pebbling
+
+    If you  just care about  the shortest pebbling *within a bound*
+    (in this example is 5) you can use the =-t= option
+
+    : pebble/bwpebble/revpebble -b 5 -t -i <inputfile>
+    
+    This  will   find  the  shortest   pebbling  with  at   most  five
+    pebbles. If  there is a  longer pebbling  with at most  4 pebbles,
+    the latter will be ignored.
+
+*** How to compute a persistent pebbling
+
+    If you want  to compute *persistent pebbling* add  the =-Z= option
+    to the  command line. This  option is available on  =bwpebble= and
+    =revpebble=.
+    
+
+** Input format
+   
+   Input graph  must be given  in the  following format: the  file can
+   start with some comments line, each of them starting with character
+   =c=.  The next  non  black  line must  contain  the  number n  of
+   vertices in the graph. Then there  must be $n$ non black lines, one
+   for each vertex 1 ≤ i ≤ n. The lines have the format:
+
+   : i : <pred 1> <pred 2> <pred 3> ... <pred k>
+  
+   where =<pred 1> <pred 2> <pred 3> ... <pred k>= is the ordered list
+   of all vertices  which have an outgoing edge to  vertex i. Here’s
+   an example
+
+   : c
+   : c This is a DAG of 5 vertices
+   : c
+   : 5
+   : 1  :
+   : 2  : 
+   : 3  : 1  
+   : 4  : 3  
+   : 5  : 2  4
+   
+   which represents the graph 
+
+   [[example.png]]
+
+*** Canonical graphs
+
+    For some graph there is not  need to provide an input file. Adding
+    the option  =-p <h>= or =-2  <h>= instead of the  input graph, the
+    pebbling  is  computed  for  the  pyramid  graph  or  tree  graph,
+    respectively, of height =<h>=. For example
+
+    : pebble -b 7 -p 5 
+
+    computes a pebbling  of cost 7 for the pyramid  of height 5 (there
+    is no pebbling of cost 6). Instead
+
+    : revpebble -b 8 -2 4 
+
+    computes a reversible black pebbling for the tree of height 5.
+
+* On pebbling games
+
+  Here is a  brief introduction to the notion of  /pebbling games/ and
+  /pebbling numbers/, in order to understand better the purpose of the
+  code.
+
   We deal we directed acyclic graphs, which are directed graph with no
   directed  cycles.   In  particular   our  program  computes  various
   complexity  measures called  /pebbling/  numbers for  graphs with  a
@@ -78,109 +178,6 @@
    this condition does not make any  difference (it does for the other
    games).
 
-** Compilation
-
-   The code is in C99 standard. So  you need a C99 compiler to compile
-   the code. If you have it just type
-
-   : make 
-
-** Usage 
-
-   We  provide  three  command   line  tools:   =pebble=,  =bwpebble=,
-   =revpebble=.   They  output   respectively  a  black,  black/white,
-   reversible pebbling  of a  directed acyclic  graph given  in input,
-   within the  upper bound to the  number of pebbles given  at command
-   line. 
-
-   If there is  no such a pebbling, then the  program fails and report
-   it,  otherwise it  outputs the  pebbling  as a  sequence of  graphs
-   written in dot [2] format, showing the pebbling.
-
-   It is *required* to choose an  upper bound on the number of pebbles
-   allowed, in order to limit  the search space. The canonical command
-   lines 
-
-   : pebble -b 5 -i <inputfile>
-
-   : bwpebble -b 5 -i <inputfile>
-
-   : revpebble -b 5 -i <inputfile>
-
-   which compute pebbling (if they  exist) using the *smallest amount*
-   of pebbles needed, provided it is at most 5.
-
-   For further info on the usage launch
-
-   : pebble -h
-
-   : bwpebble -h
-
-   : revpebble -h
-
-*** How to compute the shortest pebbling
-
-    If you  just care  about the shortest  pebbling *within  the bound*
-    (but using maybe more pebbles than needed) you can use the variants
-
-    : pebble -b 5 -t -i <inputfile>
-
-    : bwpebble -b 5 -t -i <inputfile>
-
-    : revpebble -b 5 -t -i <inputfile>
-
-    
-*** How to compute a persistent pebbling
-
-    If you want  to compute *persistent pebbling* add  the =-Z= option
-    to the  command line. This  option is available on  =bwpebble= and
-    =revpebble=.
-
-    
-
-** Input format
-   
-   Input graph  must be given  in the  following format: the  file can
-   start with some comments line, each of them starting with character
-   =c=.  The next  non  black  line must  contain  the  number n  of
-   vertices in the graph. Then there  must be $n$ non black lines, one
-   for each vertex 1 ≤ i ≤ n. The lines have the format:
-
-   : i : <pred 1> <pred 2> <pred 3> ... <pred k>
-  
-   where =<pred 1> <pred 2> <pred 3> ... <pred k>= is the ordered list
-   of all vertices  which have an outgoing edge to  vertex i. Here’s
-   an example
-
-   : c
-   : c This is a DAG of 5 vertices
-   : c
-   : 5
-   : 1  :
-   : 2  : 
-   : 3  : 1  
-   : 4  : 3  
-   : 5  : 2  4
-   
-   which represents the graph 
-
-   [[example.png]]
-
-*** Canonical graphs
-
-    For some graph there is not  need to provide an input file. Adding
-    the option  =-p <h>= or =-2  <h>= instead of the  input graph, the
-    pebbling  is  computed  for  the  pyramid  graph  or  tree  graph,
-    respectively, of height =<h>=. For example
-
-    : pebble -b 7 -p 5 
-
-    computes a pebbling  of cost 7 for the pyramid  of height 5 (there
-    is no pebbling of cost 6). Instead
-
-    : revpebble -b 8 -2 4 
-
-    computes a reversible black pebbling for the tree of height 5.
 
 
 [1] For more information about pebbling of graph you can read the
