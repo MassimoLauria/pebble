@@ -33,12 +33,23 @@
   : 2:1
 
   it fails.
-* TODO <2013-09-06 Fri> Check why pebbling on binary trees does not work
+* DONE <2013-09-06 Fri> Check why pebbling on binary trees does not work
+  CLOSED: [2013-09-09 Mon 17:55]
   
   When I computed the reversible  pebbling number for the binary trees
   of height 2 it gave me 5. Should not be 4?
+
+  *Solution:* When I wanted to get a tree of height $h$ I was actually
+  producing a tree of height $h+1$.  That is why the pebbling was more
+  expensive.
   
-* TODO <2013-09-06 Fri> Am I hashing the pebbling configuration correctly?
+* DONE <2013-09-06 Fri> Am I hashing the pebbling configuration correctly?
+  CLOSED: [2013-09-09 Mon 17:58]
 
   Configuration  with  the  same  black and  white  pebbles  but  with
   different “useful_pebbles” vector are considered equivalent.
+  
+  *Solution:* I conjecture that this way  is correct, but I cannot prove
+  it  yet. So  I created  a separated  branch with  this feature,  and
+  reverted to  the simplest  algorithm (no useful_pebbles  bit vector)
+  in the master branch.
