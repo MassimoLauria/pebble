@@ -13,18 +13,18 @@ CostTable=[0]*(MaxHeight+1)
 SplitTable=[[0]]*(MaxHeight+1)
 
 CostTable[0]=1
-CostTable[1]=2
-CostTable[2]=2
-CostTable[3]=3
-CostTable[4]=3
+CostTable[1]=3
+CostTable[2]=4
+CostTable[3]=5
+CostTable[4]=6
 
 assert(MaxHeight > 4)
 
 for n in range(5,MaxHeight+1):
-    CostTable[n] = n
+    CostTable[n] = n*n
     new_value  = 0
     for a in range(1,n):
-        new_value = 1 + max(CostTable[a-1],CostTable[n-a])
+        new_value = a + 1 + max(CostTable[a-1],CostTable[n-a])
         if new_value < CostTable[n]:
             CostTable[n]  = new_value
             SplitTable[n] = [a]
