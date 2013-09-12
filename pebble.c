@@ -33,6 +33,7 @@ Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
     input graph:\n\
        -p N         pyramid graph of height N;\n\
        -2 N         binary tree height N;\n\
+       -c N         chain of length N;\n\
        -i <input>   load input file in KTH format.\n\
        -O <input2>  OR product between input graph and <input2>.\n\
 \n\
@@ -88,6 +89,8 @@ int main(int argc, char *argv[])
 
   int pyramid_height=0;
   int tree_height=0;
+  int chain_length=0;
+  
   FILE *input_file=NULL;
   FILE *input_file_aux=NULL;
 
@@ -108,7 +111,7 @@ int main(int argc, char *argv[])
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code = getopt(argc,argv,"hZtb:p:2:f:i:O:"))!=-1) {
+  while((option_code = getopt(argc,argv,"hZtb:p:2:c:f:i:O:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
@@ -136,6 +139,12 @@ int main(int argc, char *argv[])
     case '2':
       tree_height=atoi(optarg);
       if (tree_height>0) {input_directives++; break;}
+      fprintf(stderr,USAGEMESSAGE,argv[0]);
+      exit(-1);
+      break;
+    case 'c':
+      chain_length=atoi(optarg);
+      if (chain_length>0) {input_directives++; break;}
       fprintf(stderr,USAGEMESSAGE,argv[0]);
       exit(-1);
       break;
@@ -206,6 +215,10 @@ int main(int argc, char *argv[])
     
     C=tree(tree_height);
   
+  } else if (chain_length>0) {
+    
+    C=path(chain_length);
+
   } else {
     C=kthparser(input_file);
     /*fprintf(stderr,"Parser for KTH input not implemented",argv[0]);
