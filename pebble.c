@@ -18,7 +18,6 @@
 #include "pebbling.h"
 #include "bfs.h"
 
-#define REPORT_INTERVAL          5
 
 #define USAGEMESSAGE "\n\
 Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
@@ -203,8 +202,10 @@ int main(int argc, char *argv[])
   }
 
   /* Timer for reporting progress */
-  install_timed_flags(REPORT_INTERVAL);
-
+#if PRINT_STATS_INTERVAL > 0
+  install_timed_flags(PRINT_STATS_INTERVAL);
+#endif
+  
   /* Produce or read input graph */
   DAG *C=NULL;
   if (pyramid_height>0) {

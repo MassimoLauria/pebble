@@ -1,12 +1,12 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-09-11, 08:54 (CEST) Massimo Lauria"
+# Time-stamp: "2013-09-18, 10:16 (CEST) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
-PRINT_RUNNING_STATS=1
+PRINT_STATS_INTERVAL=30   # set to 0 to disable it
 
-BUILDFLAGS=	-DPRINT_RUNNING_STATS=${PRINT_RUNNING_STATS}
+BUILDFLAGS=	-DPRINT_STATS_INTERVAL=${PRINT_STATS_INTERVAL}
 # ---------- Environment variables ------------
 #
 

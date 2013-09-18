@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:38 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-14, 15:36 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-18, 10:17 (CEST) Massimo Lauria"
 
    Description::
 
@@ -70,7 +70,7 @@ typedef struct {
 
 extern void statistics_make_report(FILE *stream,Statistic *const s);
 
-#if PRINT_RUNNING_STATS==1
+#if PRINT_STATS_INTERVAL > 0
 
 #define STATS_REPORT(S,fmt,...) {fprintf(stderr,fmt,__VA_ARGS__); statistics_make_report(stderr,&(S));}
 #define STATS_CREATE(s) Statistic s={0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0,0, 0,0,0,0, 0,0,0,0, 0}
