@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-09, 16:59 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-18, 14:04 (CEST) Massimo Lauria"
 
    Description::
 
@@ -365,8 +365,9 @@ inline Boolean ispebbled(const Vertex v,const DAG *g,const PebbleConfiguration *
   return GETBIT(c->black_pebbled,v);
 #elif WHITE_PEBBLES
   return GETBIT(c->white_pebbled,v);
+#else
+  return FALSE;
 #endif
-  
 }
 
 
@@ -387,6 +388,8 @@ inline Boolean isactive(const Vertex v,const DAG *g,const PebbleConfiguration *c
 #elif WHITE_PEBBLES
   return ((c->white_pebbled & g->pred_bitmasks[v])
           == g->pred_bitmasks[v])?TRUE:FALSE;
+#else
+  return FALSE;
 #endif
 }
 
