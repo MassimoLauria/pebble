@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-09, 16:59 (CEST) Massimo Lauria"
+   Time-stamp: "2013-09-18, 15:41 (CEST) Massimo Lauria"
 
    Description::
 
@@ -40,11 +40,14 @@ typedef struct _PebbleConfiguration {
 #if BLACK_PEBBLES
   BitTuple black_pebbled;    /* Black pebbled vertices */
 #endif
+
+  BitTuple used_pebbles;     /* Pebbles used at least once */
   
   Boolean sink_touched;
 
   unsigned int pebbles;  /* Number of pebbles in the pebbling */
 
+  
   /* Information regarding the configuration transition: what is the
      actual previous configuration? What was the vertex we acted on to
      reach the present configuration? */
@@ -97,6 +100,7 @@ extern void    deleteblack(const Vertex v, const DAG *g, PebbleConfiguration *co
 
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern Boolean isactive (const Vertex v, const DAG *g, const PebbleConfiguration *c);
+extern Boolean isused(const Vertex v, const DAG *g, const PebbleConfiguration *c);
 
 
 
