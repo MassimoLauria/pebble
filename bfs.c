@@ -33,7 +33,7 @@ extern void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguratio
  * serious hash map implementation.
  *
  */
-#define HASH_TABLE_SPACE_SIZE    0x07FFFFF
+#define HASH_TABLE_SPACE_SIZE    0x07FFFFFF
 
 /*
  * To use  the dictionary  with PebbleConfiguration  we must  tell the
