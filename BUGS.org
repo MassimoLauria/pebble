@@ -53,3 +53,6 @@
   it  yet. So  I created  a separated  branch with  this feature,  and
   reverted to  the simplest  algorithm (no useful_pebbles  bit vector)
   in the master branch.
+
+  We  verify that  this strategy  is correct,  at least  for pure  bfs
+  approach.

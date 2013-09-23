@@ -363,14 +363,10 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
    Explore the space of pebbling strategies.
 
    We employ a simple breadth-first-search exploration in the graph of
-   pebbling   configurations,  checking   if  a   final  configuration
-   (e.g. sink  has been  touched and  there are  no white  pebbles) is
-   reachable.
-
-   The  space is  explored  by looking  for pebbling  with  at most  N
-   pebbles with N that goes from  bottom to top. Every time the search
-   space has been  explored, the upper bound is raised  (at most up to
-   top), and the search continue.
+   pebbling configurations, checking if a final configuration
+   (e.g. sink has been touched and there are no white pebbles) is
+   reachable. The space is explored by looking for pebbling with at
+   most N pebbles.
    
    Persistent black-white pebbling is actually measured by placing a
    white pebble on the sink and by trying to complete the
@@ -390,16 +386,13 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
    @param DAG the graph  to pebble (with few vertices  and a single
    sink).
 
-   @param bottom the initial cap to the pebble number. It is raised
-   one by one up to the value of `top'.
-
-   @param top the maximum number of pebbles in the configuration,
-   if such number is not sufficient, the the computation
-   will fail gracefully without finding the pebbling.
+   @param upper_bound: the maximum number of pebbles in the
+   configurations, if such number is not sufficient, the the
+   computation will fail gracefully without finding the pebbling.
 
    @param persisten_pebbling: whether we count the black white
-   pebbling number for a pebbling which
-   leaves a black pebble in the sink.
+   pebbling number for a pebbling which leaves a black pebble in the
+   sink.
 
    OUTPUT:
 
@@ -417,12 +410,11 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
    vertices.  Thus the  output of this function can  be interpreted in
    both directions.
    
-   @return a pebbling
+   @return a pebbling if exists, NULL otherwise.
 
  */
 Pebbling *bfs_pebbling_strategy(DAG *g,
-                                           unsigned int bottom,
-                                           unsigned int top,
+                                           unsigned int upper_bound,
                                            Boolean persistent_pebbling) {
 
   /* PROLOGUE ----------------------------------- */
@@ -440,15 +432,9 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     exit(-1);
   }
 
-  if (bottom < 1 ) { bottom=1; } /* We start with at least space 1
-                                    pebbling. */
+  if (upper_bound < 1) { return NULL; } /* No pebbling with zero pebbles */
 
-  if (bottom > top ) {
-    fprintf(stderr,
-            "Pebbling number range is empty: [%u, %u]",bottom,top);
-    exit(-1);
-  }
-
+  
 #if (!WHITE_PEBBLES)
   persistent_pebbling = 0;
 #endif
@@ -458,39 +444,24 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
 
   /* END OF PROLOGUE ----------------------------------- */
   
-  /* Dictionary data structure */
+
+  /* Data structures for BFS */
+  PebbleConfiguration *initial=new_PebbleConfiguration();
+  Queue               *Q=newSL();
   Dict *D = newDict(HASH_TABLE_SPACE_SIZE);
-  DictQueryResult res;               /* Query results */
+
+  /* Dictionary setup */
+  DictQueryResult res;
   D->key_function = hashPebbleConfiguration;
   D->eq_function  = samePebbleConfiguration;
   D->dispose_function = freePebbleConfiguration;
-
-  /* Data structures for BFS */
-  Queue               *Q=newSL(); /* Configuration to be processed immediately.   */
-  Queue       *BoundaryQ=newSL(); /* Configuration to be processed the next round */
-
-  /* Initial configuration */
-  PebbleConfiguration *initial=new_PebbleConfiguration();
-  unsigned int upper_bound=bottom;
-
-
-#if WHITE_PEBBLES
-  /* To compute persistent pebbling put a white pebble on top and
-     try to finish the pebbling.
-  */
-  if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
-#endif
   
-  /* Initial configuration may contain a pebble and so be close to the
-     upper bound */
-  if (initial->pebbles == upper_bound && upper_bound<top) {
-    enqueue(BoundaryQ,initial);
-    STATS_INC(Stat,delayed);
-  }
-
-  /* Initial configuration in line to be processed. */
+  /* Initial configuration for the BFS */
   enqueue  (Q,initial);
   writeDict(D,&res,initial);
+#if WHITE_PEBBLES
+  if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
+#endif
 
 
   PebbleConfiguration *ptr  =NULL;    /* Configuration to be processed */
@@ -505,26 +476,8 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   STATS_SET(Stat,queued,1);
   STATS_SET(Stat,dict_size,D->size);
 
-  /* Pick a pebbling status from the queue, produce the followers, and
-     put in the queue the ones that haven't been analized yet or the
-     one with a better cost.*/
-  for(resetSL(Q); !isemptySL(Q) || !isemptySL(BoundaryQ) ; pop(Q)) {
-
-    if (isemptySL(Q)) {  /* No more element to be processed... raise the upper bound. */
-      if (upper_bound<top) {
-
-        STATS_REPORT(Stat,"\nRaising the upper bound from %u to %u / %u\n",
-                     upper_bound,upper_bound+1,top);
-
-        upper_bound++;
-        disposeSL(Q);
-        Q=BoundaryQ;
-        BoundaryQ=newSL();
-        resetSL(Q);
-      } else {
-        goto epilogue;           /* The whole search space has been explored */
-      }
-    }
+  /* The breadth-first-search on the space of pebbling configurations.*/
+  for(resetSL(Q); !isemptySL(Q); pop(Q)) {
 
     if (STATS_TIMER_OFF) {
       STATS_CLOCK_UPDATE(Stat);
@@ -567,13 +520,6 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
           goto epilogue;
         }
 
-        if (nptr->pebbles == upper_bound && upper_bound<top) {
-          /* Boundary configuration will be
-             reprocessed with a larger upper bound */
-          enqueue(BoundaryQ,nptr);
-          STATS_INC(Stat,delayed);
-        }
-
         enqueue(Q,nptr);                       /* Put in queue for later processing */
         STATS_INC(Stat,queued);
         STATS_INC(Stat,first_queuing);
@@ -607,7 +553,9 @@ epilogue:
 #endif
 
   
-  STATS_REPORT(Stat,"%s","FINAL REPORT:\n\n");
+  STATS_REPORT(Stat,"\nFINAL REPORT (clk. %llu): upper bound=%u:\n\n",
+               STATS_GET(Stat,clock),
+               upper_bound);
 
 #ifdef HASHTABLE_DEBUG
   assert(!CheckRuntimeConsistency(g,D));
@@ -616,7 +564,6 @@ epilogue:
 
   /* Free the memory of the data structures */
   if (Q) disposeSL(Q);
-  if (BoundaryQ) disposeSL(BoundaryQ);
   disposeDict(D);
 
   return solution;

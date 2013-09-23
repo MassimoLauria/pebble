@@ -101,8 +101,7 @@ int main(int argc, char *argv[])
 
   int output_graphviz=1; /* graphviz is the default output format */
 
-  unsigned int bottom=0;
-  unsigned int top=0;
+  unsigned int cost=0;
 
 
   /* PebbleConfiguration *solution=NULL; */
@@ -192,15 +191,6 @@ int main(int argc, char *argv[])
     exit(-1);
   }
 
-  /* Search space interval*/
-  if (optimize_time) {
-    bottom=pebbling_bound;
-    top=pebbling_bound;
-  } else {
-    bottom=1;
-    top=pebbling_bound;
-  }
-
   /* Timer for reporting progress */
 #if PRINT_STATS_INTERVAL > 0
   install_timed_flags(PRINT_STATS_INTERVAL);
@@ -222,8 +212,6 @@ int main(int argc, char *argv[])
 
   } else {
     C=kthparser(input_file);
-    /*fprintf(stderr,"Parser for KTH input not implemented",argv[0]);
-    exit(-1);*/
     fclose(input_file);
   }
 
@@ -236,13 +224,20 @@ int main(int argc, char *argv[])
     dispose_DAG(INNER);
     fclose(input_file_aux);
   }
-  
-  solution=bfs_pebbling_strategy(C,bottom,top,persistent_pebbling);
 
+
+  /* Search space interval*/
+  cost= optimize_time ? pebbling_bound : 1;
+
+  while ( (cost <= pebbling_bound) && !solution ) {
+    solution=bfs_pebbling_strategy(C,cost,persistent_pebbling);
+    cost++;  
+  }
+  
   if (solution) {
     fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->cost,solution->length);
     if (output_graphviz) print_dot_Pebbling(C,solution);
-    else fprintf(stderr,"Output format \'text\' not implemented.\n",pebbling_bound);
+    else fprintf(stderr,"Output format \'text\' not implemented.\n");
   } else {
     fprintf(stderr,"Graph does not have a pebbling of cost %u.\n",pebbling_bound);
   }
