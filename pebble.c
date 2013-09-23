@@ -94,7 +94,8 @@ int main(int argc, char *argv[])
   FILE *input_file_aux=NULL;
 
   int input_directives = 0;
-
+  char graph_name[100];
+  
   int optimize_time=0;
   int persistent_pebbling=0;
   int option_code=0;
@@ -201,18 +202,22 @@ int main(int argc, char *argv[])
   if (pyramid_height>0) {
   
     C=pyramid(pyramid_height);
+    snprintf(graph_name, 100, "Pyramid of height %d",pyramid_height);
   
   } else if (tree_height>0) {
     
     C=tree(tree_height);
+    snprintf(graph_name, 100, "Tree of height %d",tree_height);
   
   } else if (chain_length>0) {
     
     C=path(chain_length);
+    snprintf(graph_name, 100, "Chain of height %d",chain_length);
 
   } else {
     C=kthparser(input_file);
     fclose(input_file);
+    snprintf(graph_name, 100, "The graph in input");
   }
 
   /* Read second input graph if needed */
@@ -223,6 +228,7 @@ int main(int argc, char *argv[])
     dispose_DAG(OUTER);
     dispose_DAG(INNER);
     fclose(input_file_aux);
+    snprintf(graph_name, 100, "This OR product");
   }
 
 
@@ -230,16 +236,19 @@ int main(int argc, char *argv[])
   cost= optimize_time ? pebbling_bound : 1;
 
   while ( (cost <= pebbling_bound) && !solution ) {
+    fprintf(stderr, "Starting search for pebbling of cost %d",cost);
     solution=bfs_pebbling_strategy(C,cost,persistent_pebbling);
     cost++;  
   }
   
   if (solution) {
-    fprintf(stderr,"Graph does have a pebbling of cost %u and length %u.\n",solution->cost,solution->length);
+    fprintf(stderr,"%s does have a pebbling of cost %u and length %u.\n",
+            graph_name,solution->cost,solution->length);
     if (output_graphviz) print_dot_Pebbling(C,solution);
     else fprintf(stderr,"Output format \'text\' not implemented.\n");
   } else {
-    fprintf(stderr,"Graph does not have a pebbling of cost %u.\n",pebbling_bound);
+    fprintf(stderr,"%s does not have a pebbling of cost %u.\n",
+            graph_name,pebbling_bound);
   }
 
   /* Clean up */
