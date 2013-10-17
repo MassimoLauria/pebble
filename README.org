@@ -80,7 +80,7 @@
    
    which represents the graph 
 
-   [[example.png]]
+   [[file:example.png]]
 
 *** Canonical graphs
 
