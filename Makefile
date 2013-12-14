@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-12-14, 18:11 (CET) Massimo Lauria"
+# Time-stamp: "2013-12-14, 18:14 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
@@ -90,13 +90,13 @@ revpebble: $(OBJS)
 
 
 pebble_build: clean_variant $(OBJS)
-	make pebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
+	@-make pebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
 
 bwpebble_build: clean_variant $(OBJS)
-	make bwpebble BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
+	@-make bwpebble BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
 
 revpebble_build: clean_variant $(OBJS)
-	make revpebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
+	@-make revpebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
 
 
 timedflags.o:timedflags.c
@@ -114,7 +114,7 @@ clean:
 	@-rm -f ${TAGFILES}
 
 clean_variant:
-	rm -f bfs.o pebbling.o
+	@-rm -f bfs.o pebbling.o
 
 
 tags:
