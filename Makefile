@@ -1,16 +1,30 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-09-18, 10:16 (CEST) Massimo Lauria"
+# Time-stamp: "2013-12-14, 18:05 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
+BLACK_PEBBLES=1
+WHITE_PEBBLES=0 
+REVERSIBLE=0
+
+CONFIG_HASHSIZE=0x07FFFF
 PRINT_STATS_INTERVAL=30   # set to 0 to disable it
 
 BUILDFLAGS=	-DPRINT_STATS_INTERVAL=${PRINT_STATS_INTERVAL}
+BUILDFLAGS+=-DBLACK_PEBBLES=${BLACK_PEBBLES}
+BUILDFLAGS+=-DWHITE_PEBBLES=${WHITE_PEBBLES}
+BUILDFLAGS+=-DREVERSIBLE=${REVERSIBLE}
+BUILDFLAGS+=-DCONFIG_HASHSIZE=${CONFIG_HASHSIZE}
+
+
 # ---------- Environment variables ------------
 #
 
 RELEASE=0
+
+
+
 
 ifeq ($(RELEASE),1)
 DEBUG=-DNDEBUG
@@ -46,50 +60,47 @@ NAME=pebble
 TARGET=bwpebble pebble revpebble exposetypes
 TIME=$(shell date +%Y.%m.%d-%H.%M)
 
-.PHONY: all clean clean check-syntax tags
+SRCS=pebble.c \
+	 common.c \
+	 kthparser.c \
+	 dag.c \
+     dsbasic.c \
+     hashtable.c \
+     timedflags.c \
+     statistics.c \
+	 pebbling.c \
+	 bfs.c
+
+OBJS=$(SRCS:.c=.o)
 
 
-all: ${TARGET}
+.PHONY: all clean clean clean_variant check-syntax tags $(TARGET:=_build)
+
+
+all: $(TARGET:=_build)
 
 
 exposetypes: exposetypes.c
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
-bwpebble: pebble.o \
-		  common.o \
-		  kthparser.o \
-		  dag.o	 \
-		  dsbasic.o  \
-		  hashtable.o \
-		  timedflags.o \
-		  statistics.o \
-		  pebblingbw.o \
-		  bfsbw.o
+pebble: $(OBJS)
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
 
-pebble: pebble.o \
-		common.o \
-		kthparser.o \
-		dag.o	 \
-		dsbasic.o  \
-		hashtable.o \
-		timedflags.o \
-		statistics.o \
-		pebblingb.o \
-		bfsb.o
+bwpebble: $(OBJS)
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
 
-revpebble: pebble.o \
-		common.o \
-		kthparser.o \
-		dag.o	 \
-		dsbasic.o  \
-		hashtable.o \
-		timedflags.o \
-		statistics.o \
-		pebblingrev.o \
-		bfsrev.o
+revpebble: $(OBJS)
 	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
+
+
+pebble_build: clean_variant $(OBJS)
+	make pebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
+
+bwpebble_build: clean_variant $(OBJS)
+	make bwpebble BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
+
+revpebble_build: clean_variant $(OBJS)
+	make revpebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
 
 
 timedflags.o:timedflags.c
@@ -106,6 +117,10 @@ clean:
 	@-rm -fr *.dSYM
 	@-rm -f ${TAGFILES}
 
+clean_variant:
+	rm -f bfs.o pebbling.o
+
+
 tags:
 	$(TAGS) -I .
 
@@ -120,24 +135,6 @@ pkg:
 
 
 # ------- Build rules
-bfsbw.o: bfs.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=1 -DREVERSIBLE=0 ${CFLAGS} -c $< -o $@
-
-pebblingbw.o: pebbling.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=1 -DREVERSIBLE=0 ${CFLAGS} -c $< -o $@
-
-bfsb.o: bfs.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=0 -DREVERSIBLE=0 ${CFLAGS} -c $< -o $@
-
-pebblingb.o: pebbling.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=0 -DREVERSIBLE=0 ${CFLAGS} -c $< -o $@
-
-bfsrev.o: bfs.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=0 -DREVERSIBLE=1 ${CFLAGS} -c $< -o $@
-
-pebblingrev.o: pebbling.c
-	$(CC) -DBLACK_PEBBLES=1 -DWHITE_PEBBLES=0 -DREVERSIBLE=1 ${CFLAGS} -c $< -o $@
-
 %.o: %.c
 	$(CC) ${CFLAGS} -c $< -o $@
 
