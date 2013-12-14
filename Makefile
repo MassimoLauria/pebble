@@ -1,9 +1,11 @@
 # Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-12-14, 18:05 (CET) Massimo Lauria"
+# Time-stamp: "2013-12-14, 18:11 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
+RELEASE=0
+
 BLACK_PEBBLES=1
 WHITE_PEBBLES=0 
 REVERSIBLE=0
@@ -17,14 +19,8 @@ BUILDFLAGS+=-DWHITE_PEBBLES=${WHITE_PEBBLES}
 BUILDFLAGS+=-DREVERSIBLE=${REVERSIBLE}
 BUILDFLAGS+=-DCONFIG_HASHSIZE=${CONFIG_HASHSIZE}
 
-
 # ---------- Environment variables ------------
 #
-
-RELEASE=0
-
-
-
 
 ifeq ($(RELEASE),1)
 DEBUG=-DNDEBUG
