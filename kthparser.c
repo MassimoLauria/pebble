@@ -2,7 +2,7 @@
    Copyright (C) 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2014-03-18, 16:24 (CET) Massimo Lauria"
+   Time-stamp: "2014-03-18, 18:04 (CET) Massimo Lauria"
 
    Description::
 
@@ -76,7 +76,8 @@ DAG *kthparser(FILE *input) {
       
       vertices = read;
       position = 0;
-      PARSERDEBUG("there are %u vertices",read);
+      if (read>1) PARSERDEBUG("there are %u vertices",read);
+      else if (read==1) PARSERDEBUG("there is %u vertex",1);
 
       indegree = (size_t*)calloc(vertices,sizeof(size_t));
       outdegree = (size_t*)calloc(vertices,sizeof(size_t));
