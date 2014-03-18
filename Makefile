@@ -1,23 +1,17 @@
-# Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+# Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2013-12-14, 18:14 (CET) Massimo Lauria"
+# Time-stamp: "2014-03-18, 11:35 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
-
-BLACK_PEBBLES=1
-WHITE_PEBBLES=0 
-REVERSIBLE=0
 
 CONFIG_HASHSIZE=0x07FFFF
 PRINT_STATS_INTERVAL=30   # set to 0 to disable it
 
 BUILDFLAGS=	-DPRINT_STATS_INTERVAL=${PRINT_STATS_INTERVAL}
-BUILDFLAGS+=-DBLACK_PEBBLES=${BLACK_PEBBLES}
-BUILDFLAGS+=-DWHITE_PEBBLES=${WHITE_PEBBLES}
-BUILDFLAGS+=-DREVERSIBLE=${REVERSIBLE}
 BUILDFLAGS+=-DCONFIG_HASHSIZE=${CONFIG_HASHSIZE}
+
 
 # ---------- Environment variables ------------
 #
@@ -33,7 +27,18 @@ OPTIMIZATION=
 endif
 
 
-# DEBUG+=-DHASHTABLE_DEBUG
+# Variant flags for the various pebbling tools
+ifdef BLACK_PEBBLES
+VARIANTFLAGS=-DBLACK_PEBBLES=${BLACK_PEBBLES}
+endif
+
+ifdef WHITE_PEBBLES
+VARIANTFLAGS+=-DWHITE_PEBBLES=${WHITE_PEBBLES}
+endif
+
+ifdef REVERSIBLE
+VARIANTFLAGS+=-DREVERSIBLE=${REVERSIBLE}
+endif
 
 
 CC=gcc
@@ -43,11 +48,10 @@ C_STANDARD=-std=c99
 #C_STANDARD=-ansi
 #C_STANDARD=-std=c89
 
-
 TAGS=gtags # etags ctags
 TAGFILES=GPATH GRTAGS GSYMS GTAGS tags TAGS ID
 
-CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
+CFLAGS=${OPTIMIZATION} ${DEBUG} ${PROFILE} ${BUILDFLAGS} ${VARIANTFLAGS} -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall ${C_STANDARD}
 LDFLAGS=${DEBUG} ${PROFILE}
 
 
@@ -56,6 +60,7 @@ NAME=pebble
 TARGET=bwpebble pebble revpebble exposetypes
 TIME=$(shell date +%Y.%m.%d-%H.%M)
 
+# Source files which compilation does not depend on the pebbling variant
 SRCS=pebble.c \
 	 common.c \
 	 kthparser.c \
@@ -63,44 +68,49 @@ SRCS=pebble.c \
      dsbasic.c \
      hashtable.c \
      timedflags.c \
-     statistics.c \
-	 pebbling.c \
-	 bfs.c
+     statistics.c 
 
 OBJS=$(SRCS:.c=.o)
 
+# Source files which compilation depends on the pebbling variant
+SRCS_V=bfs.c \
+	   pebbling.c
 
-.PHONY: all clean clean clean_variant check-syntax tags $(TARGET:=_build)
+OBJS_V=$(SRCS_V:.c=.o)
 
 
-all: $(TARGET:=_build)
+.PHONY: all clean clean check-syntax tags
+
+
+all: $(TARGET)
 
 
 exposetypes: exposetypes.c
-	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
+	@-$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $<
 
 pebble: $(OBJS)
-	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
+	@-echo "Pebbling tool [$@]"
+	@-rm -f $(OBJS_V)
+	@-make  $(OBJS_V) BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
+	@-$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
+
 
 bwpebble: $(OBJS)
-	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
+	@-echo "Black white pebbling tool [$@]"
+	@-rm -f $(OBJS_V)
+	@-make  $(OBJS_V)  BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
+	@-$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
+
 
 revpebble: $(OBJS)
-	$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
-
-
-pebble_build: clean_variant $(OBJS)
-	@-make pebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
-
-bwpebble_build: clean_variant $(OBJS)
-	@-make bwpebble BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
-
-revpebble_build: clean_variant $(OBJS)
-	@-make revpebble BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
+	@-echo "Reversible pebbling tool [$@]"
+	@-rm -f $(OBJS_V)
+	@-make  $(OBJS_V)  BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
+	@$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
 
 
 timedflags.o:timedflags.c
-	$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -Winline -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@
+	@-$(CC) ${OPTIMIZATION} ${DEBUG} ${BUILDFLAGS} -Winline -finline-functions -fno-builtin --pedantic --pedantic-errors -Wall -c $< -o $@
 
 test: exposetypes
 	./exposetypes
@@ -112,10 +122,6 @@ clean:
 	@-rm -f *.o
 	@-rm -fr *.dSYM
 	@-rm -f ${TAGFILES}
-
-clean_variant:
-	@-rm -f bfs.o pebbling.o
-
 
 tags:
 	$(TAGS) -I .
@@ -132,5 +138,5 @@ pkg:
 
 # ------- Build rules
 %.o: %.c
-	$(CC) ${CFLAGS} -c $< -o $@
+	@-$(CC) ${CFLAGS} -c $< -o $@
 
