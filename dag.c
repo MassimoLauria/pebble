@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-08, 22:28 (CEST) Massimo Lauria"
+   Time-stamp: "2014-03-18, 15:25 (CET) Massimo Lauria"
 
    Description::
 
@@ -219,32 +219,9 @@ Boolean isconsistent_DAG(const DAG *ptr) {
                      I/O FUNCTIONS
  ********************************************************************************/
 
-/* This is the default way a label is assigned to a vertex idx Given a
-   buffer and a size limit, it writes on the buffer the label for the
-   vertex v.  The default implementation is to map numbers in their
-   string representation.
- */
-#ifndef __APPLE__
-extern int snprintf(char* buf,size_t size, const char *format, ... );
-#endif
-
-#if defined(_MSC_VER)
-  #define SIZE_T_SPECIFIER    "%Iu"
-#elif defined(__GNUC__)
-  #define SIZE_T_SPECIFIER    "%zu"
-#else
-  #define SIZE_T_SPECIFIER    "%lu"
-#endif
-
-static void default_vertex_label_hash(char* buf,size_t l,Vertex v) {
-   snprintf(buf,l,SIZE_T_SPECIFIER,v+1);
-}
-
-
 /* Prints a string representation of the DAG */
-void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
+void print_DAG(const DAG *p) {
   Vertex v,w;
-  char label_buffer[20];
 
   /* Ignore null graphs */
   if (!p) return;
@@ -256,24 +233,19 @@ void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
 
   /* If no function for computing labels is specified, then we use the
      default one, which turn a number in its string representation*/
-  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
-
   for (v = 0; v < p->size; ++v) {
 
-    vertex_label_hash(label_buffer,20,v);
-    printf("%s ",label_buffer);
+    printf("%u ",v+1);
     /* Incoming edges */
     printf("I:");
     for(w=0;w < p->indegree[v]; w++) {
-      vertex_label_hash(label_buffer,20,p->in[v][w]);
-      printf(" %s",label_buffer);
+      printf(" %u",p->in[v][w]+1);
     }
 
     /* Outgoing edges */
     printf("O:");
     for(w=0;w < p->outdegree[v]; w++) {
-      vertex_label_hash(label_buffer,20,p->out[v][w]);
-      printf(" %s",label_buffer);
+      printf(" %u",p->out[v][w]+1);
     }
 
     printf("\n");
@@ -289,10 +261,8 @@ void print_DAG(const DAG *p, void (*vertex_label_hash)(char*,size_t,Vertex)) {
 void print_dot_DAG(const DAG *p,
                      char *name,
                      char* options,
-                     char **vertex_options,
-                     void (*vertex_label_hash)(char*,size_t,Vertex) ) {
+                     char **vertex_options) {
   Vertex i,j;
-  char label_buffer[20];
 
   /* Ignore null graphs */
   if (!p) return;
@@ -301,12 +271,6 @@ void print_dot_DAG(const DAG *p,
   assert(p->in);
   assert(p->outdegree);
   assert(p->out);
-
-  /* If no function for computing labels is specified, then we use the
-   * default one, which turn a number in its string
-   * representation. (setq c-block-comment-prefix "*")
-   */
-  if (!vertex_label_hash) vertex_label_hash=default_vertex_label_hash;
 
   printf("digraph %s {\n",name);
   printf("\t rankdir=BT;\n");
@@ -318,11 +282,10 @@ void print_dot_DAG(const DAG *p,
   for (i = 0; i < p->size; ++i) {
 
     /* Vertex identifier */
-    printf("\t %d [",i+1);
+    printf("\t %u [",i+1);
 
     /* Start with vertex info */
-    vertex_label_hash(label_buffer,20,i);
-    printf("label=%s,penwidth=2,shape=circle,style=filled,fixedsize=true",label_buffer);
+    printf("label=%u,penwidth=2,shape=circle,style=filled,fixedsize=true",i+1);
 
     /* if there are no vertex dependent options, move to the next
        vertex */
@@ -335,8 +298,7 @@ void print_dot_DAG(const DAG *p,
   for (i = 0; i < p->size; ++i) {
 
     /* Outgoing edges */
-    vertex_label_hash(label_buffer,20,i);
-    printf("\t /* Arcs outgoing from %s (key %d)*/ \n",label_buffer,i+1);
+    printf("\t /* Arcs outgoing from %d*/ \n",i+1);
 
     for(j=0;j<p->outdegree[i];j++)
       printf("\t %d -> %d;\n",i+1,p->out[i][j]+1);

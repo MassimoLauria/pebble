@@ -186,11 +186,6 @@ int main(int argc, char *argv[])
   } 
   if (input_directives == 0) input_file = stdin;
 
-  /* Text output for pebbling has not being implemented yet */
-  if (!output_graphviz) {
-    fprintf(stderr,"Output format \'text\' not implemented.\n");
-    exit(-1);
-  }
 
   /* Timer for reporting progress */
 #if PRINT_STATS_INTERVAL > 0
@@ -231,27 +226,44 @@ int main(int argc, char *argv[])
     snprintf(graph_name, 100, "This OR product");
   }
 
-
+  /* Output on stderr if graphviz output*/
+  FILE *out_file=NULL;
+  if (output_graphviz) out_file=stderr;
+  else out_file=stdout;
+    
   /* Search space interval*/
   cost= optimize_time ? pebbling_bound : 1;
 
   while ( (cost <= pebbling_bound) && !solution ) {
-    fprintf(stderr, "Starting search for pebbling of cost %d",cost);
+    fprintf(out_file, "c Search for pebbling of cost %d\n",cost);
     solution=bfs_pebbling_strategy(C,cost,persistent_pebbling);
     cost++;  
   }
-  
+
+  /* Print solution */
   if (solution) {
-    fprintf(stderr,"%s does have a pebbling of cost %u and length %u.\n",
+
+    fprintf(out_file,"c %s has a pebbling of cost %u and length %u.\n",
             graph_name,solution->cost,solution->length);
+
+    fprintf(out_file,"s SATISFIABLE\n");
+
     if (output_graphviz) print_dot_Pebbling(C,solution);
-    else fprintf(stderr,"Output format \'text\' not implemented.\n");
+    else print_text_Pebbling(C,solution);
+
   } else {
-    fprintf(stderr,"%s does not have a pebbling of cost %u.\n",
+
+    fprintf(stderr,"c %s does not have a pebbling of cost %u.\n",
             graph_name,pebbling_bound);
+
+    fprintf(out_file,"s UNSATISFIABLE\n");
   }
 
   /* Clean up */
   dispose_DAG(C);
   if (solution) dispose_Pebbling(solution);
+
+  /* Exit codes as in SAT competitions */
+  if (solution) exit(20);
+  else exit(10);
 }

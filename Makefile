@@ -1,13 +1,13 @@
 # Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2014-03-18, 11:35 (CET) Massimo Lauria"
+# Time-stamp: "2014-03-18, 16:12 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
 
 CONFIG_HASHSIZE=0x07FFFF
-PRINT_STATS_INTERVAL=30   # set to 0 to disable it
+PRINT_STATS_INTERVAL=0    # set to 0 to disable it
 
 BUILDFLAGS=	-DPRINT_STATS_INTERVAL=${PRINT_STATS_INTERVAL}
 BUILDFLAGS+=-DCONFIG_HASHSIZE=${CONFIG_HASHSIZE}

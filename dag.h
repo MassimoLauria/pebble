@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-12, 15:35 (CEST) Massimo Lauria"
+   Time-stamp: "2014-03-18, 15:26 (CET) Massimo Lauria"
 
    Description::
 
@@ -69,14 +69,12 @@ extern DAG*    copy_DAG(const DAG *src);
 extern void    dispose_DAG(DAG* ptr);
 
 /* I/O Functions */
-extern void print_DAG(const DAG *p,
-                        void (*vertex_label_to_string)(char*,size_t,Vertex));
+extern void print_DAG(const DAG *p);
 
 extern void print_dot_DAG(const DAG *p,
                             char *name,
                             char *options,
-                            char**vertex_options,
-                            void (*vertex_label_to_string)(char*,size_t,Vertex) );
+                            char**vertex_options);
 
 
 /* Structure building functions */

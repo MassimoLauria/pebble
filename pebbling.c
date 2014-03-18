@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2013-09-18, 15:58 (CEST) Massimo Lauria"
+   Time-stamp: "2014-03-18, 16:09 (CET) Massimo Lauria"
 
    Description::
 
@@ -462,7 +462,7 @@ void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
     vertexopts[v]="color=gray,fontcolor=black,fillcolor=lightgray";
 
   }
-  print_dot_DAG(g,name,options,vertexopts,NULL);
+  print_dot_DAG(g,name,options,vertexopts);
 }
 
 
@@ -522,6 +522,64 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 #endif
   }
 }
+
+/* Print a pebbling, using dot tool */
+void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
+
+  PebbleConfiguration conf;
+  
+  conf.sink_touched=FALSE;
+#if WHITE_PEBBLES
+  conf.white_pebbled = 0;
+#endif
+#if BLACK_PEBBLES
+  conf.black_pebbled = 0;
+#endif
+  conf.used_pebbles = 0;
+  conf.pebbles = 0;
+  conf.previous_configuration = NULL;
+  conf.last_changed_vertex = 0;
+
+  Vertex v;
+  printf("v");
+  for (size_t i=0; i < ptr->length; ++i) {
+    v=ptr->steps[i];
+    /* The logical sequence of tests ensure correctness of the moves,
+       assuming the pebbling is legal */
+
+    /* Deletions */
+#if BLACK_PEBBLES
+    if (isblack(v,g,&conf)) {
+      deleteblack(v,g,&conf);
+      printf(" -%u",v+1);
+      continue;
+    }
+#endif
+
+#if WHITE_PEBBLES
+    if (iswhite(v,g,&conf)) {
+      deletewhite(v,g,&conf);
+      printf(" -%u",v+1);
+      continue;
+    }
+#endif
+
+    /* Placements */
+#if BLACK_PEBBLES
+    if (isactive(v,g,&conf)) {
+      placeblack(v,g,&conf);
+      printf(" %u",v+1);
+      continue;
+    }
+#endif
+    
+#if WHITE_PEBBLES        
+    placewhite(v,g,&conf);
+    printf(" %u",v+1);
+#endif
+  }
+}
+
 
 
 /* Heuristics */
