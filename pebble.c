@@ -20,12 +20,12 @@
 
 
 #define USAGEMESSAGE "\n\
-Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
+Usage: %s [-htZg] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
 \n\
        -h     help message;\n\
        -Z     search for a 'persistent pebbling' (optional, only useful for black/white pebbling).\n\
        -t     find shortest pebbling within space limits, instead of minimizing space (optional).\n\
-       -f     output format {graphviz,text} (default: graphviz).\n\
+       -g     graphviz output (the regular output is redirected to stderr).\n\
 \n\
        -b M   maximum number of pebbles (mandatory);\n\
 \n\
@@ -36,7 +36,7 @@ Usage: %s [-thZ] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
        -i <input>   load input file in KTH format.\n\
        -O <input2>  OR product between input graph and <input2>.\n\
 \n\
-KTH input format is a top to bottom topologically sorted\n\
+KTH input format is a source to sync topologically sorted\n\
 representation of a DAG. N is a *positive* integer, and N indexed\n\
 lines follows, each containing the index of the vertex, and a space\n\
 separated list of predecessors for that vertex. The predecessors must\n\
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
   int persistent_pebbling=0;
   int option_code=0;
 
-  int output_graphviz=1; /* graphviz is the default output format */
+  int output_graphviz=0; /* text is the default output format */
 
   unsigned int cost=0;
 
@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code = getopt(argc,argv,"hZtb:p:2:c:f:i:O:"))!=-1) {
+  while((option_code = getopt(argc,argv,"htZgb:p:2:c:f:i:O:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
@@ -158,13 +158,8 @@ int main(int argc, char *argv[])
       exit(-1);
       break;
       /* Output format */
-    case 'f':
-      if (strcmp(optarg,"text")==0) output_graphviz = 0;
-      else if (strcmp(optarg,"graphviz")==0) output_graphviz = 1;
-      else {
-        fprintf(stderr,USAGEMESSAGE,argv[0]);
-        exit(-1);
-      }
+    case 'g':
+      output_graphviz = 1;
       break;
     case '?':
     default:
@@ -212,7 +207,7 @@ int main(int argc, char *argv[])
   } else {
     C=kthparser(input_file);
     fclose(input_file);
-    snprintf(graph_name, 100, "The graph in input");
+    snprintf(graph_name, 100, "The graph");
   }
 
   /* Read second input graph if needed */
@@ -243,27 +238,36 @@ int main(int argc, char *argv[])
   /* Print solution */
   if (solution) {
 
+    if (output_graphviz) print_dot_Pebbling(C,solution);
+    
     fprintf(out_file,"c %s has a pebbling of cost %u and length %u.\n",
             graph_name,solution->cost,solution->length);
-
     fprintf(out_file,"s SATISFIABLE\n");
-
-    if (output_graphviz) print_dot_Pebbling(C,solution);
-    else print_text_Pebbling(C,solution);
+    print_text_Pebbling(C,solution);
 
   } else {
-
-    fprintf(stderr,"c %s does not have a pebbling of cost %u.\n",
+    
+    fprintf(out_file,"c %s does not have a pebbling of cost %u.\n",
             graph_name,pebbling_bound);
-
     fprintf(out_file,"s UNSATISFIABLE\n");
   }
 
-  /* Clean up */
-  dispose_DAG(C);
-  if (solution) dispose_Pebbling(solution);
+  /* Clean up and return the appropriate exit code
 
-  /* Exit codes as in SAT competitions */
-  if (solution) exit(20);
-  else exit(10);
+     SATISFIABLE is 20
+     UNSATISFIABLE is 10
+     
+   */
+  int exit_code=0;
+  
+  dispose_DAG(C);
+
+  if (solution) {
+    dispose_Pebbling(solution);
+    exit_code=20;
+  } else {
+    exit_code=10;
+  }
+
+  exit(exit_code);
 }

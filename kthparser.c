@@ -2,7 +2,7 @@
    Copyright (C) 2013 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2013-04-12, 09:25 (CEST) Massimo Lauria"
+   Time-stamp: "2014-03-18, 16:24 (CET) Massimo Lauria"
 
    Description::
 
@@ -25,12 +25,12 @@ extern void dag_precompute_data(DAG *digraph);
 typedef struct _vl { struct _vl* next; Vertex v; } vl;
 
 #ifndef NDEBUG
-#define PARSERDEBUG(fmt,...) fprintf(stderr, "PARSER DEBUG:" fmt "\n", __VA_ARGS__) 
+#define PARSERDEBUG(fmt,...) fprintf(stderr, "c PARSER DEBUG:" fmt "\n", __VA_ARGS__) 
 #else
 #define PARSERDEBUG(fmt,...) 
 #endif
 
-#define PARSERERROR(fmt,...) fprintf(stderr, "PARSER ERROR:" fmt "\n", __VA_ARGS__) 
+#define PARSERERROR(fmt,...) fprintf(stderr, "c PARSER ERROR:" fmt "\n", __VA_ARGS__) 
 
 
 /* Parse a graph in kth format
