@@ -17,15 +17,16 @@
 #include "timedflags.h"
 #include "pebbling.h"
 #include "bfs.h"
+#include "config.h"
 
 
 #define USAGEMESSAGE "\n\
-Usage: %s [-htZg] -b<int> [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
+Usage: %s [-htZ] -b<int> [-g <dotfile>] [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
 \n\
        -h     help message;\n\
        -Z     search for a 'persistent pebbling' (optional, only useful for black/white pebbling).\n\
        -t     find shortest pebbling within space limits, instead of minimizing space (optional).\n\
-       -g     graphviz output (the regular output is redirected to stderr).\n\
+       -g <dotfile> graphviz depiction of pebbling save on <dotfile>.\n\
 \n\
        -b M   maximum number of pebbles (mandatory);\n\
 \n\
@@ -59,7 +60,7 @@ c\n\
 /* 
  *  Open the input file. '-' represent standard input.
  */
-FILE *openfile(const char* filename) {
+FILE *openinputfile(const char* filename) {
 
   FILE *f = NULL;
   
@@ -67,11 +68,27 @@ FILE *openfile(const char* filename) {
   
   f = fopen(filename,"r");
   if (f==NULL) {
-    fprintf(stderr, "ERROR: unable to open file \"%s\"",filename);
+    fprintf(stderr, "c ERROR: unable to open input file \"%s\"",filename);
     exit(-1);
     }
   return f;
 }
+
+/* 
+ *  Open the output file.
+ */
+FILE *openoutputfile(const char* filename) {
+
+  FILE *f = NULL;
+  
+  f = fopen(filename,"w");
+  if (f==NULL) {
+    fprintf(stderr, "c ERROR: unable to open output file \"%s\"",filename);
+    exit(-1);
+    }
+  return f;
+}
+
 
 extern DAG *kthparser(FILE *stream);
 
@@ -92,15 +109,14 @@ int main(int argc, char *argv[])
   
   FILE *input_file=NULL;
   FILE *input_file_aux=NULL;
-
+  FILE *dot_file=NULL;
+  
   int input_directives = 0;
   char graph_name[100];
   
   int optimize_time=0;
   int persistent_pebbling=0;
   int option_code=0;
-
-  int output_graphviz=0; /* text is the default output format */
 
   unsigned int cost=0;
 
@@ -110,7 +126,7 @@ int main(int argc, char *argv[])
 
   /* Parse option to set Pyramid height,
      pebbling upper bound. */
-  while((option_code = getopt(argc,argv,"htZgb:p:2:c:f:i:O:"))!=-1) {
+  while((option_code = getopt(argc,argv,"htZb:p:2:c:f:i:O:g:"))!=-1) {
     switch (option_code) {
     case 'h':
       fprintf(stderr,USAGEMESSAGE,argv[0]);
@@ -148,18 +164,18 @@ int main(int argc, char *argv[])
       exit(-1);
       break;
     case 'i':
-      input_file=openfile(optarg);
+      input_file=openinputfile(optarg);
       input_directives++;
       break;
     case 'O':
-      input_file_aux=openfile(optarg);
+      input_file_aux=openinputfile(optarg);
       if (input_file!=stdin || input_file_aux!=stdin) break;
       fprintf(stderr,USAGEMESSAGE,argv[0]);
       exit(-1);
       break;
       /* Output format */
     case 'g':
-      output_graphviz = 1;
+      dot_file=openoutputfile(optarg);
       break;
     case '?':
     default:
@@ -207,7 +223,7 @@ int main(int argc, char *argv[])
   } else {
     C=kthparser(input_file);
     fclose(input_file);
-    snprintf(graph_name, 100, "The graph");
+    snprintf(graph_name, 100, "Input graph");
   }
 
   /* Read second input graph if needed */
@@ -218,38 +234,39 @@ int main(int argc, char *argv[])
     dispose_DAG(OUTER);
     dispose_DAG(INNER);
     fclose(input_file_aux);
-    snprintf(graph_name, 100, "This OR product");
+    snprintf(graph_name, 100, "OR product graph");
   }
 
-  /* Output on stderr if graphviz output*/
-  FILE *out_file=NULL;
-  if (output_graphviz) out_file=stderr;
-  else out_file=stdout;
-    
+  /* Re-output the input graph */
+  printf("c =====input starts=====\n");
+  printf("c c %s\n",graph_name);
+  fprint_DAG(stdout,C,"c ");
+  printf("c =====input ends=======\n");
+  
   /* Search space interval*/
   cost= optimize_time ? pebbling_bound : 1;
 
   while ( (cost <= pebbling_bound) && !solution ) {
-    fprintf(out_file, "c Search for pebbling of cost %d\n",cost);
+    printf("c Search for %s of cost %d\n",pebbling_type(),cost);
     solution=bfs_pebbling_strategy(C,cost,persistent_pebbling);
-    cost++;  
+    cost++;
   }
 
-  /* Print solution */
+  /* Output solution */
   if (solution) {
 
-    if (output_graphviz) print_dot_Pebbling(C,solution);
-    
-    fprintf(out_file,"c %s has a pebbling of cost %u and length %u.\n",
-            graph_name,solution->cost,solution->length);
-    fprintf(out_file,"s SATISFIABLE\n");
-    print_text_Pebbling(C,solution);
+    printf("c %s has a %s of cost %u and length %u.\n",
+           graph_name,pebbling_type(),solution->cost,solution->length);
+    printf("s SATISFIABLE\n");
+    fprint_text_Pebbling(stdout,C,solution);
 
+    if (dot_file) fprint_dot_Pebbling(dot_file, C, solution);
+    
   } else {
     
-    fprintf(out_file,"c %s does not have a pebbling of cost %u.\n",
-            graph_name,pebbling_bound);
-    fprintf(out_file,"s UNSATISFIABLE\n");
+    printf("c %s does not have a %s of cost %u.\n",
+           graph_name,pebbling_type(),pebbling_bound);
+    printf("s UNSATISFIABLE\n");
   }
 
   /* Clean up and return the appropriate exit code

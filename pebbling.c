@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-03-18, 16:09 (CET) Massimo Lauria"
+   Time-stamp: "2014-03-18, 17:49 (CET) Massimo Lauria"
 
    Description::
 
@@ -436,7 +436,7 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 /* Print a graph with a pebble configuration, with dot.  If the `peb'
    is NULL it does assume that the pebbling to be printed is empty.
    */
-void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
+void fprint_dot_PebbleConfiguration(FILE *outfile,const DAG *g, const PebbleConfiguration *peb,
                         char *name,char* options) {
   assert(isconsistent_DAG(g));
   assert(peb==NULL || isconsistent_PebbleConfiguration(g,peb));
@@ -462,12 +462,12 @@ void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguration *peb,
     vertexopts[v]="color=gray,fontcolor=black,fillcolor=lightgray";
 
   }
-  print_dot_DAG(g,name,options,vertexopts);
+  fprint_dot_DAG(outfile,g,name,options,vertexopts);
 }
 
 
 /* Print a pebbling, using dot tool */
-void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
+void fprint_dot_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 
   PebbleConfiguration conf;
   
@@ -483,7 +483,7 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
   conf.previous_configuration = NULL;
   conf.last_changed_vertex = 0;
 
-  print_dot_PebbleConfiguration(g,NULL,"X",NULL);
+  fprint_dot_PebbleConfiguration(outfile,g,NULL,"X",NULL);
   Vertex v;
   for (size_t i=0; i < ptr->length; ++i) {
     v=ptr->steps[i];
@@ -494,7 +494,7 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isblack(v,g,&conf)) {
       deleteblack(v,g,&conf);
-      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
       continue;
     }
 #endif
@@ -502,7 +502,7 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if WHITE_PEBBLES
     if (iswhite(v,g,&conf)) {
       deletewhite(v,g,&conf);
-      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
       continue;
     }
 #endif
@@ -511,20 +511,20 @@ void print_dot_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isactive(v,g,&conf)) {
       placeblack(v,g,&conf);
-      print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
       continue;
     }
 #endif
     
 #if WHITE_PEBBLES        
     placewhite(v,g,&conf);
-    print_dot_PebbleConfiguration(g,&conf,"X",NULL);
+    fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
 #endif
   }
 }
 
 /* Print a pebbling, using dot tool */
-void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
+void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 
   PebbleConfiguration conf;
   
@@ -541,7 +541,7 @@ void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
   conf.last_changed_vertex = 0;
 
   Vertex v;
-  printf("v");
+  fprintf(outfile,"v");
   for (size_t i=0; i < ptr->length; ++i) {
     v=ptr->steps[i];
     /* The logical sequence of tests ensure correctness of the moves,
@@ -551,7 +551,7 @@ void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isblack(v,g,&conf)) {
       deleteblack(v,g,&conf);
-      printf(" -%u",v+1);
+      fprintf(outfile," -%u",v+1);
       continue;
     }
 #endif
@@ -559,7 +559,7 @@ void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if WHITE_PEBBLES
     if (iswhite(v,g,&conf)) {
       deletewhite(v,g,&conf);
-      printf(" -%u",v+1);
+      fprintf(outfile," -%u",v+1);
       continue;
     }
 #endif
@@ -568,16 +568,18 @@ void print_text_Pebbling(const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isactive(v,g,&conf)) {
       placeblack(v,g,&conf);
-      printf(" %u",v+1);
+      fprintf(outfile," %u",v+1);
       continue;
     }
 #endif
     
 #if WHITE_PEBBLES        
     placewhite(v,g,&conf);
-    printf(" %u",v+1);
+    fprintf(outfile," %u",v+1);
 #endif
   }
+
+  fprintf(outfile,"\n");
 }
 
 

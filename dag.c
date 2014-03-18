@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2014-03-18, 15:25 (CET) Massimo Lauria"
+   Time-stamp: "2014-03-18, 17:38 (CET) Massimo Lauria"
 
    Description::
 
@@ -219,8 +219,8 @@ Boolean isconsistent_DAG(const DAG *ptr) {
                      I/O FUNCTIONS
  ********************************************************************************/
 
-/* Prints a string representation of the DAG */
-void print_DAG(const DAG *p) {
+/* Prints a string representation of the DAG in kth format */
+void fprint_DAG(FILE *outfile,const DAG *p,const char* prefix) {
   Vertex v,w;
 
   /* Ignore null graphs */
@@ -231,24 +231,16 @@ void print_DAG(const DAG *p) {
   assert(p->outdegree);
   assert(p->out);
 
-  /* If no function for computing labels is specified, then we use the
-     default one, which turn a number in its string representation*/
   for (v = 0; v < p->size; ++v) {
+    
+    if (prefix) fprintf(outfile,"%s",prefix);
 
-    printf("%u ",v+1);
-    /* Incoming edges */
-    printf("I:");
+    fprintf(outfile,"%u :",v+1);
+
     for(w=0;w < p->indegree[v]; w++) {
-      printf(" %u",p->in[v][w]+1);
+      fprintf(outfile," %u",p->in[v][w]+1);
     }
-
-    /* Outgoing edges */
-    printf("O:");
-    for(w=0;w < p->outdegree[v]; w++) {
-      printf(" %u",p->out[v][w]+1);
-    }
-
-    printf("\n");
+    fprintf(outfile,"\n");
   }
 }
 
@@ -258,10 +250,11 @@ void print_DAG(const DAG *p) {
  * graphviz. Vertices are indexed starting from 1, despite being
  * indexed from zero in the internal representation.
  */
-void print_dot_DAG(const DAG *p,
-                     char *name,
-                     char* options,
-                     char **vertex_options) {
+void fprint_dot_DAG(FILE *outfile,
+                    const DAG *p,
+                    char *name,
+                    char* options,
+                    char **vertex_options) {
   Vertex i,j;
 
   /* Ignore null graphs */
@@ -272,9 +265,9 @@ void print_dot_DAG(const DAG *p,
   assert(p->outdegree);
   assert(p->out);
 
-  printf("digraph %s {\n",name);
-  printf("\t rankdir=BT;\n");
-  if (options) printf("%s\n",options);
+  fprintf(outfile,"digraph %s {\n",name);
+  fprintf(outfile,"\t rankdir=BT;\n");
+  if (options) fprintf(outfile,"%s\n",options);
 
 
 
@@ -282,31 +275,31 @@ void print_dot_DAG(const DAG *p,
   for (i = 0; i < p->size; ++i) {
 
     /* Vertex identifier */
-    printf("\t %u [",i+1);
+    fprintf(outfile,"\t %u [",i+1);
 
     /* Start with vertex info */
-    printf("label=%u,penwidth=2,shape=circle,style=filled,fixedsize=true",i+1);
+    fprintf(outfile,"label=%u,penwidth=2,shape=circle,style=filled,fixedsize=true",i+1);
 
     /* if there are no vertex dependent options, move to the next
        vertex */
     if (vertex_options && vertex_options[i])
-      printf(",%s",vertex_options[i]);
-    printf("]\n");
+      fprintf(outfile,",%s",vertex_options[i]);
+    fprintf(outfile,"]\n");
   }
 
 
   for (i = 0; i < p->size; ++i) {
 
     /* Outgoing edges */
-    printf("\t /* Arcs outgoing from %d*/ \n",i+1);
+    fprintf(outfile,"\t /* Arcs outgoing from %d*/ \n",i+1);
 
     for(j=0;j<p->outdegree[i];j++)
-      printf("\t %d -> %d;\n",i+1,p->out[i][j]+1);
+      fprintf(outfile,"\t %d -> %d;\n",i+1,p->out[i][j]+1);
 
-    printf("\n");
+    fprintf(outfile,"\n");
   }
 
-  printf("}\n");
+  fprintf(outfile,"}\n");
 
 }
 /* }}} */

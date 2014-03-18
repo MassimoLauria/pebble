@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2014-03-18, 16:12 (CET) Massimo Lauria"
+# Time-stamp: "2014-03-18, 17:12 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
@@ -74,7 +74,8 @@ OBJS=$(SRCS:.c=.o)
 
 # Source files which compilation depends on the pebbling variant
 SRCS_V=bfs.c \
-	   pebbling.c
+	   pebbling.c \
+       config.c
 
 OBJS_V=$(SRCS_V:.c=.o)
 
