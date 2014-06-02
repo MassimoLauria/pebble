@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 16:36 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 11:50 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 11:52 (EDT) Massimo Lauria"
 
    Description::
 
@@ -43,8 +43,8 @@ typedef unsigned char          Boolean;
 /* Exit codes for SAT solvers, as described in
    http://www.satcompetition.org/
  */
-#define EXIT_SATISFIABLE 20
-#define EXIT_UNSATISFIABLE 10
+#define EXIT_SATISFIABLE 10
+#define EXIT_UNSATISFIABLE 20
 #define EXIT_UNKNOWN  0
 
 #endif /* COMMON_H  */
