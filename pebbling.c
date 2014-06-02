@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-03-18, 17:49 (CET) Massimo Lauria"
+   Time-stamp: "2014-06-02, 00:07 (EDT) Massimo Lauria"
 
    Description::
 
@@ -312,6 +312,25 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   }
 }
 
+inline void placeblack_force(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
+
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(v<g->size);
+  assert(!ispebbled(v,g,c));
+
+  SETBIT(c->black_pebbled,v);
+  c->pebbles       += 1;
+
+  if (v==g->sinks[0] && !c->sink_touched) {
+    c->sink_touched = TRUE;
+    SETBIT(c->used_pebbles,v);
+  }
+}
+
+
+
+
 #endif /* BLACK_PEBBLES */
 
 #if WHITE_PEBBLES
@@ -417,8 +436,11 @@ inline Boolean isused(const Vertex v,const DAG *g,const PebbleConfiguration *c) 
 
 
 
-/* Determines if the configuration is a final one */
-inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
+/* Determines if the configuration is final for a visiting
+   pebbling. In a visiting pebbling we start with an empty
+   configuration an we try to touch the sink. And reach a
+   configuration without white pebbles. */
+inline Boolean isfinal_visiting(const DAG *g,const PebbleConfiguration *c) {
 
   assert(isconsistent_DAG(g));
   assert(isconsistent_PebbleConfiguration(g,c));
@@ -426,9 +448,31 @@ inline Boolean isfinal(const DAG *g,const PebbleConfiguration *c) {
 #if WHITE_PEBBLES
   if (c->white_pebbled!=0) return FALSE;
 #endif
-  
+
   if (c->sink_touched==TRUE) return TRUE;
   else return FALSE;
+}
+
+/* Determines if the configuration is final for a persistent
+   pebbling. In a persistent pebbling we start with a configuration
+   with a hard to remove pebble on the sink (i.e. makes sense for
+   white and reversible) and we try to reach the configuration with no
+   hard to remove pebbles. */
+inline Boolean isfinal_persistent(const DAG *g,const PebbleConfiguration *c) {
+
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+  assert(c->sink_touched);
+  
+#if WHITE_PEBBLES
+  if (c->white_pebbled!=0) return FALSE;
+#elif REVERSIBLE
+  if (c->black_pebbled!=0) return FALSE;
+#else
+  assert(FALSE);           /* persistent pebbling makes sense only for REVERSIBLE and WHITE_PEBBLE */
+#endif
+
+  return TRUE;
 }
 
 
