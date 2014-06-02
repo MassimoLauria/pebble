@@ -280,7 +280,7 @@ int main(int argc, char *argv[])
      UNSATISFIABLE is 10
      
    */
-  int exit_code=0;
+  int exit_code=EXIT_SUCCESS;
   
   dispose_DAG(C);
 

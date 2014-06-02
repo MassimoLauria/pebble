@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 10:00 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 11:40 (EDT) Massimo Lauria"
 
    Description::
 
@@ -599,7 +599,7 @@ void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 
 /* Heuristics */
 
-#ifdef BLACK_WHITE_PEBBLING
+#if BLACK_WHITE_PEBBLING==1
 
 static inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
@@ -628,7 +628,7 @@ static inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,con
 }
 
 
-#ifdef BLACK_WHITE_PEBBLING
+#if BLACK_WHITE_PEBBLING
 static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (!isused(v, g, c)) return TRUE;
