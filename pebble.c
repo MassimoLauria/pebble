@@ -57,6 +57,11 @@ c\n\
 5  : 2  4\n"
 
 
+#if BLACK_WHITE_PEBBLING && REVERSIBLE_PEBBLING
+#error "Invalid compiler options: black/white AND reversible simultaneously."
+#endif
+
+
 /* 
  *  Open the input file. '-' represent standard input.
  */

@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2014-03-18, 17:12 (CET) Massimo Lauria"
+# Time-stamp: "2014-06-02, 09:33 (EDT) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
@@ -28,16 +28,12 @@ endif
 
 
 # Variant flags for the various pebbling tools
-ifdef BLACK_PEBBLES
-VARIANTFLAGS=-DBLACK_PEBBLES=${BLACK_PEBBLES}
+ifdef BLACK_WHITE_PEBBLING
+VARIANTFLAGS+=-DBLACK_WHITE_PEBBLING=${BLACK_WHITE_PEBBLING}
 endif
 
-ifdef WHITE_PEBBLES
-VARIANTFLAGS+=-DWHITE_PEBBLES=${WHITE_PEBBLES}
-endif
-
-ifdef REVERSIBLE
-VARIANTFLAGS+=-DREVERSIBLE=${REVERSIBLE}
+ifdef REVERSIBLE_PEBBLING
+VARIANTFLAGS+=-DREVERSIBLE_PEBBLING=${REVERSIBLE_PEBBLING}
 endif
 
 
@@ -92,21 +88,21 @@ exposetypes: exposetypes.c
 pebble: $(OBJS)
 	@-echo "Pebbling tool [$@]"
 	@-rm -f $(OBJS_V)
-	@-make  $(OBJS_V) BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=0
+	@-make  $(OBJS_V) BLACK_WHITE_PEBBLING=0 REVERSIBLE_PEBBLING=0
 	@-$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
 
 
 bwpebble: $(OBJS)
 	@-echo "Black white pebbling tool [$@]"
 	@-rm -f $(OBJS_V)
-	@-make  $(OBJS_V)  BLACK_PEBBLES=1 WHITE_PEBBLES=1 REVERSIBLE=0
+	@-make  $(OBJS_V) BLACK_WHITE_PEBBLING=1 REVERSIBLE_PEBBLING=0
 	@-$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
 
 
 revpebble: $(OBJS)
 	@-echo "Reversible pebbling tool [$@]"
 	@-rm -f $(OBJS_V)
-	@-make  $(OBJS_V)  BLACK_PEBBLES=1 WHITE_PEBBLES=0 REVERSIBLE=1
+	@-make  $(OBJS_V) BLACK_WHITE_PEBBLING=0 REVERSIBLE_PEBBLING=1
 	@$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
 
 

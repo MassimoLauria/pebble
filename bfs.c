@@ -43,15 +43,13 @@ extern void print_dot_PebbleConfiguration(const DAG *g, const PebbleConfiguratio
 size_t hashPebbleConfiguration(void *data) {
   assert(data);
   PebbleConfiguration *ptr=(PebbleConfiguration *)data;
-#if WHITE_PEBBLES && BLACK_PEBBLES  
+
+#if BLACK_WHITE_PEBBLING
   return  (size_t)(ptr->white_pebbled * 0x9e3779b9 + ptr->black_pebbled);
-#elif WHITE_PEBBLES
-  return  (size_t)(ptr->white_pebbled * 0x9e3779b9);
-#elif BLACK_PEBBLES
-  return  (size_t)(ptr->black_pebbled * 0x9e3779b9);
 #else
-  return 0;
+  return  (size_t)(ptr->black_pebbled * 0x9e3779b9);
 #endif
+
 }
 
 /*
@@ -71,11 +69,9 @@ Boolean  samePebbleConfiguration(void *A,void *B) {
   pA=(PebbleConfiguration*)A;
   pB=(PebbleConfiguration*)B;
 
-#if BLACK_PEBBLES
   if (pA->black_pebbled != pB->black_pebbled) return FALSE;
-#endif
 
-#if WHITE_PEBBLES
+#if BLACK_WHITE_PEBBLING
   if (pA->white_pebbled != pB->white_pebbled) return FALSE;
 #endif
 
@@ -204,8 +200,11 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
   }
   length -= 1; /* initial conf is not a step */
 
-#if WHITE_PEBBLES
-  length += final->pebbles; /* pebbles left to clean up. */
+#if BLACK_WHITE_PEBBLING
+  /* there may be black pebbles left to clean up which translates into
+     white placement after reversing the pebbling.
+   */
+  length += final->pebbles;
 #endif 
   
   /* solution to be filled */
@@ -213,9 +212,11 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
   solution->length = length;
   solution->cost   = cost;
 
-  /* Preamble phase: place some white pebbles */
+  
   i=0;
-#if WHITE_PEBBLES
+#if BLACK_WHITE_PEBBLING
+  /* Preamble phase: place some white pebbles, which correspond to the
+     black pebbles cleaned at the end of the original pebbling. */
   for(Vertex v=0;v<graph->size;v++) {
     if (isblack(v,graph,final)) { solution->steps[i]=v; ++i; }
   }
@@ -239,8 +240,8 @@ Pebbling *finalize_persistent_pebbling(const DAG *graph,
 
 
 /**
-   Finalize the a black-white pebbling, by removing residual black
-   pebbles.
+   Finalize the a black or black-white pebbling, by removing residual
+   black pebbles.
 
    @param dag the graph we are pebbling
 
@@ -253,7 +254,7 @@ Pebbling *finalize_pebbling(const DAG *graph,
   assert(graph);
   assert(final);
 
-#if REVERSIBLE
+#if REVERSIBLE_PEBBLING
   assert(0);
 #endif
 
@@ -315,7 +316,7 @@ Pebbling *finalize_reversible_pebbling(const DAG *graph,
   assert(graph);
   assert(final);
 
-#if !REVERSIBLE
+#if !REVERSIBLE_PEBBLING
   assert(0);
 #endif
 
@@ -436,7 +437,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   if (upper_bound < 1) { return NULL; } /* No pebbling with zero pebbles */
 
   
-#if (!WHITE_PEBBLES && !REVERSIBLE)
+#if (!BLACK_WHITE_PEBBLING && !REVERSIBLE_PEBBLING)
   persistent_pebbling = 0;
 #endif
   
@@ -460,7 +461,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   /* Initial configuration for the BFS */
   enqueue  (Q,initial);
   writeDict(D,&res,initial);
-#if WHITE_PEBBLES || REVERSIBLE
+#if BLACK_WHITE_PEBBLING || REVERSIBLE_PEBBLING
   if (persistent_pebbling) {  init_persistent_pebbling(g, initial); }
 #endif
 
@@ -555,7 +556,7 @@ epilogue:
     solution = final ? finalize_persistent_pebbling(g,final) : NULL ;
 
   } else {
-#if REVERSIBLE
+#if REVERSIBLE_PEBBLING
     solution = final ? finalize_reversible_pebbling(g,final) : NULL ;
 #else
     solution = final ? finalize_pebbling(g,final) : NULL ;

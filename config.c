@@ -2,7 +2,7 @@
   Copyright (C) 2014 by Massimo Lauria <lauria.massimo@gmail.com>
   
   Created   : "2014-03-18, Tuesday 17:04 (CET) Massimo Lauria"
-  Time-stamp: "2014-03-18, 17:15 (CET) Massimo Lauria"
+  Time-stamp: "2014-06-02, 09:33 (EDT) Massimo Lauria"
   
   Description::
   
@@ -16,7 +16,7 @@
 
 /* Code */
 
-#if WHITE_PEBBLES==0 && BLACK_PEBBLES==1 && REVERSIBLE==1
+#if REVERSIBLE_PEBBLING
 
 const char* pebbling_type() {
   static const char* name="reversible pebbling";
@@ -28,10 +28,19 @@ const char* pebbling_Type() {
   return Name;
 }
 
-#endif
+#elif BLACK_WHITE_PEBBLING
 
+const char* pebbling_type() {
+  static const char* name="black-white pebbling";
+  return name;
+}
 
-#if WHITE_PEBBLES==0 && BLACK_PEBBLES==1 && REVERSIBLE==0
+const char* pebbling_Type() {
+  static const char* Name="Black-white pebbling";
+  return Name;
+}
+
+#else 
 
 const char* pebbling_type() {
   static const char* name="pebbling";
@@ -44,29 +53,5 @@ const char* pebbling_Type() {
 }
 
 #endif
-
-
-#if WHITE_PEBBLES==1 && BLACK_PEBBLES==1 && REVERSIBLE==0
-
-const char* pebbling_type() {
-  static const char* name="black-white pebbling";
-  return name;
-}
-
-const char* pebbling_Type() {
-  static const char* Name="Black-white pebbling";
-  return Name;
-}
-
-#endif
-
-
-
-
-
-
-
-
-
 
 
