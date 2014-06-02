@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 00:08 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 08:04 (EDT) Massimo Lauria"
 
    Description::
 
@@ -82,6 +82,8 @@ extern Boolean      isconsistent_PebbleConfiguration(const DAG *graph,const Pebb
 
 extern Boolean isfinal_persistent(const DAG *g,const PebbleConfiguration *c);
 extern Boolean isfinal_visiting(const DAG *g,const PebbleConfiguration *c);
+extern void    init_persistent_pebbling(const DAG *g,PebbleConfiguration *const c);  
+
 
 extern int     configurationcost(const DAG *g,const PebbleConfiguration *c);
 
@@ -97,10 +99,6 @@ extern void    deletewhite(const Vertex v, const DAG *g, PebbleConfiguration *co
 extern Boolean isblack    (const Vertex v, const DAG *g, const PebbleConfiguration *c);
 extern void    placeblack (const Vertex v, const DAG *g, PebbleConfiguration *const c);
 extern void    deleteblack(const Vertex v, const DAG *g, PebbleConfiguration *const c);
-#endif
-
-#if BLACK_PEBBLES && REVERSIBLE
-extern void    placeblack_force(const Vertex v,const DAG *g,PebbleConfiguration *const c);
 #endif
 
 extern Boolean ispebbled(const Vertex v, const DAG *g, const PebbleConfiguration *c);

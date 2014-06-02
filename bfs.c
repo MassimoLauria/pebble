@@ -460,11 +460,9 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
   /* Initial configuration for the BFS */
   enqueue  (Q,initial);
   writeDict(D,&res,initial);
-#if WHITE_PEBBLES
-  if (persistent_pebbling) {  placewhite(g->sinks[0],g,initial); }
-#elif REVERSIBLE
-  if (persistent_pebbling) {  placeblack_force(g->sinks[0],g,initial); }
-#endif   
+#if WHITE_PEBBLES || REVERSIBLE
+  if (persistent_pebbling) {  init_persistent_pebbling(g, initial); }
+#endif
 
 
   PebbleConfiguration *ptr  =NULL;    /* Configuration to be processed */

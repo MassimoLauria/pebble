@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 00:07 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 08:05 (EDT) Massimo Lauria"
 
    Description::
 
@@ -312,24 +312,6 @@ inline void placeblack(const Vertex v,const DAG *g,PebbleConfiguration *const c)
   }
 }
 
-inline void placeblack_force(const Vertex v,const DAG *g,PebbleConfiguration *const c) {
-
-  assert(isconsistent_DAG(g));
-  assert(isconsistent_PebbleConfiguration(g,c));
-  assert(v<g->size);
-  assert(!ispebbled(v,g,c));
-
-  SETBIT(c->black_pebbled,v);
-  c->pebbles       += 1;
-
-  if (v==g->sinks[0] && !c->sink_touched) {
-    c->sink_touched = TRUE;
-    SETBIT(c->used_pebbles,v);
-  }
-}
-
-
-
 
 #endif /* BLACK_PEBBLES */
 
@@ -434,6 +416,29 @@ inline Boolean isused(const Vertex v,const DAG *g,const PebbleConfiguration *c) 
   return GETBIT(c->used_pebbles,v);
 }
 
+/* Persistent pebbling is realized by placing a pebble on top and then
+   by reaching the empty configuration. In both black-white
+   andreversible pebble the actual pebbling is inverted to result in
+   the desired pebbling that ends with a pebble on the sink.  */
+void    init_persistent_pebbling(const DAG *g, PebbleConfiguration *const c) {
+
+  assert(isconsistent_DAG(g));
+  assert(isconsistent_PebbleConfiguration(g,c));
+
+  assert(g->sink_number==1);
+  assert(!ispebbled(g->sinks[0],g,c));
+#if REVERSIBLE
+  SETBIT(c->black_pebbled,g->sinks[0]);
+#elif WHITE_PEBBLES
+  SETBIT(c->black_pebbled,g->sinks[0]);
+#else
+  assert(0);
+#endif
+  
+  c->pebbles       += 1;
+  c->sink_touched = TRUE;
+  SETBIT(c->used_pebbles,g->sinks[0]);
+}
 
 
 /* Determines if the configuration is final for a visiting
