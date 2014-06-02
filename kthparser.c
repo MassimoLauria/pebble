@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2014-03-18, 18:04 (CET) Massimo Lauria"
+   Time-stamp: "2014-06-02, 09:21 (EDT) Massimo Lauria"
 
    Description::
 
@@ -59,7 +59,7 @@ DAG *kthparser(FILE *input) {
   
   while (feof(input)==0) {
     
-    temp=fscanf(input,"%100s",&buffer);
+    temp=fscanf(input,"%100s",(char*)&buffer);
     if (temp==-1) break;
     
     if (buffer[0]=='c') { /* Comment line */
@@ -69,14 +69,14 @@ DAG *kthparser(FILE *input) {
     }
 
     /* Read the vertex number */
-    temp=sscanf(buffer,"%u",&read);
+    temp=sscanf(buffer,"%lu",&read);
     if (temp==-1 || read==0) break;
 
     if (vertices==0) { /* This is the vertex number */
       
       vertices = read;
       position = 0;
-      if (read>1) PARSERDEBUG("there are %u vertices",read);
+      if (read>1) PARSERDEBUG("there are %lu vertices",read);
       else if (read==1) PARSERDEBUG("there is %u vertex",1);
 
       indegree = (size_t*)calloc(vertices,sizeof(size_t));
@@ -90,12 +90,11 @@ DAG *kthparser(FILE *input) {
     } else if ( read < position ) { /* Still reading vertex specification */
       
       if (last_predecessor >= read) {
-        PARSERERROR("predecessors must be in ascending order.",
-                last_predecessor,read);
+        PARSERERROR("Predecessors must be in ascending order. %lu predecessor of %lu",last_predecessor,read);
         exit(-1);
       }
 
-      PARSERDEBUG("Edge %u -> %u",read,position);
+      PARSERDEBUG("Edge %lu -> %lu",read,position);
       last_predecessor = read;
       
       indegree[position-1]++;
@@ -108,29 +107,29 @@ DAG *kthparser(FILE *input) {
       insertpoint->next = NULL;
 
     } else if (read == position ){
-      PARSERERROR("self loop on vertex %u.",position);
+      PARSERERROR("self loop on vertex %lu.",position);
       exit(-1);
  
     } else if (read > vertices ){
-      PARSERERROR("out of range vertex %u.",read);
+      PARSERERROR("out of range vertex %lu.",read);
       exit(-1);
 
     } else if (read == position+1) { /* This is a vertex specification. Pass the : */
     
-      PARSERDEBUG("Start reading predecessors of %u.",read);
+      PARSERDEBUG("Start reading predecessors of %lu.",read);
       
       last_predecessor = 0;
       position = position +1;
       insertpoint = predecessors[position-1];
 
-      temp=fscanf(input,"%100s",&buffer);
+      temp=fscanf(input,"%100s",(char*)&buffer);
       if (temp==-1 || strcmp(buffer,":")!=0) {
-        PARSERERROR("expecting \":\" before predecessors for vertex %u.",position,buffer);
+        PARSERERROR("expecting \":\" before predecessors for vertex %lu.",position);
         exit(-1);
       }
 
     } else {
-      PARSERERROR("Vertex %u missing.",position+1);
+      PARSERERROR("Vertex %lu missing.",position+1);
       exit(-1);
     }
   }
@@ -139,7 +138,7 @@ DAG *kthparser(FILE *input) {
     PARSERERROR("%s","positive number of vertices expected.");
  
   if (position != vertices) {
-    PARSERERROR("unexpected end of file at vertex %u.",position); 
+    PARSERERROR("unexpected end of file at vertex %lu.",position); 
   }
 
 

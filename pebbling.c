@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 08:05 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 09:18 (EDT) Massimo Lauria"
 
    Description::
 
@@ -600,7 +600,7 @@ void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isblack(v,g,&conf)) {
       deleteblack(v,g,&conf);
-      fprintf(outfile," -%u",v+1);
+      fprintf(outfile," -%lu",v+1);
       continue;
     }
 #endif
@@ -608,7 +608,7 @@ void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 #if WHITE_PEBBLES
     if (iswhite(v,g,&conf)) {
       deletewhite(v,g,&conf);
-      fprintf(outfile," -%u",v+1);
+      fprintf(outfile," -%lu",v+1);
       continue;
     }
 #endif
@@ -617,14 +617,14 @@ void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 #if BLACK_PEBBLES
     if (isactive(v,g,&conf)) {
       placeblack(v,g,&conf);
-      fprintf(outfile," %u",v+1);
+      fprintf(outfile," %lu",v+1);
       continue;
     }
 #endif
     
 #if WHITE_PEBBLES        
     placewhite(v,g,&conf);
-    fprintf(outfile," %u",v+1);
+    fprintf(outfile," %lu",v+1);
 #endif
   }
 
@@ -634,6 +634,8 @@ void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
 
 
 /* Heuristics */
+
+#ifdef WHITE_PEBBLES
 
 static inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
@@ -647,6 +649,8 @@ static inline Boolean place_white_heuristics_cut(const Vertex v,const DAG *g,con
   return FALSE;
 }
 
+#endif
+
 static inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (c->previous_configuration==NULL) return FALSE;
@@ -659,6 +663,8 @@ static inline Boolean place_black_heuristics_cut(const Vertex v,const DAG *g,con
   return FALSE;
 }
 
+
+#ifdef WHITE_PEBBLES
 static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (!isused(v, g, c)) return TRUE;
@@ -684,7 +690,8 @@ static inline Boolean delete_white_heuristics_cut(const Vertex v,const DAG *g,co
   }
 
 }
-
+#endif
+ 
 static inline Boolean delete_black_heuristics_cut(const Vertex v,const DAG *g,const PebbleConfiguration *c) {
 
   if (!isused(v, g, c)) return TRUE;

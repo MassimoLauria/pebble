@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-18, sabato 01:23 (CET) Massimo Lauria"
-   Time-stamp: "2012-06-04, 19:35 (CEST) Massimo Lauria"
+   Time-stamp: "2014-06-02, 09:10 (EDT) Massimo Lauria"
 
    Description::
 
@@ -202,7 +202,7 @@ void histogramDict(FILE *stream,Dict *d) {
   if (d==NULL) return;
 
   fprintf(stream,"HASHTABLE_HISTOGRAM\n");
-  fprintf(stream,"SIZE %u\nALLOCATION %u\n",d->size,d->allocation);
+  fprintf(stream,"SIZE %lu\nALLOCATION %lu\n",d->size,d->allocation);
 
   tot=0;
   for(size_t i=0;i<d->size;i++) {

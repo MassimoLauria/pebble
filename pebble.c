@@ -256,7 +256,7 @@ int main(int argc, char *argv[])
   if (solution) {
 
     printf("c %s has a %s of cost %u and length %u.\n",
-           graph_name,pebbling_type(),solution->cost,solution->length);
+           graph_name,pebbling_type(),solution->cost,(unsigned int)solution->length);
     printf("s SATISFIABLE\n");
     fprint_text_Pebbling(stdout,C,solution);
 

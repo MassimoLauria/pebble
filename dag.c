@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-16, giovedì 17:03 (CET) Massimo Lauria"
-   Time-stamp: "2014-03-18, 17:38 (CET) Massimo Lauria"
+   Time-stamp: "2014-06-02, 09:09 (EDT) Massimo Lauria"
 
    Description::
 
@@ -235,10 +235,10 @@ void fprint_DAG(FILE *outfile,const DAG *p,const char* prefix) {
     
     if (prefix) fprintf(outfile,"%s",prefix);
 
-    fprintf(outfile,"%u :",v+1);
+    fprintf(outfile,"%lu :",v+1);
 
     for(w=0;w < p->indegree[v]; w++) {
-      fprintf(outfile," %u",p->in[v][w]+1);
+      fprintf(outfile," %lu",p->in[v][w]+1);
     }
     fprintf(outfile,"\n");
   }
@@ -275,10 +275,10 @@ void fprint_dot_DAG(FILE *outfile,
   for (i = 0; i < p->size; ++i) {
 
     /* Vertex identifier */
-    fprintf(outfile,"\t %u [",i+1);
+    fprintf(outfile,"\t %lu [",i+1);
 
     /* Start with vertex info */
-    fprintf(outfile,"label=%u,penwidth=2,shape=circle,style=filled,fixedsize=true",i+1);
+    fprintf(outfile,"label=%lu,penwidth=2,shape=circle,style=filled,fixedsize=true",i+1);
 
     /* if there are no vertex dependent options, move to the next
        vertex */
@@ -291,10 +291,10 @@ void fprint_dot_DAG(FILE *outfile,
   for (i = 0; i < p->size; ++i) {
 
     /* Outgoing edges */
-    fprintf(outfile,"\t /* Arcs outgoing from %d*/ \n",i+1);
+    fprintf(outfile,"\t /* Arcs outgoing from %lu */ \n",i+1);
 
     for(j=0;j<p->outdegree[i];j++)
-      fprintf(outfile,"\t %d -> %d;\n",i+1,p->out[i][j]+1);
+      fprintf(outfile,"\t %lu -> %lu;\n",i+1,p->out[i][j]+1);
 
     fprintf(outfile,"\n");
   }

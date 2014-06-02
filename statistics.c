@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2013 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2011-01-12, mercoledì 17:37 (CET) Massimo Lauria"
-   Time-stamp: "2013-06-14, 15:40 (CEST) Massimo Lauria"
+   Time-stamp: "2014-06-02, 09:23 (EDT) Massimo Lauria"
 
    Description::
 
@@ -46,47 +46,47 @@ void statistics_make_report(FILE *stream,Statistic *const s) {
   fprintf(stream,"                    PER SECOND  |            TOTAL\n"
                  "              ------------------------------------\n");
 
-  fprintf(stream,"[   Queued]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[   Queued]  = %15llu  |  %15llu\n",
           s->queued_T/tmp_clock,s->queued_T);
-  fprintf(stream,"[   Unique]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[   Unique]  = %15llu  |  %15llu\n",
           s->first_queuing_T/tmp_clock,s->first_queuing_T);
-  fprintf(stream,"[ Requeued]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[ Requeued]  = %15llu  |  %15llu\n",
           s->requeuing_T/tmp_clock,s->requeuing_T);
-  fprintf(stream,"[  Delayed]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[  Delayed]  = %15llu  |  %15llu\n",
           s->delayed_T/tmp_clock,s->delayed_T);
 
   fprintf(stderr,"\n");
 
-  fprintf(stream,"[Processed]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[Processed]  = %15llu  |  %15llu\n",
           s->processed_T/tmp_clock,s->processed_T);
-  fprintf(stream,"[Discarded]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[Discarded]  = %15llu  |  %15llu\n",
           s->queued_and_discarded_T/tmp_clock,s->queued_and_discarded_T);
-  fprintf(stream,"[Sub Optim]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[Sub Optim]  = %15llu  |  %15llu\n",
           s->suboptimal_T/tmp_clock,s->suboptimal_T);
-  fprintf(stream,"[Expensive]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[Expensive]  = %15llu  |  %15llu\n",
           s->above_upper_bound_T/tmp_clock,s->above_upper_bound_T);
-  fprintf(stream,"[    Final]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[    Final]  = %15llu  |  %15llu\n",
           s->final_T/tmp_clock,s->final_T);
 
   fprintf(stderr,"\n");
 
-  fprintf(stream,"[Offspring]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[Offspring]  = %15llu  |  %15llu\n",
           s->offspring_T/tmp_clock,s->offspring_T);
   if (s->processed_T) {
-    fprintf(stream,"[Avg.Neig.]  = % 15llu\n\n"  ,s->offspring_T/s->processed_T);
+    fprintf(stream,"[Avg.Neig.]  = %15llu\n\n"  ,s->offspring_T/s->processed_T);
   }
 
   fprintf(stderr,"\n");
 
-  fprintf(stream,"[D.Queries]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[D.Queries]  = %15llu  |  %15llu\n",
           s->dict_queries_T/tmp_clock,s->dict_queries_T);
-  fprintf(stream,"[D. Writes]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[D. Writes]  = %15llu  |  %15llu\n",
           s->dict_writes_T/tmp_clock,s->dict_writes_T);
-  fprintf(stream,"[D. Misses]  = % 15llu  |  % 15llu\n",
+  fprintf(stream,"[D. Misses]  = %15llu  |  %15llu\n",
           s->dict_misses_T/tmp_clock,s->dict_misses_T);
 
   if (s->dict_queries_T && s->dict_size) {
-    fprintf(stream,"[Avg. Hops]  = % 15llu vs %llu\n\n",s->dict_hops_T/s->dict_queries_T,s->first_queuing_T/s->dict_size);
+    fprintf(stream,"[Avg. Hops]  = %15llu vs %llu\n\n",s->dict_hops_T/s->dict_queries_T,s->first_queuing_T/s->dict_size);
   }
 
   /* Reset partial counters */
