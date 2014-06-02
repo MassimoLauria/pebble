@@ -2,7 +2,7 @@
    Copyright (C) 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2013-04-11, 21:15 (CEST) Massimo Lauria"
-   Time-stamp: "2014-06-02, 09:21 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-02, 11:43 (EDT) Massimo Lauria"
 
    Description::
 
@@ -91,7 +91,7 @@ DAG *kthparser(FILE *input) {
       
       if (last_predecessor >= read) {
         PARSERERROR("Predecessors must be in ascending order. %lu predecessor of %lu",last_predecessor,read);
-        exit(-1);
+        exit(EXIT_FAILURE);
       }
 
       PARSERDEBUG("Edge %lu -> %lu",read,position);
@@ -108,11 +108,11 @@ DAG *kthparser(FILE *input) {
 
     } else if (read == position ){
       PARSERERROR("self loop on vertex %lu.",position);
-      exit(-1);
+      exit(EXIT_FAILURE);
  
     } else if (read > vertices ){
       PARSERERROR("out of range vertex %lu.",read);
-      exit(-1);
+      exit(EXIT_FAILURE);
 
     } else if (read == position+1) { /* This is a vertex specification. Pass the : */
     
@@ -125,12 +125,12 @@ DAG *kthparser(FILE *input) {
       temp=fscanf(input,"%100s",(char*)&buffer);
       if (temp==-1 || strcmp(buffer,":")!=0) {
         PARSERERROR("expecting \":\" before predecessors for vertex %lu.",position);
-        exit(-1);
+        exit(EXIT_FAILURE);
       }
 
     } else {
       PARSERERROR("Vertex %lu missing.",position+1);
-      exit(-1);
+      exit(EXIT_FAILURE);
     }
   }
 

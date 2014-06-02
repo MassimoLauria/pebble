@@ -424,14 +424,14 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     fprintf(stderr,
             "Error in search procedure: the graph is too "
             "big for the optimized data structures.");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   if (g->sink_number!=1) {
     fprintf(stderr,
             "Error in search procedure: the graph has more than "
             "one sink vertex.");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   if (upper_bound < 1) { return NULL; } /* No pebbling with zero pebbles */
