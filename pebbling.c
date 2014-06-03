@@ -2,7 +2,7 @@
    Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 11:40 (EDT) Massimo Lauria"
+   Time-stamp: "2014-06-03, 13:58 (EDT) Massimo Lauria"
 
    Description::
 
@@ -406,7 +406,7 @@ void    init_persistent_pebbling(const DAG *g, PebbleConfiguration *const c) {
 #if REVERSIBLE_PEBBLING
   SETBIT(c->black_pebbled,g->sinks[0]);
 #elif BLACK_WHITE_PEBBLING
-  SETBIT(c->black_pebbled,g->sinks[0]);
+  SETBIT(c->white_pebbled,g->sinks[0]);
 #else
   assert(0);
 #endif
