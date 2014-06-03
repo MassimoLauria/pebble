@@ -24,7 +24,7 @@
 Usage: %s [-htZ] -b<int> [-g <dotfile>] [ -p<int> | -2<int> | -i <input> ] [-O <input2> ] \n\
 \n\
        -h     help message;\n\
-       -Z     search for a 'persistent pebbling' (optional, only useful for black/white pebbling).\n\
+       -Z     search for a 'persistent pebbling' (optional, useful for black/white and reversible pebbling).\n\
        -t     find shortest pebbling within space limits, instead of minimizing space (optional).\n\
        -g <dotfile> graphviz depiction of pebbling save on <dotfile>.\n\
 \n\
@@ -252,8 +252,8 @@ int main(int argc, char *argv[])
   cost= optimize_time ? pebbling_bound : 1;
 
   while ( (cost <= pebbling_bound) && !solution ) {
-    printf("c Search for %s of cost %d\n",pebbling_type(),cost);
     solution=bfs_pebbling_strategy(C,cost,persistent_pebbling);
+    if (!solution) printf("c There is no %s of cost %d\n",pebbling_type(),cost);    
     cost++;
   }
 
