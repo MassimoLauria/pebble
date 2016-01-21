@@ -1,7 +1,7 @@
-# Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
+# Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2014-06-02, 09:33 (EDT) Massimo Lauria"
+# Time-stamp: "2016-01-21, 11:46 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
@@ -36,9 +36,6 @@ ifdef REVERSIBLE_PEBBLING
 VARIANTFLAGS+=-DREVERSIBLE_PEBBLING=${REVERSIBLE_PEBBLING}
 endif
 
-
-CC=gcc
-#CC=cc
 
 C_STANDARD=-std=c99
 #C_STANDARD=-ansi
