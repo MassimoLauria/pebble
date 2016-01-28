@@ -12,6 +12,7 @@
 pebble
 bwpebble
 revpebble
+revpebble2qdimacs
 exposetypes
 *.dot
 GTAGS

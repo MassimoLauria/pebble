@@ -1,7 +1,7 @@
 # Copyright (C) 2010, 2011, 2012, 2013, 2014, 2016 by Massimo Lauria <lauria.massimo@gmail.com>
 #
 # Created   : "2010-12-16, giovedì 16:32 (CET) Massimo Lauria"
-# Time-stamp: "2016-01-21, 11:46 (CET) Massimo Lauria"
+# Time-stamp: "2016-01-28, 17:42 (CET) Massimo Lauria"
 
 # ---------- BUILD FLAGS ----------------------
 RELEASE=0
@@ -101,6 +101,11 @@ revpebble: $(OBJS)
 	@-rm -f $(OBJS_V)
 	@-make  $(OBJS_V) BLACK_WHITE_PEBBLING=0 REVERSIBLE_PEBBLING=1
 	@$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+ $(OBJS_V)
+
+
+revpebble2qdimacs: revpebble2qdimacs.o common.o kthparser.o dag.o dsbasic.o
+	@-echo "Reversible pebbling QDIMACS formula [$@]"
+	@$(CC) $(LDFLAGS) ${CFLAGS} -o $@  $+
 
 
 timedflags.o:timedflags.c
