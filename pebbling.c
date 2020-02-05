@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013, 2014, 2020 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:01 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-03, 13:58 (EDT) Massimo Lauria"
+   Time-stamp: "2020-02-05, 16:07 (CET) Massimo Lauria"
 
    Description::
 
@@ -15,11 +15,24 @@
 
 /* Preamble */
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include "common.h"
 #include "dag.h"
 #include "pebbling.h"
+
+FILE *openstepfile(const char* filename) {
+
+  FILE *f = NULL;
+  
+  f = fopen(filename,"w");
+  if (f==NULL) {
+    fprintf(stderr, "c ERROR: unable to open output file \"%s\"",filename);
+    exit(EXIT_FAILURE);
+    }
+  return f;
+}
 
 
 /**
@@ -490,10 +503,13 @@ void fprint_dot_PebbleConfiguration(FILE *outfile,const DAG *g, const PebbleConf
 
 
 /* Print a pebbling, using dot tool */
-void fprint_dot_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
+void fprint_dot_Pebbling(char *dot_path,const DAG *g, const Pebbling *ptr) {
 
   PebbleConfiguration conf;
-  
+  int step=0;
+  char filenamebuffer[100];
+  FILE *F=NULL;
+    
   conf.sink_touched=FALSE;
 
 #if BLACK_WHITE_PEBBLING
@@ -506,24 +522,36 @@ void fprint_dot_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
   conf.previous_configuration = NULL;
   conf.last_changed_vertex = 0;
 
-  fprint_dot_PebbleConfiguration(outfile,g,NULL,"X",NULL);
+  snprintf(filenamebuffer,100,"%s/%05d.dot",dot_path,step);
+  F = openstepfile(filenamebuffer);
+  fprint_dot_PebbleConfiguration(F,g,&conf,"X",NULL);
+  fclose(F);
+
   Vertex v;
   for (size_t i=0; i < ptr->length; ++i) {
     v=ptr->steps[i];
+
+    step++;
+    snprintf(filenamebuffer,100,"%s/%05d.dot",dot_path,step);
+    F = openstepfile(filenamebuffer);
+  
+
     /* The logical sequence of tests ensure correctness of the moves,
        assuming the pebbling is legal */
 
     /* Deletions */
     if (isblack(v,g,&conf)) {
       deleteblack(v,g,&conf);
-      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(F,g,&conf,"X",NULL);
+      fclose(F);
       continue;
     }
 
 #if BLACK_WHITE_PEBBLING
     if (iswhite(v,g,&conf)) {
       deletewhite(v,g,&conf);
-      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(F,g,&conf,"X",NULL);
+      fclose(F);
       continue;
     }
 #endif
@@ -531,13 +559,15 @@ void fprint_dot_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr) {
     /* Placements */
     if (isactive(v,g,&conf)) {
       placeblack(v,g,&conf);
-      fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
+      fprint_dot_PebbleConfiguration(F,g,&conf,"X",NULL);
+      fclose(F);
       continue;
     }
     
 #if BLACK_WHITE_PEBBLING        
     placewhite(v,g,&conf);
-    fprint_dot_PebbleConfiguration(outfile,g,&conf,"X",NULL);
+    fprint_dot_PebbleConfiguration(F,g,&conf,"X",NULL);
+    fclose(F);
 #endif
   }
 }

@@ -1,8 +1,8 @@
 /*
-   Copyright (C) 2010, 2011, 2012, 2013, 2014 by Massimo Lauria <lauria.massimo@gmail.com>
+   Copyright (C) 2010, 2011, 2012, 2013, 2014, 2020 by Massimo Lauria <lauria.massimo@gmail.com>
 
    Created   : "2010-12-17, venerdì 12:03 (CET) Massimo Lauria"
-   Time-stamp: "2014-06-02, 09:35 (EDT) Massimo Lauria"
+   Time-stamp: "2020-02-05, 15:40 (CET) Massimo Lauria"
 
    Description::
 
@@ -128,7 +128,7 @@ extern PebbleConfiguration *next_PebbleConfiguration(const Vertex v,
 
 
 /* Pretty Print functions */
-extern void fprint_dot_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr);
+extern void fprint_dot_Pebbling(char *dot_path,const DAG *g, const Pebbling *ptr);
 extern void fprint_text_Pebbling(FILE *outfile,const DAG *g, const Pebbling *ptr);
 
 

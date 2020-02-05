@@ -11,6 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <sys/stat.h>
 
 #include "common.h"
 #include "dag.h"
@@ -114,7 +115,7 @@ int main(int argc, char *argv[])
   
   FILE *input_file=NULL;
   FILE *input_file_aux=NULL;
-  FILE *dot_file=NULL;
+  char *dot_path=NULL;
   
   int input_directives = 0;
   char graph_name[100];
@@ -180,7 +181,7 @@ int main(int argc, char *argv[])
       break;
       /* Output format */
     case 'g':
-      dot_file=openoutputfile(optarg);
+      dot_path=optarg;
       break;
     case '?':
     default:
@@ -265,7 +266,14 @@ int main(int argc, char *argv[])
     printf("s SATISFIABLE\n");
     fprint_text_Pebbling(stdout,C,solution);
 
-    if (dot_file) fprint_dot_Pebbling(dot_file, C, solution);
+    if (dot_path!=NULL) {
+
+        if (mkdir(dot_path,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH)==0) {
+          fprint_dot_Pebbling(dot_path, C, solution);
+        } else {
+          fprintf(stderr,"Can't make the output directory for the dot files.");          
+        }
+    }
     
   } else {
     

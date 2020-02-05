@@ -7,11 +7,15 @@ if [[ $# -ne 1 ]]; then
     exit -1
 fi
 
-INPUT=$1
-OUTPUT=${INPUT/.dot/.pdf}
-TEMPEPS=`mktemp -t dot2pdf.XXXXXX` 
+for INPUT in $1/*.dot; do
 
-dot -Teps $1 2>/dev/null > $TEMPEPS
-echo "Output file is \"$OUTPUT\""
-epspdf "$TEMPEPS" $OUTPUT
-rm $TEMPEPS
+    OUTPUT=${INPUT/.dot/.pdf}
+    TEMPEPS=`mktemp -t dot2pdf.XXXXXX` 
+
+    dot -Teps $INPUT 2>/dev/null > $TEMPEPS
+    epspdf "$TEMPEPS" $OUTPUT
+    rm $TEMPEPS
+done
+
+
+pdfunite $1/*.pdf $1.pdf 
