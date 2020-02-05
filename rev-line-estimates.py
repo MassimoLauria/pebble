@@ -54,18 +54,18 @@ for n in range(5,MaxHeight+1):
         elif new_pvalue == PTable[n]:
             PSplit[n] += [a]
  
-print "     H |   Cost | Delta | Split "
+print("     H |   Cost | Delta | Split ")
 for n in range(1,MaxHeight+1):
-    print " %5d | %5d | %3d | %d-%d "%(n,
+    print(" %5d | %5d | %3d | %d-%d "%(n,
                                        CTable[n],
                                        CTable[n]-CTable[n-1],
                                        min(CSplit[n]),
-                                       max(CSplit[n]))
+                                       max(CSplit[n])))
 
-print "     H |   Pers | Delta | Split "
+print("     H |   Pers | Delta | Split ")
 for n in range(1,MaxHeight+1):
-    print " %5d | %5d | %3d | %d-%d "%(n,
+    print(" %5d | %5d | %3d | %d-%d "%(n,
                                        PTable[n],
                                        PTable[n]-PTable[n-1],
                                        min(PSplit[n]),
-                                       max(PSplit[n]))
+                                       max(PSplit[n])))

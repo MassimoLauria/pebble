@@ -32,10 +32,10 @@ for n in range(5,MaxHeight+1):
             SplitTable[n] += [a]
  
 
-print "     H |   Cost | Delta | Split "
+print("     H |   Cost | Delta | Split ")
 for n in range(1,MaxHeight+1):
-    print " %5d | %5d | %3d | %d-%d "%(n,
+    print(" %5d | %5d | %3d | %d-%d "%(n,
                                       CostTable[n],
                                       CostTable[n]-CostTable[n-1],
                                        min(SplitTable[n]),
-                                       max(SplitTable[n]))
+                                       max(SplitTable[n])))

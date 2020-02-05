@@ -27,8 +27,8 @@ CostTable=[0]*(MaxHeight+1)
 for n in range(1,MaxHeight+1):
     CostTable[n]=persistent_pyr_cost(n)
 
-print "     H |   Cost | Delta | "
+print("     H |   Cost | Delta | ")
 for n in range(1,MaxHeight+1):
-    print " %5d | %5d | %3d | "%(n,
+    print(" %5d | %5d | %3d | "%(n,
                                  CostTable[n],
-                                 CostTable[n]-CostTable[n-1])
+                                 CostTable[n]-CostTable[n-1]))
