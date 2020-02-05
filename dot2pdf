@@ -9,6 +9,7 @@ fi
 
 for INPUT in $1/*.dot; do
 
+    echo "Processing $INPUT"
     OUTPUT=${INPUT/.dot/.pdf}
     TEMPEPS=`mktemp -t dot2pdf.XXXXXX` 
 
@@ -17,5 +18,5 @@ for INPUT in $1/*.dot; do
     rm $TEMPEPS
 done
 
-
+echo "Build final file $1.pdf"
 pdfunite $1/*.pdf $1.pdf 
