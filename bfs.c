@@ -491,7 +491,7 @@ Pebbling *bfs_pebbling_strategy(DAG *g,
     if (STATS_TIMER_OFF) {
       STATS_CLOCK_UPDATE(Stat);
       STATS_REPORT(Stat,
-                   "\nClock %llu: Report for graph on %u vertices, upper bound=%u:\n",
+                   "\nClock %llu: Report for graph on %zu vertices, upper bound=%u:\n",
                    STATS_GET(Stat,clock),
                    g->size,
                    upper_bound);
